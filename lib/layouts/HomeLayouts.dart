@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/widgets/header.dart';
+import 'package:money/widgets/heroContainer.dart';
 
 class Homelayouts extends StatefulWidget {
   const Homelayouts({super.key});
@@ -13,11 +14,7 @@ class _MyHomePageLayouts extends State<Homelayouts> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(3),
-      child: Column(
-          children: [
-            Header()
-          ],
-      ),
+      child: Column(children: [Header(), Herocontainer()]),
     );
   }
 }
