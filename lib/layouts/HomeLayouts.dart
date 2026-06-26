@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:money/widgets/header.dart';
 
 class Homelayouts extends StatefulWidget {
   const Homelayouts({super.key});
@@ -10,10 +11,12 @@ class Homelayouts extends StatefulWidget {
 class _MyHomePageLayouts extends State<Homelayouts> {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Layout appears',
-        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w900),
+    return Container(
+      padding: EdgeInsets.all(3),
+      child: Column(
+          children: [
+            Header()
+          ],
       ),
     );
   }
