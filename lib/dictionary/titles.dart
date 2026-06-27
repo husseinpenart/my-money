@@ -4,3 +4,14 @@ class Titles {
   static const String hello = 'سلام';
   static const String searchText = 'جستجو ...';
 }
+
+class ScreenDictionary {
+  static const String myWalllet = 'کیف پول من';
+  static const String moenyUnit = 'تومان';
+  static const String pureIncomeText = 'خالص طلب شما';
+  static const String demandText = 'طلب ها';
+  static const String debtsText = 'بدهی ها';
+  static const String paidText= 'تسویه شده';
+  static const String paidInProgressText= 'در جریان';
+  static const String notPaidText= 'پرداخت نشده';
+}
