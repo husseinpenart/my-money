@@ -11,7 +11,12 @@ class ScreenDictionary {
   static const String pureIncomeText = 'خالص طلب شما';
   static const String demandText = 'طلب ها';
   static const String debtsText = 'بدهی ها';
-  static const String paidText= 'تسویه شده';
-  static const String paidInProgressText= 'در جریان';
-  static const String notPaidText= 'پرداخت نشده';
+  static const String paidText = 'تسویه شده';
+  static const String paidInProgressText = 'در جریان';
+  static const String notPaidText = 'پرداخت نشده';
+  static const String approveDemand = 'ثبت طلب';
+  static const String approveDebt = 'ثبت بدهی';
+  static const String payment = 'پرداخت';
+  static const String fullsettlement = 'تسویه کامل';
+  static const String report = 'گزارش';
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class CustomIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
+
   const CustomIconButton({
     super.key,
     required this.icon,
@@ -24,11 +25,12 @@ class CustomIconButton extends StatelessWidget {
               blurRadius: 7,
               offset: Offset(0, 2),
               blurStyle: BlurStyle.normal,
-              spreadRadius: BorderSide.strokeAlignOutside
+              spreadRadius: BorderSide.strokeAlignOutside,
             ),
           ],
         ),
         child: Icon(icon, color: Colors.grey),
+        
       ),
     );
   }

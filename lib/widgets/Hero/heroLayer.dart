@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/widgets/global/GlassContainer.dart';
-import 'package:money/widgets/heroContainerGrid.dart';
-import 'package:money/widgets/heroCountItems.dart';
-import 'package:money/widgets/heroInfo.dart';
+import 'package:money/widgets/Hero/heroContainerGrid.dart';
+import 'package:money/widgets/Hero/heroCountItems.dart';
+import 'package:money/widgets/Hero/heroInfo.dart';
 
 class Herolayer extends StatelessWidget {
   const Herolayer({super.key});

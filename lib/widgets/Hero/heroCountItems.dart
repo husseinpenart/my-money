@@ -13,22 +13,22 @@ class Herocountitems extends StatelessWidget {
           containerWidth: 400,
           child: Center(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Text(
-                        '1',
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      '1',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'sans',
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     SizedBox(height: 2),
                     Text(
                       ScreenDictionary.paidText,
@@ -43,17 +43,17 @@ class Herocountitems extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Text(
-                        '2',
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      '2',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'sans',
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     SizedBox(height: 2),
                     Text(
                       ScreenDictionary.paidInProgressText,
@@ -68,15 +68,14 @@ class Herocountitems extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Text(
-                        '1',
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      '3',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'sans',
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 2),
