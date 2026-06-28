@@ -49,7 +49,7 @@ class _QuickaccessState extends State<Quickaccess> {
       },
     ),
     MenuItemModel(
-      icon: Icons.dashboard_outlined ,
+      icon: Icons.dashboard_outlined,
       label: ScreenDictionary.report,
       iconColor: Color.fromRGBO(149, 106, 247, 10),
       iconBackColor: const Color.fromRGBO(239, 246, 255, 10),
@@ -68,52 +68,69 @@ class _QuickaccessState extends State<Quickaccess> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            blurRadius: 5,
-            color: Colors.black54,
+            blurRadius: 2,
+            color: Colors.black.withValues(alpha: 0.05),
             offset: Offset(0, 2),
             blurStyle: BlurStyle.normal,
             spreadRadius: BorderSide.strokeAlignOutside,
           ),
         ],
       ),
-      child: Container(
-        padding: EdgeInsets.all(15),
-        child: Wrap(
-          alignment: WrapAlignment.spaceEvenly,
-          spacing: 15.0,
-          runSpacing: 20.0,
-          children: menuItem.map((item) {
-            return Container(
-              padding: EdgeInsets.all(4),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: item.iconBackColor,
-                      borderRadius: BorderRadius.circular(13),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 7,
-                          color: Colors.black.withValues(alpha: 0.08),
-                          offset: const Offset(0, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            ScreenDictionary.quickAccess,
+            style: TextStyle(fontFamily: 'sans'),
+            textAlign: TextAlign.left,
+          ),
+          SizedBox(height: 10),
+          Center(
+            // padding: EdgeInsets.all(15),
+            child: Wrap(
+              alignment: WrapAlignment.spaceEvenly,
+              spacing: 15.0,
+              runSpacing: 20.0,
+              children: menuItem.map((item) {
+                return Container(
+                  padding: EdgeInsets.all(4),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: item.iconBackColor,
+                          borderRadius: BorderRadius.circular(13),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 7,
+                              color: Colors.black.withValues(alpha: 0.08),
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(item.icon),
-                      color: item.iconColor,
-                      iconSize: 20,
-                      onPressed: item.onTap,
-                    ),
+                        child: IconButton(
+                          icon: Icon(item.icon),
+                          color: item.iconColor,
+                          iconSize: 20,
+                          onPressed: item.onTap,
+                        ),
+                      ),
+                      const SizedBox(height: 10), // فاصله متن زیر دکمه
+                      Text(
+                        item.label,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'sans',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10), // فاصله متن زیر دکمه
-                  Text(item.label, style: const TextStyle(fontSize: 12 , fontFamily: 'sans')),
-                ],
-              ),
-            );
-          }).toList(), // تبدیل خروجی مپ به لیست ویجت
-        ),
+                );
+              }).toList(), // تبدیل خروجی مپ به لیست ویجت
+            ),
+          ),
+        ],
       ),
     );
   }

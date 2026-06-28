@@ -19,4 +19,7 @@ class ScreenDictionary {
   static const String payment = 'پرداخت';
   static const String fullsettlement = 'تسویه کامل';
   static const String report = 'گزارش';
+  static const String quickAccess = 'دسترسی سریع';
+  static const String importantOnes = 'مهم ترین ها';
+  static const String mostSee = 'یادآوری';
 }
