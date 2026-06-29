@@ -27,7 +27,8 @@ class _MyHomePageLayouts extends State<Homelayouts> {
             SizedBox(height: 10),
             Mostimportant(),
             SizedBox(height: 10),
-            CardItemLayout()
+            CardItemLayout(),
+
           ],
         ),
       ),

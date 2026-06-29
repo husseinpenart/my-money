@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
+import 'package:money/widgets/cardItems/card_items.dart';
 import 'package:money/widgets/cardItems/filter_buttons.dart';
 
 class CardItemLayout extends StatefulWidget {
@@ -21,8 +22,7 @@ class _CardItemLayoutState extends State<CardItemLayout> {
       ButtonsDictionary.open,
       ButtonsDictionary.minor,
       ButtonsDictionary.important,
-      ButtonsDictionary.settlement
-
+      ButtonsDictionary.settlement,
     ];
     return Container(
       padding: EdgeInsets.all(16),
@@ -46,6 +46,7 @@ class _CardItemLayoutState extends State<CardItemLayout> {
             ),
           ),
           //  next Row
+          CardItems(),
         ],
       ),
     );

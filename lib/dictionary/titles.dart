@@ -22,6 +22,8 @@ class ScreenDictionary {
   static const String quickAccess = 'دسترسی سریع';
   static const String importantOnes = 'مهم ترین ها';
   static const String mostSee = 'یادآوری';
+  static const String wholePrice = 'کل مبلغ';
+  static const String reminded = 'مانده';
 }
 
 class ButtonsDictionary {
