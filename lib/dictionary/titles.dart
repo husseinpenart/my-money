@@ -32,4 +32,8 @@ class ButtonsDictionary {
   static const String minor = 'جزئی';
   static const String settlement = 'تسویه';
   static const String important = 'مهم';
+  static const String deleteStars = 'حذف ستاره';
+  static const String editItem = 'حذف';
+  static const String deleteItem = 'ویرایش';
+  static const String paymentProgress = 'پیشرفت پرداخت';
 }
