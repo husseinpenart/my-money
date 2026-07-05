@@ -11,7 +11,6 @@ class CardItems extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // بخش هدر (تعداد رکورد و مرتب سازی)
           Padding(
             padding: const EdgeInsets.all(2),
             child: Row(

@@ -280,13 +280,12 @@ class CardWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(1),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Center(
                     child: SizedBox(
                       height: 1,
-                      // width: 300,
                       child: VerticalDivider(
                         width: 1,
                         color: const Color.fromARGB(255, 177, 174, 174),

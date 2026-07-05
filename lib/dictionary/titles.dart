@@ -33,7 +33,13 @@ class ButtonsDictionary {
   static const String settlement = 'تسویه';
   static const String important = 'مهم';
   static const String deleteStars = 'حذف ستاره';
-  static const String editItem = 'حذف';
-  static const String deleteItem = 'ویرایش';
+  static const String editItem = 'ویرایش';
+  static const String deleteItem = 'حذف';
   static const String paymentProgress = 'پیشرفت پرداخت';
+}
+
+class BottomNavigations {
+  static const String home = 'خانه';
+  static const String contacts = 'مخاطبین';
+  static const String setting = 'تنظیمات';
 }
