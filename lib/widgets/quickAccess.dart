@@ -86,7 +86,6 @@ class _QuickaccessState extends State<Quickaccess> {
           ),
           SizedBox(height: 10),
           Center(
-            // padding: EdgeInsets.all(15),
             child: Wrap(
               alignment: WrapAlignment.spaceEvenly,
               spacing: 15.0,

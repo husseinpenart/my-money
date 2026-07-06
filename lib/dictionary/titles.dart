@@ -24,6 +24,14 @@ class ScreenDictionary {
   static const String mostSee = 'یادآوری';
   static const String wholePrice = 'کل مبلغ';
   static const String reminded = 'مانده';
+  static const String dataReports = 'آمار و گزارش';
+  static const String financialReport = 'گزارش مالی';
+  static const String debtRatio = 'نسبت طلب به بدهی';
+  static const String wholeDemand = 'کل طلب';
+  static const String wholeDebt = 'کل بدهی';
+  static const String paidDebt = 'پرداخت شده';
+  static const String wholeReminded = 'مانده کل';
+  static const String paymentStatus = 'وضعیت پرداخت‌ها';
 }
 
 class ButtonsDictionary {

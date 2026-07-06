@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/layouts/HomeLayouts.dart';
+import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
 
 void main() {
@@ -19,14 +20,12 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // make the app language rtl
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [Locale('fa')],
-      // make the app language rtl
       title: Titles.topTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -52,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   final List<Widget> _pages = const [
     Homelayouts(),
-    Center(child: Text('گزارش')),
+    ReportPage(),
     Center(child: Text('مخاطبین')),
     Center(child: Text('تنظیمات')),
   ];
