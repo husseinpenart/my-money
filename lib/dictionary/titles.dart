@@ -32,6 +32,7 @@ class ScreenDictionary {
   static const String paidDebt = 'پرداخت شده';
   static const String wholeReminded = 'مانده کل';
   static const String paymentStatus = 'وضعیت پرداخت‌ها';
+  static const String demand = 'طلب';
 }
 
 class ButtonsDictionary {

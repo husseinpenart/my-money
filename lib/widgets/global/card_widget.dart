@@ -2,26 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
 
 class CardWidget extends StatelessWidget {
-  const CardWidget({
-    super.key,
-  });
+  const CardWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Card(
         elevation: 5,
-        shadowColor: Colors.black.withOpacity(0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         color: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(
-                top: 12,
-                right: 12,
-                left: 12,
-              ),
+              padding: const EdgeInsets.only(top: 12, right: 12, left: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -57,13 +51,9 @@ class CardWidget extends StatelessWidget {
                 ],
               ),
             ),
-    
+
             Padding(
-              padding: const EdgeInsets.only(
-                bottom: 12,
-                right: 12,
-                left: 12,
-              ),
+              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -95,10 +85,8 @@ class CardWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-    
+
                   const SizedBox(width: 15),
-    
-                  // اطلاعات کاربر (استفاده از Expanded برای جلوگیری از overflow)
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,11 +165,7 @@ class CardWidget extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.trending_up,
-                            size: 14,
-                            color: Colors.teal,
-                          ),
+                          Icon(Icons.trending_up, size: 14, color: Colors.teal),
                           Text(
                             '۴,۵۰۰,۰۰۰ ت',
                             style: TextStyle(
@@ -197,7 +181,7 @@ class CardWidget extends StatelessWidget {
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
-    
+
                     children: [
                       Text(
                         ScreenDictionary.reminded,
@@ -236,17 +220,11 @@ class CardWidget extends StatelessWidget {
                     children: [
                       Text(
                         ButtonsDictionary.paymentProgress,
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(fontFamily: 'sans', fontSize: 13),
                       ),
                       Text(
                         '44%',
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(fontFamily: 'sans', fontSize: 13),
                       ),
                     ],
                   ),
@@ -298,11 +276,7 @@ class CardWidget extends StatelessWidget {
                     onPressed: null,
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.star_rounded,
-                          color: Colors.amber,
-                          size: 20,
-                        ),
+                        Icon(Icons.star_rounded, color: Colors.amber, size: 20),
                         SizedBox(width: 5),
                         Text(
                           ButtonsDictionary.deleteStars,
@@ -345,7 +319,7 @@ class CardWidget extends StatelessWidget {
                           color: Colors.red,
                           size: 20,
                         ),
-    
+
                         SizedBox(width: 5),
                         Text(
                           ButtonsDictionary.deleteItem,
