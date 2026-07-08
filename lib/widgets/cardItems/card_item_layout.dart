@@ -25,9 +25,10 @@ class _CardItemLayoutState extends State<CardItemLayout> {
       ButtonsDictionary.settlement,
     ];
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(4),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+
         children: [
           Wrap(
             spacing: 10,

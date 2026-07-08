@@ -7,10 +7,10 @@ class CardItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(23),
+      padding: const EdgeInsets.all(1),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 10,),
           Padding(
             padding: const EdgeInsets.all(2),
             child: Row(

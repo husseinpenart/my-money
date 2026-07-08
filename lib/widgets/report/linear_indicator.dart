@@ -44,98 +44,95 @@ class _LinearIndicatorState extends State<LinearIndicator> {
   ];
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: EdgeInsets.all(15),
-        margin: EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(14)),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 3,
-              color: Colors.black.withValues(alpha: 0.30),
-              spreadRadius: 0,
-              offset: Offset(3, 2),
-              blurStyle: BlurStyle.normal,
+    return Container(
+      padding: EdgeInsets.all(15),
+      margin: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(14)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 3,
+            color: Colors.black.withValues(alpha: 0.30),
+            spreadRadius: 0,
+            offset: Offset(3, 2),
+            blurStyle: BlurStyle.normal,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+    
+        children: [
+          Text(
+            ScreenDictionary.paymentStatus,
+            style: TextStyle(
+              fontFamily: 'sans',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-            Text(
-              ScreenDictionary.paymentStatus,
-              style: TextStyle(
-                fontFamily: 'sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: progressItem.map((item) {
-                return Container(
-                  padding: EdgeInsets.all(14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        spacing: 10.0,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(10),
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              color: item.colorDecoration,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: progressItem.map((item) {
+              return Container(
+                padding: EdgeInsets.all(2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100),
+                            color: item.colorDecoration,
+                          ),
+                        ),
+                        Text(
+                          item.progressText,
+                          style: TextStyle(fontFamily: 'sans', fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(5),
+                          width: 200,
+                          child: LinearProgressIndicator(
+                            backgroundColor: item.backgroundColor,
+                            color: item.colors,
+                            borderRadius: BorderRadius.circular(100),
+                            value: item.valueItem,
+                            minHeight: 10,
+                            trackGap: item.trackGap,
+                            // semanticsValue: 'label',
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              item.valueColor,
                             ),
                           ),
-                          Text(
-                            item.progressText,
-                            style: TextStyle(fontFamily: 'sans', fontSize: 12),
+                        ),
+                        Text(
+                          item.progressValue,
+                          style: TextStyle(
+                            fontFamily: 'sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(14),
-                            width: 300,
-                            child: LinearProgressIndicator(
-                              backgroundColor: item.backgroundColor,
-                              color: item.colors,
-                              borderRadius: BorderRadius.circular(100),
-                              value: item.valueItem,
-                              minHeight: 10,
-                              trackGap: item.trackGap,
-                              semanticsValue: 'label',
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                item.valueColor,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            item.progressValue,
-                            style: TextStyle(
-                              fontFamily: 'sans',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

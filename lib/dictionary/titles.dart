@@ -33,6 +33,9 @@ class ScreenDictionary {
   static const String wholeReminded = 'مانده کل';
   static const String paymentStatus = 'وضعیت پرداخت‌ها';
   static const String demand = 'طلب';
+  static const String demander = 'طلبکار';
+  static const String debtor = 'بدهکار';
+  static const String note = 'یادداشت';
 }
 
 class ButtonsDictionary {
@@ -45,6 +48,7 @@ class ButtonsDictionary {
   static const String editItem = 'ویرایش';
   static const String deleteItem = 'حذف';
   static const String paymentProgress = 'پیشرفت پرداخت';
+  static const String approvePayment = 'ثبت پرداخت';
 }
 
 class BottomNavigations {

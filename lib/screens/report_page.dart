@@ -36,6 +36,7 @@ class _ReportPageState extends State<ReportPage> {
             ReportGridCard(),
             /// financial report section
             //  Pie chart card
+            SizedBox(height: 10,),
             Center(
               child: Container(
                 padding: EdgeInsets.all(15),

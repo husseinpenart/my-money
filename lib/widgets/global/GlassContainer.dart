@@ -12,7 +12,7 @@ class GlassContainer extends StatelessWidget {
     this.opacity = 0.15,
     this.borderOpacity = 0.25,
     this.shadowOpacity = 0.1,
-    this.containerWidth = 100,
+    this.containerWidth,
   });
 
   final Widget child;
@@ -22,7 +22,7 @@ class GlassContainer extends StatelessWidget {
   final double opacity;
   final double borderOpacity;
   final double shadowOpacity;
-  final double containerWidth;
+  final double? containerWidth;
 
   @override
   Widget build(BuildContext context) {

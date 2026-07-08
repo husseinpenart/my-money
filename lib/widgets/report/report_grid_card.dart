@@ -48,21 +48,18 @@ class _ReportGridCard extends State<ReportGridCard> {
       crossAxisSpacing: 2,
       mainAxisSpacing: 0,
       childAspectRatio: 1.4,
-      // padding: EdgeInsets.all(50),
       shrinkWrap: true,
-      // physics: NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       children: finanaceItems.map((item) {
-        return Container(
-          padding: EdgeInsets.all(11),
+        return Expanded(
           child: Container(
-            margin: EdgeInsets.all(1),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Container(
                   padding: EdgeInsets.all(16),
-                  width: double.maxFinite,
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(13),
@@ -77,10 +74,8 @@ class _ReportGridCard extends State<ReportGridCard> {
                     ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 10.0,
                     children: [
-                      //  Icons part
+                      SizedBox(height: 5),
                       Container(
                         padding: EdgeInsets.all(5),
                         decoration: BoxDecoration(
