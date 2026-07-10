@@ -26,7 +26,7 @@ class TextIconButton extends StatelessWidget {
         buttonText,
         style: TextStyle(
           fontFamily: 'sans',
-          fontSize: 12,
+          fontSize: 11,
           color: textColor,
           fontWeight: FontWeight.bold,
         ),

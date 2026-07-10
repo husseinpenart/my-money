@@ -52,10 +52,10 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.school),
             label: BottomNavigations.contacts,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: BottomNavigations.setting,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: BottomNavigations.setting,
+          // ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation

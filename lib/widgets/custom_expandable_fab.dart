@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:money/layouts/confirm_demand_layout.dart';
 
 class CustomExpandableFab extends StatefulWidget {
   const CustomExpandableFab({super.key});
@@ -13,7 +14,9 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
   late Animation<double> _animateIcon;
   late Animation<double> _translateButton;
   bool _isOpen = false;
-  final double _fabHeight = 56.0;
+  final double _fabHeight = 32.0;
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
 
   @override
   void initState() {
@@ -42,6 +45,8 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
   }
 
   void _toggleMenu() {
@@ -78,11 +83,10 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
-              textDirection: TextDirection.rtl, // دکمه راست، متن چپ (RTL)
+              textDirection: TextDirection.rtl,
               children: [
-                // دکمه آیکون‌دار
                 GestureDetector(
-                  onTap: onTap, // مستقیم متد onTap ورودی را صدا می‌زنیم
+                  onTap: onTap,
                   child: Container(
                     width: 54,
                     height: 54,
@@ -101,9 +105,8 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
                   ),
                 ),
                 const SizedBox(width: 14),
-                // برچسب متنی کپسولی
                 GestureDetector(
-                  onTap: onTap, // مستقیم متد onTap ورودی را صدا می‌زنیم
+                  onTap: onTap,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -144,53 +147,31 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 5.0,
       children: [
         _buildMenuItem(
           buttonColor: const Color(0xFF2563EB),
           icon: Icons.south_west,
           label: 'ثبت طلب',
-          index: 3,
+          index: 1,
           onTap: () {
-           
             WidgetsBinding.instance.addPostFrameCallback((_) {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
+                enableDrag: true,
+                showDragHandle: true,
+                constraints: BoxConstraints(maxHeight: 800, maxWidth: 500),
                 builder: (BuildContext sheetContext) {
-                  return Container(
-                    height: 300,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25),
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          const Text(
-                            'فرم ثبت طلب',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'sans',
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            child: const Text('بستن'),
-                            onPressed: () => Navigator.pop(sheetContext),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ConfirmDemandLayout(
+                    startDateController:
+                        _startDateController,
+                    endDateController: _endDateController,
                   );
                 },
               );
-                _toggleMenu();
+              _toggleMenu();
             });
           },
         ),
@@ -248,7 +229,7 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
           buttonColor: const Color(0xFF0EAB7B),
           icon: Icons.credit_card,
           label: 'ثبت پرداخت',
-          index: 1,
+          index: 3,
           onTap: () {
             _toggleMenu();
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -300,7 +281,15 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: const Color(0xFF2C3545),
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromRGBO(24, 84, 235, 1),
+                  Color.fromRGBO(63, 121, 230, 1),
+                  Color.fromRGBO(95, 145, 236, 1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(

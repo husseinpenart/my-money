@@ -36,6 +36,21 @@ class ScreenDictionary {
   static const String demander = 'طلبکار';
   static const String debtor = 'بدهکار';
   static const String note = 'یادداشت';
+  static const String informTitle = 'ثبت طلب جدید';
+  static const String ownedTitle = 'طلب دارم';
+  static const String ownDebtTitle = 'بدهکارم';
+  static const String placeholderName = 'نام و نام خانوادگی';
+  static const String placeholderPrice = '1,500,000';
+  static const String placeholderMobile = '09120000000';
+  static const String placeholderNote = 'پرداخت برای خرید ماشین برادرم';
+  static const String labelPrice = 'مبلغ کل (تومان) ';
+  static const String labelName = 'نام طرف حساب ';
+  static const String labelMobile = 'شماره موبایل';
+  static const String labelNote = 'توضیحات';
+  static const String initialRegisterDate = 'تاریخ ثبت';
+  static const String endPaymentDate = 'سررسید پرداخت';
+  static const String saveDemmandButton = 'ذخیره طلب';
+
 }
 
 class ButtonsDictionary {
