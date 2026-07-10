@@ -165,9 +165,9 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
                 constraints: BoxConstraints(maxHeight: 800, maxWidth: 500),
                 builder: (BuildContext sheetContext) {
                   return ConfirmDemandLayout(
-                    startDateController:
-                        _startDateController,
+                    startDateController: _startDateController,
                     endDateController: _endDateController,
+                    hasDebt: false,
                   );
                 },
               );
@@ -188,39 +188,18 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
+                enableDrag: true,
+                showDragHandle: true,
+                constraints: BoxConstraints(maxHeight: 800, maxWidth: 500),
                 builder: (BuildContext sheetContext) {
-                  return Container(
-                    height: 300,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25),
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          const Text(
-                            'فرم ثبت طلب',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'sans',
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            child: const Text('بستن'),
-                            onPressed: () => Navigator.pop(sheetContext),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ConfirmDemandLayout(
+                    startDateController: _startDateController,
+                    endDateController: _endDateController,
+                    hasDebt: true,
                   );
                 },
               );
+              _toggleMenu();
             });
           },
         ),
