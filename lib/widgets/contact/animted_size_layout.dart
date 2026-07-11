@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
+import 'package:money/layouts/approve_payment.dart';
+import 'package:money/layouts/confirm_demand_layout.dart';
 import 'package:money/widgets/contact/grid_row_table.dart';
 import 'package:money/widgets/contact/note_section.dart';
 import 'package:money/widgets/contact/paid_progress.dart';
 import 'package:money/widgets/global/text_icon_button.dart';
 
-class AnimatedSizeLayout extends StatelessWidget {
+class AnimatedSizeLayout extends StatefulWidget {
   const AnimatedSizeLayout({super.key, required bool isExpanded})
     : _isExpanded = isExpanded;
 
   final bool _isExpanded;
+
+  @override
+  State<AnimatedSizeLayout> createState() => _AnimatedSizeLayoutState();
+}
+
+class _AnimatedSizeLayoutState extends State<AnimatedSizeLayout> {
+  final TextEditingController _startDateController = TextEditingController();
+
+  final TextEditingController _endDateController = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +36,7 @@ class AnimatedSizeLayout extends StatelessWidget {
       curve: Curves.easeInOut,
 
       alignment: Alignment.topCenter,
-      child: _isExpanded
+      child: widget._isExpanded
           ? Expanded(
               child: Column(
                 children: [
@@ -36,7 +54,21 @@ class AnimatedSizeLayout extends StatelessWidget {
                       TextIconButton(
                         buttonIcon: Icons.create_outlined,
                         buttonText: ButtonsDictionary.editItem,
-                        onPress: () {},
+                        onPress: () {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (BuildContext sheetContext) {
+                                return ConfirmDemandLayout(
+                                  startDateController: _startDateController,
+                                  endDateController: _endDateController,
+                                  hasDebt: true,
+                                  editTitle: true,
+                                );
+                              },
+                            );
+                          });
+                        },
                         buttonBackground: Color.fromRGBO(229, 236, 251, 1),
                         textColor: Color.fromRGBO(73, 120, 236, 1),
                         iconColor: Color.fromRGBO(73, 120, 236, 1),
@@ -44,7 +76,16 @@ class AnimatedSizeLayout extends StatelessWidget {
                       TextIconButton(
                         buttonIcon: Icons.wallet,
                         buttonText: ButtonsDictionary.approvePayment,
-                        onPress: () {},
+                        onPress: () {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (BuildContext sheetContext) {
+                                return RecordPayment();
+                              },
+                            );
+                          });
+                        },
                         buttonBackground: Color.fromRGBO(236, 253, 245, 1),
                         textColor: Color.fromRGBO(4, 127, 119, 1),
                         iconColor: Color.fromRGBO(4, 127, 119, 1),

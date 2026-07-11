@@ -151,6 +151,7 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
       children: [
         _buildMenuItem(
           buttonColor: const Color(0xFF2563EB),
+          
           icon: Icons.south_west,
           label: 'ثبت طلب',
           index: 1,
@@ -203,56 +204,7 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
             });
           },
         ),
-        // دکمه سوم (ثبت پرداخت)
-        _buildMenuItem(
-          buttonColor: const Color(0xFF0EAB7B),
-          icon: Icons.credit_card,
-          label: 'ثبت پرداخت',
-          index: 3,
-          onTap: () {
-            _toggleMenu();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (BuildContext sheetContext) {
-                  return Container(
-                    height: 300,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25),
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          const Text(
-                            'فرم ثبت طلب',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'sans',
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            child: const Text('بستن'),
-                            onPressed: () => Navigator.pop(sheetContext),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            });
-          },
-        ),
-
+        
         // دکمه اصلی پایین
         GestureDetector(
           onTap: _toggleMenu,

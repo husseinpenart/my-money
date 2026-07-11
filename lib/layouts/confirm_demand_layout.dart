@@ -8,11 +8,13 @@ class ConfirmDemandLayout extends StatefulWidget {
   final TextEditingController _startDateController;
   final TextEditingController _endDateController;
   final bool hasDebt;
+  final bool editTitle;
   const ConfirmDemandLayout({
     super.key,
     required TextEditingController startDateController,
     required TextEditingController endDateController,
     required this.hasDebt,
+    this.editTitle = false,
   }) : _startDateController = startDateController,
        _endDateController = endDateController;
 
@@ -50,6 +52,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
   @override
   void initState() {
     super.initState();
+    super.initState();
     _isDemand = !widget.hasDebt;
     _isDebt = widget.hasDebt;
   }
@@ -85,13 +88,12 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
           children: [
             SizedBox(height: 20),
             Text(
-              _isDemand
+              widget.editTitle
+                  ? ScreenDictionary.informEdit
+                  : _isDemand
                   ? ScreenDictionary.informTitle
-                  : widget.hasDebt
-                  ? ScreenDictionary.informNewDebt
                   : ScreenDictionary.informNewDebt,
-              style: TextStyle(fontFamily: 'sans', fontSize: 17),
-              textAlign: TextAlign.justify,
+              style: const TextStyle(fontFamily: 'sans', fontSize: 17),
             ),
             SizedBox(height: 20),
             const Divider(thickness: 0.5, height: 1),
@@ -388,7 +390,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                           fontSize: 13,
                           color: Colors.white,
                         ),
-                        selectionColor: Colors.amber,
+                        selectionColor: Colors.transparent,
                         textAlign: TextAlign.center,
                       ),
                     ),

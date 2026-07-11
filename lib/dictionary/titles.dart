@@ -38,6 +38,8 @@ class ScreenDictionary {
   static const String note = 'یادداشت';
   static const String informTitle = 'ثبت طلب جدید';
   static const String informNewDebt = 'ثبت بدهی جدید';
+  static const String informEdit = 'ویرایش آیتم';
+  static const String informPayment = 'ثبت پرداخت';
   static const String ownedTitle = 'طلب دارم';
   static const String ownDebtTitle = 'بدهکارم';
   static const String placeholderName = 'نام و نام خانوادگی';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:money/widgets/global/card_widget.dart';
+import 'package:money/widgets/cardItems/card_widget.dart';
 
 class CardItems extends StatelessWidget {
   const CardItems({super.key});

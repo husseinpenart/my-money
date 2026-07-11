@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
+import 'package:money/layouts/confirm_demand_layout.dart';
 
-class CardWidget extends StatelessWidget {
+class CardWidget extends StatefulWidget {
   const CardWidget({super.key});
+
+  @override
+  State<CardWidget> createState() => _CardWidgetState();
+}
+
+class _CardWidgetState extends State<CardWidget> {
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +305,21 @@ class CardWidget extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: null,
+                  onPressed: () {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (BuildContext sheetContext) {
+                          return ConfirmDemandLayout(
+                            startDateController: _startDateController,
+                            endDateController: _endDateController,
+                            hasDebt: true,
+                            editTitle: true,
+                          );
+                        },
+                      );
+                    });
+                  },
                   child: Row(
                     children: [
                       Icon(
