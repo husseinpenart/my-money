@@ -39,6 +39,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   fl_chart: ^1.2.0
   persian_datetime_picker: ^3.2.0
+  smooth_page_indicator: ^2.0.1
 
 dev_dependencies:
   flutter_test:

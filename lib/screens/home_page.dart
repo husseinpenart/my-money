@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/layouts/HomeLayouts.dart';
+import 'package:money/screens/auth/login_screen.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
@@ -16,6 +17,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   final List<Widget> _pages = const [
+    // IntroPage(),
+    LoginScreen(),
     Homelayouts(),
     ReportPage(),
     ContactPage(),
