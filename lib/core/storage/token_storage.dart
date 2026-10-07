@@ -1,21 +1,31 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenStorage {
-  static const String _tokenKey = 'my_money_token';
+  static const String _tokenKey = 'access_token';
 
-  final SharedPreferences preferences;
+  SharedPreferences? _prefs;
+  String? _cachedToken;
 
-  TokenStorage(this.preferences);
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+    _cachedToken = _prefs?.getString(_tokenKey);
+  }
 
   String? getToken() {
-    return preferences.getString(_tokenKey);
+    return _cachedToken;
   }
 
   Future<void> saveToken(String token) async {
-    await preferences.setString(_tokenKey, token);
+    _cachedToken = token;
+    await _prefs?.setString(_tokenKey, token);
   }
 
   Future<void> clearToken() async {
-    await preferences.remove(_tokenKey);
+    _cachedToken = null;
+    await _prefs?.remove(_tokenKey);
+  }
+
+  bool get isLoggedIn {
+    return _cachedToken != null && _cachedToken!.isNotEmpty;
   }
 }

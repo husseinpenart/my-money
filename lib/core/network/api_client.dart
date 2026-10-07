@@ -9,7 +9,7 @@ class ApiClient {
   ApiClient(this.tokenStorage)
     : dio = Dio(
         BaseOptions(
-          baseUrl: 'http://localhost:8085/api',
+          baseUrl: 'http://192.168.1.185:8085/api',
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 30),
           headers: {
@@ -75,6 +75,7 @@ class ApiClient {
 
   Options _buildOptions(bool requiresAuth) {
     final token = tokenStorage.getToken();
+    ;
 
     final headers = <String, dynamic>{};
 

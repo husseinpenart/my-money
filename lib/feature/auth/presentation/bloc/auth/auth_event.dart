@@ -1,9 +1,7 @@
-//  class for all events in bloc section items
 abstract class AuthEvent {
   const AuthEvent();
 }
 
-//  login submit
 class LoginSubmitted extends AuthEvent {
   final String phoneNumber;
   final String password;
@@ -12,16 +10,17 @@ class LoginSubmitted extends AuthEvent {
 }
 
 class RegisterSubmitted extends AuthEvent {
-  final String identity;
+  final String name;
   final String phoneNumber;
   final String password;
-  final String confirmedPassword;
+  final String confirmPassword;
+  final bool agreedToTerms;
 
   const RegisterSubmitted({
-    required this.identity,
+    required this.name,
     required this.phoneNumber,
     required this.password,
-    required this.confirmedPassword,
+    required this.confirmPassword,
+    required this.agreedToTerms,
   });
 }
-    

@@ -11,10 +11,13 @@ class AuthLoading extends AuthState {
 }
 
 class AuthSuccess extends AuthState {
-  const AuthSuccess();
+  final String message;
+
+  const AuthSuccess({required this.message});
 }
 
 class AuthFailure extends AuthState {
   final String message;
+
   const AuthFailure({required this.message});
 }

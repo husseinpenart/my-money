@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:money/core/di/injection.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/screens/home_page.dart';
 
-void main() {
-  runApp(const MyApp());
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await configureDependencies();
+
+  runApp(const MoneyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class MoneyApp extends StatefulWidget {
+  
+  const MoneyApp({super.key});
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MoneyApp> createState() => _MoneyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MoneyAppState extends State<MoneyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

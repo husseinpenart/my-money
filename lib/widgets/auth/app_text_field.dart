@@ -13,7 +13,8 @@ class AppTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final AutovalidateMode autovalidateMode;
-
+  final TextDirection? textDirection;
+  final TextAlign? textAlign;
   const AppTextField({
     super.key,
     required this.controller,
@@ -26,6 +27,8 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.textDirection, // 👈 جدید
+    this.textAlign,
   });
 
   @override
@@ -33,7 +36,14 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF4A5164))),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF4A5164),
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -42,6 +52,8 @@ class AppTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           onChanged: onChanged,
           validator: validator,
+          textDirection: textDirection, // 👈
+          textAlign: textAlign ?? TextAlign.right,
           autovalidateMode: autovalidateMode,
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
