@@ -64,7 +64,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
                       borderRadius: BorderRadius.circular(26),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.green2.withOpacity(0.35),
+                          color: AppColors.green2.withValues(alpha: 0.35),
                           blurRadius: 34,
                           offset: const Offset(0, 16),
                         ),

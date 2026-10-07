@@ -26,7 +26,7 @@ class PrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
           boxShadow: enabled
-              ? [BoxShadow(color: gradientColors.last.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))]
+              ? [BoxShadow(color: gradientColors.last.withValues(alpha: 0.35), blurRadius: 20, offset: const Offset(0, 8))]
               : null,
         ),
         child: Material(

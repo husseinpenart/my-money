@@ -401,7 +401,7 @@ class _RecordPaymentState extends State<RecordPayment> {
           ),
           Switch(
             value: _fullSettlement,
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: RP.switchOnTrack,
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: RP.switchOffTrack,

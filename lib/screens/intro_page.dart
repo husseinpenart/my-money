@@ -96,7 +96,7 @@ class _IntroPageState extends State<IntroPage> {
                     );
                   },
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.15),
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,

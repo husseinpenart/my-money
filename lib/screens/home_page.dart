@@ -5,6 +5,7 @@ import 'package:money/screens/auth/login_screen.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -55,14 +56,13 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.school),
             label: BottomNavigations.contacts,
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.settings),
-          //   label: BottomNavigations.setting,
-          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: BottomNavigations.setting,
+          ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation
-          .startFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const CustomExpandableFab(),
     );
   }
