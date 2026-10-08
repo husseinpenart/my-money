@@ -1,5 +1,3 @@
-// lib/core/utils/number_helper.dart
-
 class NumberHelper {
   NumberHelper._();
 
@@ -26,6 +24,7 @@ class NumberHelper {
     '٩': '9',
   };
 
+  // بررسی کنید این متد دقیقاً با همین نام وجود داشته باشد:
   static String toEnglishDigits(String value) {
     if (value.isEmpty) return value;
     return value.split('').map((char) => _digitMap[char] ?? char).join();

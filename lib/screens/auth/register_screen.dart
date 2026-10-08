@@ -7,7 +7,7 @@ import 'package:money/data/policy_content.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_state.dart';
-import 'package:money/helper/utils/number_helper.dart';
+import 'package:money/helper/utils/string_utils.dart';
 import 'package:money/theme/app_colors.dart';
 
 import 'package:money/widgets/auth/agree_checkbox_row.dart';
@@ -68,7 +68,7 @@ class _RegisterViewState extends State<_RegisterView> {
   // 👈 این متد بررسی می‌کند کدام خطاها توسط کاربر برطرف شده‌اند تا آن‌ها را پاک کند
   List<String> get _activeErrors {
     final name = _nameController.text.trim();
-    final phone = NumberHelper.toPersianDigits(_phoneController.text.trim());
+    final phone = NumberHelper.toEnglishDigits(_phoneController.text.trim());
     final pass = _passwordController.text;
     final confirm = _confirmController.text;
 
@@ -104,7 +104,7 @@ class _RegisterViewState extends State<_RegisterView> {
     context.read<AuthBloc>().add(
       RegisterSubmitted(
         name: _nameController.text.trim(),
-        phoneNumber: NumberHelper.toPersianDigits(_phoneController.text.trim()),
+        phoneNumber: NumberHelper.toEnglishDigits(_phoneController.text.trim()),
         password: _passwordController.text,
         confirmedPassword: _confirmController.text,
         agreedToTerms: _agreed,
@@ -286,7 +286,9 @@ class _RegisterViewState extends State<_RegisterView> {
                               const SizedBox(height: 18),
 
                               PrimaryButton(
-                                label: 'ایجاد حساب کاربری',
+                                label: isLoading
+                                    ? 'در حال ساخت حساب کاربری...'
+                                    : 'ایجاد حساب کاربری',
                                 gradientColors: AppColors.purpleGradient,
                                 loading: isLoading,
                                 onPressed: _submit,

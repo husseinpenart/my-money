@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/dictionary/titles.dart';
 
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_state.dart';
-import 'package:money/helper/utils/number_helper.dart';
+import 'package:money/helper/utils/string_utils.dart';
+import 'package:money/screens/home_page.dart';
 import 'package:money/theme/app_colors.dart';
 import 'package:money/widgets/auth/app_password_field.dart';
 import 'package:money/widgets/auth/app_text_field.dart';
@@ -19,7 +21,6 @@ import 'package:money/widgets/auth/switch_link.dart';
 import 'package:money/widgets/auth/trust_badge_row.dart';
 
 import 'register_screen.dart';
-import 'success_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -56,12 +57,13 @@ class _LoginViewState extends State<_LoginView> {
 
   // بررسی لحظه‌ای خطاها برای حذف موارد برطرف‌شده
   List<String> get _activeErrors {
-    final phone = NumberHelper.toPersianDigits(_phoneController.text.trim());
-    final pass = _passwordController.text.trim();
+    final phone = _phoneController.text.trim();
+    final pass = _passwordController.text;
 
     return _serverErrors.where((err) {
-      if (err.contains('الزامی') && phone.isNotEmpty && pass.isNotEmpty)
+      if (err.contains('الزامی') && phone.isNotEmpty && pass.isNotEmpty) {
         return false;
+      }
       if (err.contains('تماس') && phone.isNotEmpty) return false;
       if (err.contains('11 رقم') && phone.length == 11) return false;
       if (err.contains('09') && phone.startsWith('09')) return false;
@@ -80,10 +82,10 @@ class _LoginViewState extends State<_LoginView> {
 
   void _submit() {
     final phone = _phoneController.text.trim();
-    final password = _passwordController.text.trim();
+    final password = _passwordController.text;
 
-    // تبدیل شماره به ارقام انگلیسی برای ارسال به سرور
-    final normalizedPhone = NumberHelper.toPersianDigits(phone);
+    // تبدیل شماره به ارقام انگلیسی استاندارد برای ارسال به سرور ASP.NET
+    final normalizedPhone = NumberHelper.toEnglishDigits(phone);
 
     if (normalizedPhone.isEmpty || password.isEmpty) {
       setState(() {
@@ -96,7 +98,7 @@ class _LoginViewState extends State<_LoginView> {
       _serverErrors = [];
     });
 
-    // ارسال ایونت به بلاک
+    // ارسال ایونت ورود
     context.read<AuthBloc>().add(
       LoginSubmitted(phoneNumber: normalizedPhone, password: password),
     );
@@ -119,6 +121,20 @@ class _LoginViewState extends State<_LoginView> {
     if (state is AuthSuccess) {
       setState(() => _serverErrors = []);
 
+      // ۱. متن پیام برگشتی از سمت سرور
+      final successMsg = state.message.isNotEmpty
+          ? state.message
+          : 'ورود با موفقیت انجام شد';
+
+      // ۲. انتقال به صفحه اصلی و پاک کردن تمام صفحات قبلی از پشته (Stack)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const MyHomePage(title: Titles.mainTitle),
+        ),
+        (route) => false,
+      );
+
+      // ۳. نمایش پیام سرور روی صفحه اصلی
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -126,25 +142,22 @@ class _LoginViewState extends State<_LoginView> {
             content: Directionality(
               textDirection: TextDirection.rtl,
               child: Text(
-                state.message.trim().isEmpty
-                    ? 'عملیات با موفقیت انجام شد.'
-                    : state.message.trim(),
+                successMsg,
+                style: const TextStyle(
+                  fontFamily: 'Vazir',
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
               ),
             ),
             backgroundColor: Colors.green.shade700,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const SuccessScreen(
-            title: 'ورود موفق!',
-            subtitle: 'خوش برگشتید\nدر حال ورود به برنامه...',
-          ),
-        ),
-      );
     }
   }
 
@@ -229,10 +242,12 @@ class _LoginViewState extends State<_LoginView> {
                               const SizedBox(height: 2),
 
                               PrimaryButton(
-                                label: 'ورود به حساب',
+                                label: isLoading
+                                    ? 'در حال ورود...'
+                                    : 'ورود به حساب',
                                 gradientColors: AppColors.blueGradient,
                                 loading: isLoading,
-                                onPressed: isLoading ? null : _submit,
+                                onPressed: _submit,
                               ),
 
                               if (activeErrors.isNotEmpty) ...[
