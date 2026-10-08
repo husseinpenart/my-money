@@ -23,7 +23,6 @@ class AuthRemoteDataSource {
         'confirmedPassword': confirmedPassword,
       },
     );
-print('>>> register payload: ${response.data}');
     return response.data;
   }
 

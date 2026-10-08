@@ -1,9 +1,11 @@
 // lib/core/di/injection.dart (یا هر فایلی که داری)
 import 'package:get_it/get_it.dart';
+import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
+import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/token_storage.dart';
-import 'package:money/feature/auth/data/dataResource/auth_remote_data_source.dart';
+import 'package:money/feature/data/dataResource/auth_remote_data_source.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -32,5 +34,13 @@ Future<void> configureDependencies() async {
       remoteDataSource: getIt<AuthRemoteDataSource>(),
       tokenStorage: getIt<TokenStorage>(),
     ),
+  );
+
+  getIt.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSource(getIt<ApiClient>()),
+  );
+
+  getIt.registerFactory<SearchBloc>(
+    () => SearchBloc(remoteDataSource: getIt<SearchRemoteDataSource>()),
   );
 }

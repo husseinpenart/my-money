@@ -2,7 +2,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/core/storage/token_storage.dart';
-import 'package:money/feature/auth/data/dataResource/auth_remote_data_source.dart';
+import 'package:money/feature/data/dataResource/auth_remote_data_source.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_state.dart';
 
@@ -41,6 +41,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
         return;
       }
+
+      // در صورت ثبت‌نام موفق، نام کاربر نیز ذخیره می‌شود
+      await tokenStorage.saveName(event.name);
 
       emit(
         AuthSuccess(
@@ -81,6 +84,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final String? token = _readToken(response);
       if (token != null && token.isNotEmpty) {
         await tokenStorage.saveToken(token);
+      }
+
+      // ۳. خواندن و ذخیره نام کاربر
+      final String? name = _readName(response);
+      if (name != null && name.isNotEmpty) {
+        await tokenStorage.saveName(name);
       }
 
       emit(
@@ -133,6 +142,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final d = response['data'];
       if (d is Map<String, dynamic>) {
         for (final k in ['token', 'accessToken', 'access_token', 'jwt']) {
+          final v = d[k];
+          if (v is String && v.trim().isNotEmpty) return v.trim();
+        }
+      }
+    }
+    return null;
+  }
+
+  // خواندن نام کاربر از پاسخ سرور
+  String? _readName(dynamic response) {
+    if (response is Map<String, dynamic>) {
+      for (final k in ['name', 'userName', 'username', 'fullName']) {
+        final v = response[k];
+        if (v is String && v.trim().isNotEmpty) return v.trim();
+      }
+      final d = response['data'];
+      if (d is Map<String, dynamic>) {
+        for (final k in ['name', 'userName', 'username', 'fullName']) {
           final v = d[k];
           if (v is String && v.trim().isNotEmpty) return v.trim();
         }
