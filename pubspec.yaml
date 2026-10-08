@@ -46,6 +46,9 @@ dependencies:
   equatable: ^2.1.0
   shared_preferences: ^2.5.5
   bloc_concurrency: ^0.3.0
+  flutter_contacts: ^2.1.0
+  
+
 
 dev_dependencies:
   flutter_test:

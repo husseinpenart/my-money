@@ -5,6 +5,8 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         >
+        <uses-permission android:name="android.permission.READ_CONTACTS" />  
+        <uses-permission android:name="android.permission.WRITE_CONTACTS" />  
         <activity
             android:name=".MainActivity"
             android:exported="true"

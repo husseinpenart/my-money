@@ -1,6 +1,8 @@
 // lib/core/di/injection.dart (یا هر فایلی که داری)
 import 'package:get_it/get_it.dart';
+import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
+import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/network/api_client.dart';
@@ -43,4 +45,12 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<SearchBloc>(
     () => SearchBloc(remoteDataSource: getIt<SearchRemoteDataSource>()),
   );
+
+  getIt.registerLazySingleton<ContactRemoteDataSource>(
+  () => ContactRemoteDataSource(getIt<ApiClient>()),
+);
+
+getIt.registerFactory<ContactBloc>(
+  () => ContactBloc(remoteDataSource: getIt<ContactRemoteDataSource>()),
+);
 }
