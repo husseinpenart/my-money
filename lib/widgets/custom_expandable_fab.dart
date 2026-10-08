@@ -15,8 +15,6 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
   late Animation<double> _translateButton;
   bool _isOpen = false;
   final double _fabHeight = 32.0;
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
 
   @override
   void initState() {
@@ -45,8 +43,6 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
   void dispose() {
     _animationController.dispose();
     super.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
   }
 
   void _toggleMenu() {
@@ -58,7 +54,6 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
     _isOpen = !_isOpen;
   }
 
-  // متد ساخت ردیف‌های منو
   Widget _buildMenuItem({
     required Color buttonColor,
     required IconData icon,
@@ -151,32 +146,16 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
       children: [
         _buildMenuItem(
           buttonColor: const Color(0xFF2563EB),
-          
           icon: Icons.south_west,
           label: 'ثبت طلب',
           index: 1,
           onTap: () {
+            _toggleMenu();
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                enableDrag: true,
-                showDragHandle: true,
-                constraints: BoxConstraints(maxHeight: 800, maxWidth: 500),
-                builder: (BuildContext sheetContext) {
-                  return ConfirmDemandLayout(
-                    startDateController: _startDateController,
-                    endDateController: _endDateController,
-                    hasDebt: false,
-                  );
-                },
-              );
-              _toggleMenu();
+              showDebtFormSheet(context, hasDebt: false);
             });
           },
         ),
-        // دکمه دوم (ثبت بدهی)
         _buildMenuItem(
           buttonColor: const Color(0xFFE53E3E),
           icon: Icons.north_east,
@@ -185,34 +164,18 @@ class _CustomExpandableFabState extends State<CustomExpandableFab>
           onTap: () {
             _toggleMenu();
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                enableDrag: true,
-                showDragHandle: true,
-                constraints: BoxConstraints(maxHeight: 800, maxWidth: 500),
-                builder: (BuildContext sheetContext) {
-                  return ConfirmDemandLayout(
-                    startDateController: _startDateController,
-                    endDateController: _endDateController,
-                    hasDebt: true,
-                  );
-                },
-              );
-              _toggleMenu();
+              showDebtFormSheet(context, hasDebt: true);
             });
           },
         ),
-        
-        // دکمه اصلی پایین
+
         GestureDetector(
           onTap: _toggleMenu,
           child: Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
                   Color.fromRGBO(24, 84, 235, 1),
                   Color.fromRGBO(63, 121, 230, 1),

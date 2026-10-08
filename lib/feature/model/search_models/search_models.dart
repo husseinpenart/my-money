@@ -37,6 +37,7 @@ class SearchDebt {
   final String? description;
   final bool payStatus;
   final bool isStarred;
+final List<String> covers;
 
   const SearchDebt({
     required this.payId,
@@ -50,6 +51,7 @@ class SearchDebt {
     required this.description,
     required this.payStatus,
     required this.isStarred,
+    required this.covers,
   });
 
   bool get isDebt => recordType.toLowerCase() == 'debt';
@@ -66,6 +68,7 @@ class SearchDebt {
     description: j['description']?.toString(),
     payStatus: j['payStatus'] == true,
     isStarred: j['isStarred'] == true,
+    covers: ((j['covers'] as List?) ?? []).map((e) => e.toString()).toList(),
   );
 }
 

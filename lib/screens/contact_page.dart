@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -6,10 +5,9 @@ import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_event.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_state.dart';
-import 'package:money/feature/model/contact/contact_model.dart';
 import 'package:money/helper/list/contact_counter.dart';
-import 'package:money/widgets/contact/contact_card.dart';
 import 'package:money/widgets/contact/contact_form_sheet.dart';
+import 'package:money/widgets/contact/contact_list_view.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 
 class ContactPage extends StatelessWidget {
@@ -24,72 +22,8 @@ class ContactPage extends StatelessWidget {
   }
 }
 
-class _ContactView extends StatefulWidget {
+class _ContactView extends StatelessWidget {
   const _ContactView();
-
-  @override
-  State<_ContactView> createState() => _ContactViewState();
-}
-
-class _ContactViewState extends State<_ContactView> {
-  final ScrollController _scroll = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scroll.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (_scroll.hasClients &&
-        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) {
-      context.read<ContactBloc>().add(const ContactsLoadMore());
-    }
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  Future<void> _refresh() {
-    final done = Completer<void>();
-    context.read<ContactBloc>().add(ContactsFetched(done: done));
-    return done.future;
-  }
-
-  Future<void> _confirmDelete(ContactModel c) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          'حذف مخاطب',
-          style: sans(size: 15, weight: FontWeight.bold),
-        ),
-        content: Text(
-          'آیا از حذف «${c.name}» مطمئن هستی؟',
-          style: sans(size: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('انصراف', style: sans(size: 13)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'حذف',
-              style: sans(size: 13, color: Colors.red.shade400),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok == true && mounted) {
-      context.read<ContactBloc>().add(ContactDeleted(c.contactId));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,84 +87,8 @@ class _ContactViewState extends State<_ContactView> {
             ),
             const SizedBox(height: 20),
 
-            // ───── لیست ─────
-            Expanded(
-              child: BlocBuilder<ContactBloc, ContactState>(
-                buildWhen: (p, c) =>
-                    p.status != c.status ||
-                    p.items != c.items ||
-                    p.isLoadingMore != c.isLoadingMore ||
-                    p.error != c.error,
-                builder: (context, state) {
-                  if (state.status == ContactsStatus.initial ||
-                      (state.status == ContactsStatus.loading &&
-                          state.items.isEmpty)) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: kAccent),
-                    );
-                  }
-
-                  if (state.status == ContactsStatus.failure &&
-                      state.items.isEmpty) {
-                    return _Message(
-                      icon: Icons.error_outline,
-                      text: state.error ?? 'خطا در دریافت مخاطبین',
-                      actionLabel: 'تلاش دوباره',
-                      onAction: () => context.read<ContactBloc>().add(
-                        const ContactsFetched(),
-                      ),
-                    );
-                  }
-
-                  if (state.items.isEmpty) {
-                    return _Message(
-                      icon: Icons.contacts_outlined,
-                      text: 'هنوز مخاطبی ثبت نکرده‌ای',
-                      actionLabel: 'افزودن مخاطب',
-                      onAction: () => showContactFormSheet(context),
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    color: kAccent,
-                    onRefresh: _refresh,
-                    child: ListView.separated(
-                      controller: _scroll,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(2, 2, 2, 24),
-                      itemCount:
-                          state.items.length + (state.isLoadingMore ? 1 : 0),
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
-                      itemBuilder: (context, i) {
-                        if (i >= state.items.length) {
-                          return const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Center(
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: kAccent,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        final c = state.items[i];
-                        return ContactCard(
-                          key: ValueKey(c.contactId),
-                          contact: c,
-                          onEdit: () =>
-                              showContactFormSheet(context, contact: c),
-                          onDelete: () => _confirmDelete(c),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+            // ───── لیست + سرچ + فیلتر + جزئیات ─────
+            const Expanded(child: ContactListView()),
           ],
         ),
       ),
@@ -245,7 +103,6 @@ class _Counters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // شمارش «طلبکار/بدهکار» روی مخاطبین لودشده است
     final demanders = state.items.where((c) => c.hasUnpaidReceivable).length;
     final debtors = state.items.where((c) => c.hasUnpaidDebt).length;
 
@@ -310,45 +167,6 @@ class _Counters extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _Message({
-    required this.icon,
-    required this.text,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 44, color: Colors.grey.shade400),
-          const SizedBox(height: 10),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: sans(size: 13, color: Colors.grey.shade600),
-          ),
-          if (actionLabel != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onAction,
-              child: Text(actionLabel!, style: sans(size: 12)),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

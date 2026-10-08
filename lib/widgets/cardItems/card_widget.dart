@@ -10,16 +10,6 @@ class CardWidget extends StatefulWidget {
 }
 
 class _CardWidgetState extends State<CardWidget> {
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -44,15 +34,15 @@ class _CardWidgetState extends State<CardWidget> {
                     color: const Color.fromRGBO(254, 243, 199, 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.hourglass_bottom,
                         size: 12,
                         color: Color.fromRGBO(176, 123, 77, 1),
                       ),
-                      const SizedBox(width: 5),
-                      const Text(
+                      SizedBox(width: 5),
+                      Text(
                         'پرداخت جزئی',
                         style: TextStyle(
                           fontFamily: 'sans',
@@ -107,9 +97,9 @@ class _CardWidgetState extends State<CardWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         children: [
-                          const Text(
+                          Text(
                             'علی رضایی',
                             style: TextStyle(
                               fontFamily: 'sans',
@@ -117,8 +107,8 @@ class _CardWidgetState extends State<CardWidget> {
                               fontSize: 16,
                             ),
                           ),
-                          const SizedBox(width: 5),
-                          const Icon(
+                          SizedBox(width: 5),
+                          Icon(
                             Icons.star_rounded,
                             size: 16,
                             color: Colors.amber,
@@ -135,16 +125,16 @@ class _CardWidgetState extends State<CardWidget> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
+                      const Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_sharp,
                             size: 12,
                             color: Colors.grey,
                           ),
-                          const SizedBox(width: 5),
-                          const Text(
-                            'سررسید: ۱۴۰۳/۰۴/۰۱',
+                          SizedBox(width: 5),
+                          Text(
+                            'سررسید: ۱۴۳/۰۴/۰۱',
                             style: TextStyle(
                               fontFamily: 'sans',
                               fontSize: 12,
@@ -159,8 +149,9 @@ class _CardWidgetState extends State<CardWidget> {
               ],
             ),
           ),
+
           Padding(
-            padding: EdgeInsetsGeometry.all(12),
+            padding: const EdgeInsets.all(12), // 👈 EdgeInsetsGeometry.all نبود
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -170,18 +161,22 @@ class _CardWidgetState extends State<CardWidget> {
                   children: [
                     Text(
                       ScreenDictionary.wholePrice,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'sans',
                         fontSize: 12,
                         color: Colors.blueGrey,
                       ),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Icon(Icons.trending_up, size: 14, color: Colors.teal),
-                        Text(
+                        const Icon(
+                          Icons.trending_up,
+                          size: 14,
+                          color: Colors.teal,
+                        ),
+                        const Text(
                           '۴,۵۰۰,۰۰۰ ت',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -189,25 +184,24 @@ class _CardWidgetState extends State<CardWidget> {
                             color: Colors.teal,
                           ),
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                       ],
                     ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
-
                   children: [
                     Text(
                       ScreenDictionary.reminded,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'sans',
                         fontSize: 12,
                         color: Colors.blueGrey,
                       ),
                     ),
-                    SizedBox(height: 5),
-                    Row(
+                    const SizedBox(height: 5),
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text(
@@ -226,29 +220,30 @@ class _CardWidgetState extends State<CardWidget> {
               ],
             ),
           ),
+
           Container(
-            padding: EdgeInsets.all(15),
+            padding: const EdgeInsets.all(15),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       ButtonsDictionary.paymentProgress,
                       style: TextStyle(fontFamily: 'sans', fontSize: 13),
                     ),
-                    Text(
+                    const Text(
                       '44%',
                       style: TextStyle(fontFamily: 'sans', fontSize: 13),
                     ),
                   ],
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 LinearProgressIndicator(
-                  backgroundColor: Color.fromRGBO(232, 236, 244, 1),
-                  color: Color.fromRGBO(232, 236, 244, 1),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    const Color.fromRGBO(249, 186, 46, 1),
+                  backgroundColor: const Color.fromRGBO(232, 236, 244, 1),
+                  color: const Color.fromRGBO(232, 236, 244, 1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color.fromRGBO(249, 186, 46, 1),
                   ),
                   borderRadius: BorderRadius.circular(100),
                   value: 0.44,
@@ -258,30 +253,31 @@ class _CardWidgetState extends State<CardWidget> {
               ],
             ),
           ),
+
           Center(
             child: SizedBox(
               height: 1,
-              // width: 300,
-              child: Divider(
+              child: const Divider(
                 height: 1,
-                color: const Color.fromARGB(255, 177, 174, 174),
+                color: Color.fromARGB(255, 177, 174, 174),
                 thickness: 1,
                 endIndent: 1,
               ),
             ),
           ),
+
           Container(
-            padding: EdgeInsets.all(1),
+            padding: const EdgeInsets.all(1),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Center(
+                const Center(
                   child: SizedBox(
                     height: 1,
                     child: VerticalDivider(
                       width: 1,
-                      color: const Color.fromARGB(255, 177, 174, 174),
+                      color: Color.fromARGB(255, 177, 174, 174),
                       thickness: 1,
                       endIndent: 1,
                     ),
@@ -289,7 +285,7 @@ class _CardWidgetState extends State<CardWidget> {
                 ),
                 TextButton(
                   onPressed: null,
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(Icons.star_rounded, color: Colors.amber, size: 20),
                       SizedBox(width: 5),
@@ -306,25 +302,15 @@ class _CardWidgetState extends State<CardWidget> {
                 ),
                 TextButton(
                   onPressed: () {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      showModalBottomSheet(
-                        context: context,
-                        builder: (BuildContext sheetContext) {
-                          return ConfirmDemandLayout(
-                            startDateController: _startDateController,
-                            endDateController: _endDateController,
-                            hasDebt: true,
-                            editTitle: true,
-                          );
-                        },
-                      );
-                    });
+                    // 👈 به‌جای ConfirmDemandLayout مستقیم، از showDebtFormSheet
+                    //    استفاده می‌کنیم تا BlocProvider هم داشته باشد.
+                    showDebtFormSheet(context, hasDebt: true, editTitle: true);
                   },
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(
                         Icons.create_outlined,
-                        color: const Color.fromRGBO(153, 198, 243, 1),
+                        color: Color.fromRGBO(153, 198, 243, 1),
                         size: 20,
                       ),
                       SizedBox(width: 5),
@@ -341,14 +327,13 @@ class _CardWidgetState extends State<CardWidget> {
                 ),
                 TextButton(
                   onPressed: null,
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(
                         Icons.delete_outline_rounded,
                         color: Colors.red,
                         size: 20,
                       ),
-
                       SizedBox(width: 5),
                       Text(
                         ButtonsDictionary.deleteItem,
