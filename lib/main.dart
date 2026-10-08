@@ -7,9 +7,9 @@ import 'package:money/screens/home_page.dart';
 
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await configureDependencies();
+  WidgetsFlutterBinding.ensureInitialized(); // 👈 این خط برای وب حیاتی است!
+  
+  await configureDependencies(); 
 
   runApp(const MoneyApp());
 }

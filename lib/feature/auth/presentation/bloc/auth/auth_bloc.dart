@@ -20,8 +20,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     RegisterSubmitted event,
     Emitter<AuthState> emit,
   ) async {
-    // ❌ چک agreedToTerms و password!=confirm اینجا حذف شد
-    //    تا اعتبارسنجی کامل به سرور سپرده شود.
     emit(const AuthLoading());
 
     try {
@@ -29,7 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         name: event.name,
         phoneNumber: event.phoneNumber,
         password: event.password,
-        confirmPassword: event.confirmPassword,
+        confirmedPassword: event.confirmedPassword,
       );
 
       if (_isFailedResponse(response)) {
@@ -69,6 +67,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
 
+      // ۱. بررسی خطای سرور
       if (_isFailedResponse(response)) {
         emit(
           AuthFailure(
@@ -78,6 +77,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
 
+      // ۲. خواندن و ذخیره امن توکن
       final String? token = _readToken(response);
       if (token != null && token.isNotEmpty) {
         await tokenStorage.saveToken(token);

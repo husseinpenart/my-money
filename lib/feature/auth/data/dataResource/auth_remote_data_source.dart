@@ -11,7 +11,7 @@ class AuthRemoteDataSource {
     required String name,
     required String phoneNumber,
     required String password,
-    required String confirmPassword,
+    required String confirmedPassword,
   }) async {
     final Response<dynamic> response = await apiClient.post<dynamic>(
       '/AuthControllers/register',
@@ -20,14 +20,10 @@ class AuthRemoteDataSource {
         'name': name,
         'phoneNumber': phoneNumber,
         'password': password,
-
-        // 👇 چون DTO بک‌اند typo دارد (ConfirmedPaassword با دو s).
-        //    اگر بک‌اند را به ConfirmedPassword اصلاح کردی، این خط را
-        //    به 'confirmPassword': confirmPassword برگردان.
-        'confirmedPaassword': confirmPassword,
+        'confirmedPassword': confirmedPassword,
       },
     );
-
+print('>>> register payload: ${response.data}');
     return response.data;
   }
 

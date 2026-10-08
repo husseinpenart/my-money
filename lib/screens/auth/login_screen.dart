@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_state.dart';
+import 'package:money/helper/utils/number_helper.dart';
 import 'package:money/theme/app_colors.dart';
 import 'package:money/widgets/auth/app_password_field.dart';
 import 'package:money/widgets/auth/app_text_field.dart';
@@ -44,11 +45,30 @@ class _LoginViewState extends State<_LoginView> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  List<String> _serverErrors = [];
+
   @override
   void dispose() {
     _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // بررسی لحظه‌ای خطاها برای حذف موارد برطرف‌شده
+  List<String> get _activeErrors {
+    final phone = NumberHelper.toPersianDigits(_phoneController.text.trim());
+    final pass = _passwordController.text.trim();
+
+    return _serverErrors.where((err) {
+      if (err.contains('الزامی') && phone.isNotEmpty && pass.isNotEmpty)
+        return false;
+      if (err.contains('تماس') && phone.isNotEmpty) return false;
+      if (err.contains('11 رقم') && phone.length == 11) return false;
+      if (err.contains('09') && phone.startsWith('09')) return false;
+      if (err.contains('عبور') && pass.isNotEmpty) return false;
+      if (err.contains('8 کاراکتر') && pass.length >= 8) return false;
+      return true;
+    }).toList();
   }
 
   void _goToRegister() {
@@ -59,50 +79,64 @@ class _LoginViewState extends State<_LoginView> {
   }
 
   void _submit() {
-    // بدون validator، validate() همیشه true است → درخواست حتماً به سرور می‌رود.
-    _formKey.currentState?.validate();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
 
+    // تبدیل شماره به ارقام انگلیسی برای ارسال به سرور
+    final normalizedPhone = NumberHelper.toPersianDigits(phone);
+
+    if (normalizedPhone.isEmpty || password.isEmpty) {
+      setState(() {
+        _serverErrors = ['پر کردن تمامی فیلد ها الزامی است'];
+      });
+      return;
+    }
+
+    setState(() {
+      _serverErrors = [];
+    });
+
+    // ارسال ایونت به بلاک
     context.read<AuthBloc>().add(
-      LoginSubmitted(
-        phoneNumber: _phoneController.text.trim(),
-        password: _passwordController.text,
-      ),
+      LoginSubmitted(phoneNumber: normalizedPhone, password: password),
     );
-  }
-
-  void _showMessage({required String message, required bool isError}) {
-    if (!mounted) return;
-    final String text = message.trim().isEmpty
-        ? (isError ? 'خطایی رخ داد.' : 'عملیات با موفقیت انجام شد.')
-        : message.trim();
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Text(text),
-          ),
-          backgroundColor: isError
-              ? Colors.red.shade700
-              : Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: isError ? 5 : 3),
-        ),
-      );
   }
 
   void _onAuthStateChanged(BuildContext context, AuthState state) {
     if (!mounted) return;
 
     if (state is AuthFailure) {
-      _showMessage(message: state.message, isError: true);
+      setState(() {
+        _serverErrors = state.message
+            .split('\n')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      });
       return;
     }
 
     if (state is AuthSuccess) {
-      _showMessage(message: state.message, isError: false);
+      setState(() => _serverErrors = []);
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Text(
+                state.message.trim().isEmpty
+                    ? 'عملیات با موفقیت انجام شد.'
+                    : state.message.trim(),
+              ),
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => const SuccessScreen(
@@ -120,6 +154,7 @@ class _LoginViewState extends State<_LoginView> {
       listener: _onAuthStateChanged,
       builder: (context, state) {
         final bool isLoading = state is AuthLoading;
+        final activeErrors = _activeErrors;
 
         return Scaffold(
           body: SafeArea(
@@ -158,16 +193,16 @@ class _LoginViewState extends State<_LoginView> {
                               AppTextField(
                                 controller: _phoneController,
                                 label: 'شماره موبایل',
-                                hint: '0912 000 0000', // لاتین
+                                hint: '0912 000 0000',
                                 icon: Icons.phone_outlined,
                                 keyboardType: TextInputType.phone,
                                 maxLength: 11,
-                                textDirection:
-                                    TextDirection.ltr, // 👈 رفع برعکس
+                                textDirection: TextDirection.ltr,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: null, // 👈 خطا از سرور
+                                validator: null,
+                                onChanged: (_) => setState(() {}),
                               ),
 
                               const SizedBox(height: 16),
@@ -176,7 +211,8 @@ class _LoginViewState extends State<_LoginView> {
                                 controller: _passwordController,
                                 label: 'رمز عبور',
                                 hint: 'رمز عبور خود را وارد کنید',
-                                validator: null, // 👈 خطا از سرور
+                                validator: null,
+                                onChanged: (_) => setState(() {}),
                               ),
 
                               Align(
@@ -198,6 +234,54 @@ class _LoginViewState extends State<_LoginView> {
                                 loading: isLoading,
                                 onPressed: isLoading ? null : _submit,
                               ),
+
+                              if (activeErrors.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.red.shade200,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: activeErrors.map((err) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 3,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline_rounded,
+                                              color: Colors.red.shade700,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                err,
+                                                style: TextStyle(
+                                                  color: Colors.red.shade800,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+
+                              const SizedBox(height: 16),
 
                               const TrustBadgeRow(),
                             ],

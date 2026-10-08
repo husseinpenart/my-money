@@ -1,4 +1,6 @@
+// lib/core/di/injection.dart (یا هر فایلی که داری)
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/feature/auth/data/dataResource/auth_remote_data_source.dart';
@@ -7,17 +9,20 @@ import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 final GetIt getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
-  /// Token Storage
-  getIt.registerLazySingleton<TokenStorage>(() => TokenStorage());
+  // ۱. اول خود SharedPreferences را مقداردهی می‌کنیم
+  final sharedPreferences = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(sharedPreferences);
 
-  await getIt<TokenStorage>().init();
+  // ۲. توکن استوریج با نمونه‌ی آماده ساخته می‌شود
+  getIt.registerSingleton<TokenStorage>(
+    TokenStorage(getIt<SharedPreferences>()),
+  );
 
-  /// Api Client
+  // ۳. بقیه سرویس‌ها
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(getIt<TokenStorage>()),
   );
 
-  /// Auth Remote Data Source
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSource(getIt<ApiClient>()),
   );

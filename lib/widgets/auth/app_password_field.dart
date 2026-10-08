@@ -8,6 +8,7 @@ class AppPasswordField extends StatefulWidget {
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final AutovalidateMode autovalidateMode;
+  final String? errorText; // 👈 ۱. متغیر خطا
 
   const AppPasswordField({
     super.key,
@@ -17,6 +18,7 @@ class AppPasswordField extends StatefulWidget {
     this.validator,
     this.onChanged,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.errorText, // 👈 ۲. اضافه شدن به سازنده
   });
 
   @override
@@ -31,7 +33,14 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF4A5164))),
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF4A5164),
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: widget.controller,
@@ -42,11 +51,18 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: widget.hint,
-            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF9AA1B3)),
+            errorText: widget.errorText, // 👈 ۳. نمایش متن خطا زیر فیلد
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              size: 18,
+              color: Color(0xFF9AA1B3),
+            ),
             suffixIcon: IconButton(
               splashRadius: 18,
               icon: Icon(
-                _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                _obscure
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
                 size: 18,
                 color: const Color(0xFF9AA1B3),
               ),

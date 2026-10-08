@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final String hint;
+  final String? hint;
   final IconData icon;
   final TextInputType keyboardType;
   final int? maxLength;
@@ -15,11 +15,13 @@ class AppTextField extends StatelessWidget {
   final AutovalidateMode autovalidateMode;
   final TextDirection? textDirection;
   final TextAlign? textAlign;
+  final String? errorText; // 👈 ۱. اضافه شدن فیلد خطا
+
   const AppTextField({
     super.key,
     required this.controller,
     required this.label,
-    required this.hint,
+    this.hint,
     required this.icon,
     this.keyboardType = TextInputType.text,
     this.maxLength,
@@ -27,8 +29,9 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
-    this.textDirection, // 👈 جدید
+    this.textDirection,
     this.textAlign,
+    this.errorText, // 👈 ۲. اضافه شدن به سازنده
   });
 
   @override
@@ -52,12 +55,13 @@ class AppTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           onChanged: onChanged,
           validator: validator,
-          textDirection: textDirection, // 👈
+          textDirection: textDirection,
           textAlign: textAlign ?? TextAlign.right,
           autovalidateMode: autovalidateMode,
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
+            errorText: errorText, // 👈 ۳. پاس دادن خطا به InputDecoration
             prefixIcon: Icon(icon, size: 18, color: const Color(0xFF9AA1B3)),
           ),
         ),
