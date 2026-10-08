@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/layouts/HomeLayouts.dart';
-import 'package:money/screens/auth/login_screen.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
@@ -17,14 +16,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+
+  // 👈 لاگین اسکرین را از اینجا حذف کردیم (تعداد ویجت‌ها و آیکون‌ها باید برابر باشد)
   final List<Widget> _pages = const [
-    // IntroPage(),
-    LoginScreen(),
     Homelayouts(),
     ReportPage(),
     ContactPage(),
     Center(child: Text('تنظیمات')),
   ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -37,11 +37,11 @@ class _MyHomePageState extends State<MyHomePage> {
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color.fromRGBO(78, 129, 239, 1),
-        unselectedItemColor: Color.fromRGBO(163, 168, 176, 1),
+        selectedItemColor: const Color.fromRGBO(78, 129, 239, 1),
+        unselectedItemColor: const Color.fromRGBO(163, 168, 176, 1),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedLabelStyle: TextStyle(fontFamily: 'sans', fontSize: 12),
+        selectedLabelStyle: const TextStyle(fontFamily: 'sans', fontSize: 12),
         unselectedLabelStyle: const TextStyle(fontFamily: 'sans', fontSize: 12),
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:money/dictionary/titles.dart';
-import 'package:money/screens/home_page.dart';
+import 'package:money/screens/auth/login_screen.dart'; // 👈 مسیر لاگین شما
+import 'package:money/screens/auth/register_screen.dart'; // 👈 مسیر رجیستر شما
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class IntroPage extends StatefulWidget {
@@ -13,7 +13,6 @@ class IntroPage extends StatefulWidget {
 class _IntroPageState extends State<IntroPage> {
   final PageController _controller = PageController();
   bool _isLastPage = false;
-
   int _currentPage = 0;
 
   final List<List<Color>> _pageGradients = [
@@ -44,12 +43,12 @@ class _IntroPageState extends State<IntroPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AnimatedContainer(
-        duration: const Duration(milliseconds: 500), // سرعت تغییر رنگ بک‌گراند
+        duration: const Duration(milliseconds: 500),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: _pageGradients[_currentPage], // استفاده از رنگ صفحه فعلی
+            colors: _pageGradients[_currentPage],
           ),
         ),
         child: SafeArea(
@@ -59,7 +58,7 @@ class _IntroPageState extends State<IntroPage> {
                 controller: _controller,
                 onPageChanged: (index) {
                   setState(() {
-                    _currentPage = index; // تغییر ایندکس رنگ با تغییر صفحه
+                    _currentPage = index;
                     _isLastPage = (index == 2);
                   });
                 },
@@ -84,37 +83,42 @@ class _IntroPageState extends State<IntroPage> {
                   ),
                 ],
               ),
-              Positioned(
-                top: 16,
-                left: 16,
-                child: TextButton(
-                  onPressed: () {
-                    _controller.animateToPage(
-                      2,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+              // دکمه رد کردن (اگر صفحه آخر نبودیم نمایش داده می‌شود)
+              if (!_isLastPage)
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: TextButton(
+                    onPressed: () {
+                      // مستقیم کاربر را به صفحه ورود بفرست
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white.withAlpha(40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text(
-                    "رد کردن",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontFamily: 'sans',
+                    child: const Text(
+                      "رد کردن",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontFamily: 'sans',
+                      ),
                     ),
                   ),
                 ),
-              ),
+
               Positioned(
                 bottom: 30,
                 left: 24,
@@ -142,57 +146,121 @@ class _IntroPageState extends State<IntroPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          if (_isLastPage) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const MyHomePage(title: Titles.mainTitle),
+
+                    // 👈 اینجا تغییر کرد! اگر صفحه آخر بودیم ۲ دکمه نشون بده، اگر نه همون دکمه بعدی
+                    if (_isLastPage)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor:
+                                    _pageGradients[_currentPage].first,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                               ),
-                            );
-                          } else {
+                              child: const Text(
+                                "ورود",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Vazir',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const RegisterScreen(),
+                                  ),
+                                ); // جایگزین با صفحه ثبت نام شما
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                "ثبت‌نام",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Vazir',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: OutlinedButton(
+                          onPressed: () {
                             _controller.nextPage(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
                             );
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isLastPage ? "شروع برنامه" : "بعدی",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Vazir',
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.arrow_forward,
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
                               color: Colors.white,
-                              size: 18,
+                              width: 1.5,
                             ),
-                          ],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "بعدی",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Vazir',
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -217,12 +285,9 @@ class _IntroPageState extends State<IntroPage> {
             width: 140,
             height: 140,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: Colors.white.withAlpha(30),
               borderRadius: BorderRadius.circular(36),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
+              border: Border.all(color: Colors.white.withAlpha(64), width: 1.5),
             ),
             child: Icon(icon, size: 64, color: Colors.white),
           ),
@@ -242,7 +307,7 @@ class _IntroPageState extends State<IntroPage> {
             subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withAlpha(178),
               fontSize: 14,
               height: 1.6,
               fontFamily: 'Vazir',
