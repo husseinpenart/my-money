@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 class FilterButtons extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
   const FilterButtons({
     super.key,
     required this.title,
@@ -12,31 +8,43 @@ class FilterButtons extends StatelessWidget {
     required this.onTap,
   });
 
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color.fromRGBO(37, 99, 235, 10) : Colors.white,
+          // آلفای قبلی (10 در fromRGBO) اشتباه بود؛ اینجا رنگ ثابت و درست
+          color: isSelected ? const Color(0xFF2563EB) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 5,
-              color: Colors.black.withValues(alpha: 0.06),
-              spreadRadius: 5,
-              offset: Offset(0, 5),
-              blurStyle: BlurStyle.normal
-            )
-          ]
+          border: Border.all(
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB),
+          ),
+          // سایه فقط در حالت غیرانتخاب، ملایم و بدون spread اضافه
+          boxShadow: isSelected
+              ? null
+              : [
+                  BoxShadow(
+                    blurRadius: 6,
+                    color: Colors.black.withValues(alpha: 0.05),
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Text(
           title,
           style: TextStyle(
             fontFamily: 'sans',
             fontSize: 12,
-            color: isSelected ? Colors.white : Colors.black,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF374151),
           ),
         ),
       ),

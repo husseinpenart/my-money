@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart'; // 👈 برای PointerDeviceKind
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/bus/debt_change_bus.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/debt/debt_details_sheet.dart';
@@ -8,7 +10,6 @@ import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:money/feature/model/search_models/search_filter.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 import 'package:money/helper/list/mount_money.dart';
-
 import 'package:money/widgets/report/report_format.dart';
 
 class Mostimportant extends StatefulWidget {
@@ -29,7 +30,14 @@ class _MostimportantState extends State<Mostimportant> {
   @override
   void initState() {
     super.initState();
+    DebtChangeBus.instance.addListener(_load);
     _load();
+  }
+
+  @override
+  void dispose() {
+    DebtChangeBus.instance.removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -43,13 +51,12 @@ class _MostimportantState extends State<Mostimportant> {
       while (true) {
         final res = await _ds.search(
           query: '',
-          // 👇 اگر نام عضو enum نوع در search_filter.dart فرق دارد، همین یک خط
           filter: const SearchFilter(type: SearchType.debts),
           pageNumber: page,
           pageSize: 100,
         );
         starred.addAll(res.debts.items.where((d) => d.isStarred));
-        if (!res.debts.hasMore) break; // 👇 اگر نام فیلد PagedResult فرق دارد
+        if (!res.debts.hasMore) break;
         page++;
         if (page > 10) break;
       }
@@ -58,6 +65,10 @@ class _MostimportantState extends State<Mostimportant> {
           int.tryParse(a.wholePrice) ?? 0,
         ),
       );
+
+      // 👈 تشخیص قطعی «آیا اصلاً چیزی برای اسکرول هست؟»
+      debugPrint('>>> carousel starred count = ${starred.length}');
+
       setState(() {
         _raw = starred;
         _items = starred.map(_toCard).toList();
@@ -85,8 +96,7 @@ class _MostimportantState extends State<Mostimportant> {
   }
 
   Future<void> _open(SearchDebt d) async {
-    final changed = await showDebtDetails(context, d);
-    if (changed == true) _load();
+    await showDebtDetails(context, d);
   }
 
   @override
@@ -94,7 +104,7 @@ class _MostimportantState extends State<Mostimportant> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ───── هدر (دیزاین همان قبلی + «مشاهده همه») ─────
+        // ───── هدر (دست‌نخورده) ─────
         Container(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -140,10 +150,10 @@ class _MostimportantState extends State<Mostimportant> {
           ),
         ),
 
-        // ───── کاروسل (ساختار کارت عیناً همان قبلی) ─────
+        // ───── کاروسل ─────
         Container(
           height: 180,
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
@@ -169,18 +179,26 @@ class _MostimportantState extends State<Mostimportant> {
                     ),
                   ),
                 )
-              : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var i = 0; i < _items.length; i++)
-                        GestureDetector(
-                          // 👈 tap = جزئیات + ویرایش
-                          onTap: () => _open(_raw[i]),
-                          child: _card(_items[i]),
-                        ),
-                    ],
+              // 👇 ScrollConfiguration: روی وب ماوس/trackpad هم drag می‌کند
+              : ScrollConfiguration(
+                  behavior: const ScrollBehavior().copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                      PointerDeviceKind.trackpad,
+                      PointerDeviceKind.stylus,
+                    },
+                  ),
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    itemCount: _items.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 15),
+                    itemBuilder: (context, i) => GestureDetector(
+                      onTap: () => _open(_raw[i]),
+                      child: _card(_items[i]),
+                    ),
                   ),
                 ),
         ),
@@ -190,7 +208,7 @@ class _MostimportantState extends State<Mostimportant> {
 
   Widget _card(MountMoney item) {
     return Container(
-      margin: const EdgeInsets.only(left: 15),
+      margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(15),
       width: 200,
       decoration: BoxDecoration(

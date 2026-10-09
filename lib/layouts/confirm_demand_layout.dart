@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/bus/debt_change_bus.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_event.dart';
@@ -252,6 +253,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
               ),
             ),
           );
+           DebtChangeBus.instance.notifyChanged();
           Navigator.of(context).pop(true);
         } else if (state.status == DebtFormStatus.failure) {
           setState(() => _serverError = state.message);

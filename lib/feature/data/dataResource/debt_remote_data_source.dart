@@ -24,6 +24,21 @@ class DebtRemoteDataSource {
     _unwrap(res.data);
   }
 
+  Future<void> delete(String payId) async {
+    final res = await apiClient.delete<dynamic>('$_path/$payId');
+    _unwrap(res.data);
+  }
+
+  /// ستاره‌دار/برداشتن بدون درگیرکردن covers (تا تصاویر قبلی پاک نشوند).
+  /// 👈 سرور با [FromQuery] می‌خواند، پس حتماً queryParameters بفرست، نه data.
+  Future<void> toggleStar(String payId, bool isStarred) async {
+    final res = await apiClient.patch<dynamic>(
+      '$_path/$payId/star',
+      queryParameters: {'isStarred': isStarred}, // 👈 به‌جای data:
+    );
+    _unwrap(res.data);
+  }
+
   FormData _buildForm(DebtFormData d) {
     final form = FormData.fromMap({
       'ContactId': d.contactId,
@@ -79,8 +94,9 @@ class DebtRemoteDataSource {
     final failed = body['success'] == false || (sc is int && sc >= 400);
     if (failed) {
       final errors = extractApiMessages(body['errors']);
-      final msgs =
-          errors.isNotEmpty ? errors : extractApiMessages(body['message']);
+      final msgs = errors.isNotEmpty
+          ? errors
+          : extractApiMessages(body['message']);
       throw DebtApiException(
         msgs.isNotEmpty ? msgs.join('\n') : 'عملیات ناموفق بود',
       );
