@@ -90,8 +90,9 @@ class _ContactListViewState extends State<ContactListView> {
   List<ContactModel> _apply(List<ContactModel> items) {
     final q = normalizeDigits(_query.trim().toLowerCase());
     return items.where((c) {
-      if (_filter == ContactFilter.demander && !c.hasUnpaidReceivable)
+      if (_filter == ContactFilter.demander && !c.hasUnpaidReceivable) {
         return false;
+      }
       if (_filter == ContactFilter.debtor && !c.hasUnpaidDebt) return false;
       if (q.isNotEmpty) {
         final hay =

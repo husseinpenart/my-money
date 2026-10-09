@@ -457,7 +457,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                               child: SwitchListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
-                                activeColor: accent,
+                                activeThumbColor: accent,
                                 value: _paid,
                                 onChanged: (v) => setState(() => _paid = v),
                                 title: Text(

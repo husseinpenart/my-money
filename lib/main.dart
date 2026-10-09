@@ -15,7 +15,7 @@ Future<void> main() async {
 
   // 👈 بررسی وجود توکن
   final tokenStorage = GetIt.I<TokenStorage>();
-  final token = await tokenStorage
+  final token = tokenStorage
       .getToken(); // نکته: اگر اسم متد خواندن توکن در کلاست متفاوت است، آن را تغییر بده
   final bool isLoggedIn = token != null && token.isNotEmpty;
 

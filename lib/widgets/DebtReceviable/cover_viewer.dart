@@ -174,8 +174,9 @@ class _CoverViewerPageState extends State<CoverViewerPage> {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent e) {
-    if (e is! KeyDownEvent && e is! KeyRepeatEvent)
+    if (e is! KeyDownEvent && e is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
+    }
     final k = e.logicalKey;
     final rtl = Directionality.of(context) == TextDirection.rtl;
 

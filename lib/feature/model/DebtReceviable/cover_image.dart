@@ -87,8 +87,9 @@ class CoverController extends ValueNotifier<List<CoverImage>> {
     if (f == null) return null;
     final bytes = f.bytes;
     if (bytes == null) return 'فایل خوانده نشد';
-    if (bytes.lengthInBytes > maxBytes)
+    if (bytes.lengthInBytes > maxBytes) {
       return 'حجم تصویر بیشتر از ۵ مگابایت است';
+    }
 
     value = [
       for (final e in value)
