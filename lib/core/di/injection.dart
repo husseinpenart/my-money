@@ -2,10 +2,12 @@
 import 'package:get_it/get_it.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
+import 'package:money/feature/auth/presentation/bloc/hero/hero_stats_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
 import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/debt_remote_data_source.dart';
+import 'package:money/feature/data/dataResource/lib/feature/auth/data/dataResource/hero_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/report_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,5 +72,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<ReportBloc>(
     () => ReportBloc(remoteDataSource: getIt<ReportRemoteDataSource>()),
+  );
+
+  getIt.registerLazySingleton<HeroRemoteDataSource>(
+    () => HeroRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<HeroStatsBloc>(
+    () => HeroStatsBloc(getIt<HeroRemoteDataSource>()),
   );
 }

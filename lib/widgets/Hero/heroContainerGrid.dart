@@ -1,26 +1,32 @@
-import 'package:flutter/material.dart';
-import 'package:money/dictionary/titles.dart';
-import 'package:money/widgets/global/GlassContainer.dart';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:money/dictionary/titles.dart';
+import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
+import 'package:money/widgets/global/GlassContainer.dart';
+import 'package:money/widgets/report/report_format.dart';
 
 class Herocontainergrid extends StatelessWidget {
   const Herocontainergrid({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<ReportBloc>().state.data?.summary;
+
     return Container(
-      padding: EdgeInsets.all(5),
+      padding: const EdgeInsets.all(5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-            child: GlassContainer(            
+            child: GlassContainer(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Transform.rotate(
                     angle: 180 * math.pi / 180,
                     child: Container(
-                      padding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: Colors.lightGreen,
                         borderRadius: BorderRadius.circular(25),
@@ -47,7 +53,7 @@ class Herocontainergrid extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '12,500,000',
+                        s == null ? '—' : money(s.unpaidReceivable), // 👈 طلب
                         style: const TextStyle(
                           color: Colors.white,
                           fontFamily: 'sans',
@@ -70,16 +76,16 @@ class Herocontainergrid extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 30),
+          const SizedBox(width: 30),
           Expanded(
             child: GlassContainer(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 255, 123, 113),
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(255, 255, 123, 113),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -88,9 +94,7 @@ class Herocontainergrid extends StatelessWidget {
                       size: 12,
                     ),
                   ),
-            
                   const SizedBox(width: 10),
-            
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -105,7 +109,7 @@ class Herocontainergrid extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '4,500,000',
+                        s == null ? '—' : money(s.unpaidDebt), // 👈 بدهی
                         style: const TextStyle(
                           color: Colors.white,
                           fontFamily: 'sans',
@@ -128,7 +132,6 @@ class Herocontainergrid extends StatelessWidget {
               ),
             ),
           ),
-     
         ],
       ),
     );

@@ -1,12 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:money/core/network/api_client.dart';
 import 'package:money/dictionary/titles.dart';
-import 'package:money/widgets/global/GlassContainer.dart';
+import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
+import 'package:money/feature/auth/presentation/bloc/report/report_event.dart';
+import 'package:money/feature/data/dataResource/report_remote_data_source.dart';
+import 'package:money/feature/model/report/report_models.dart';
 import 'package:money/widgets/Hero/heroContainerGrid.dart';
 import 'package:money/widgets/Hero/heroCountItems.dart';
 import 'package:money/widgets/Hero/heroInfo.dart';
+import 'package:money/widgets/global/GlassContainer.dart';
 
-class Herolayer extends StatelessWidget {
+class Herolayer extends StatefulWidget {
   const Herolayer({super.key});
+
+  @override
+  State<Herolayer> createState() => _HerolayerState();
+}
+
+class _HerolayerState extends State<Herolayer> {
+  // instance مستقل برای Hero (تا بازه‌ی صفحه‌ی Report روی آن اثر نگذارد)
+  late final ReportBloc _bloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = ReportBloc(
+      remoteDataSource: ReportRemoteDataSource(GetIt.I<ApiClient>()),
+    )..add(const ReportRequested(period: ReportPeriod.all));
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: _bloc,
+      child: const _HeroLayerBody(),
+    );
+  }
+}
+
+class _HeroLayerBody extends StatelessWidget {
+  const _HeroLayerBody();
 
   @override
   Widget build(BuildContext context) {
@@ -91,10 +132,10 @@ class Herolayer extends StatelessWidget {
 
           /// Hero info
           const Heroinfo(),
-          SizedBox(height: 20),
-          Herocontainergrid(),
-          SizedBox(height: 10),
-          Herocountitems(),
+          const SizedBox(height: 20),
+          const Herocontainergrid(),
+          const SizedBox(height: 10),
+          const Herocountitems(),
         ],
       ),
     );

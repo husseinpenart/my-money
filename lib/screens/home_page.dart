@@ -22,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Homelayouts(),
     ReportPage(),
     ContactPage(),
-    Center(child: Text('تنظیمات')),
+    // Center(child: Text('تنظیمات')),
   ];
 
   void _onItemTapped(int index) {
@@ -56,10 +56,10 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.school),
             label: BottomNavigations.contacts,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: BottomNavigations.setting,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: BottomNavigations.setting,
+          // ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
