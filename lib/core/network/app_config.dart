@@ -1,5 +1,6 @@
 /// آدرس سرور برای ساخت لینک تصاویر (مسیرهای نسبی covers)
-const String kFilesBaseUrl = 'http://192.168.1.185:8085/uploads';
+// const String kFilesBaseUrl = 'http://192.168.1.185:8085/uploads';
+const String kFilesBaseUrl = 'http://localhost:8085';
 
 String resolveFileUrl(String path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
