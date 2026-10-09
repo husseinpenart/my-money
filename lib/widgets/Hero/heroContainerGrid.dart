@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
+import 'package:money/helper/utils/currency_scope.dart';
+import 'package:money/widgets/Hero/animated_number_text.dart';
 import 'package:money/widgets/global/GlassContainer.dart';
-import 'package:money/widgets/report/report_format.dart';
 
 class Herocontainergrid extends StatelessWidget {
   const Herocontainergrid({super.key});
@@ -12,6 +13,7 @@ class Herocontainergrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<ReportBloc>().state.data?.summary;
+    final cur = CurrencyScope.of(context);
 
     return Container(
       padding: const EdgeInsets.all(5),
@@ -52,17 +54,28 @@ class Herocontainergrid extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
+                      s == null
+                          ? const Text(
+                              '—',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'sans',
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            )
+                          : AnimatedNumberText(
+                              value: s.unpaidReceivable,
+                              format: cur.format,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'sans',
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                       Text(
-                        s == null ? '—' : money(s.unpaidReceivable), // 👈 طلب
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'sans',
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      Text(
-                        ScreenDictionary.moenyUnit,
+                        cur.label, // 👈 برچسب هم با واحد عوض می‌شود
                         style: const TextStyle(
                           color: Color.fromARGB(255, 64, 255, 39),
                           fontFamily: 'sans',
@@ -108,17 +121,28 @@ class Herocontainergrid extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      s == null
+                          ? const Text(
+                              '—',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'sans',
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            )
+                          : AnimatedNumberText(
+                              value: s.unpaidDebt,
+                              format: cur.format,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'sans',
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                       Text(
-                        s == null ? '—' : money(s.unpaidDebt), // 👈 بدهی
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'sans',
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      Text(
-                        ScreenDictionary.moenyUnit,
+                        cur.label,
                         style: const TextStyle(
                           color: Color.fromARGB(255, 255, 123, 113),
                           fontFamily: 'sans',
