@@ -3,6 +3,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/model/DebtReceviable/debt_form_data.dart';
+import 'package:money/feature/model/search_models/search_models.dart';
+import 'package:money/helper/utils/thousands_formatter.dart';
 
 class DebtRemoteDataSource {
   final ApiClient apiClient;
@@ -69,7 +71,28 @@ class DebtRemoteDataSource {
     }
     return form;
   }
+Future<SearchDebt> getById(String payId) async {
+  final res = await apiClient.get<dynamic>('$_path/$payId');
+  final data = _unwrap(res.data);
+  if (data is Map<String, dynamic>) return SearchDebt.fromJson(data);
+  throw DebtApiException('رکورد پیدا نشد');
+}
 
+/// فقط وضعیت پرداخت را عوض می‌کند. چون فایلی نمی‌فرستیم، تصاویر قبلی دست‌نخورده می‌ماند
+Future<void> setPaid(SearchDebt d, {required bool paid}) async {
+  final now = DateTime.now().toUtc();
+  await update(DebtFormData(
+    payId: d.payId,
+    contactId: d.contactId,
+    recordType: d.isDebt ? 'Debt' : 'Receivable',
+    wholePrice: ThousandsInputFormatter.digitsOnly(d.wholePrice),
+    registerdDate: (d.registerdDate ?? now).toUtc(),
+    endedDate: (d.endedDate ?? now).toUtc(),
+    description: d.description,
+    payStatus: paid,
+    isStarred: d.isStarred,
+  ));
+}
   MediaType _mediaType(String filename) {
     final ext = filename.contains('.')
         ? filename.split('.').last.toLowerCase()

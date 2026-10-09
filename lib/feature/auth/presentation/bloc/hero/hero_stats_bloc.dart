@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/auth/presentation/bloc/hero/hero_stats_event.dart';
 import 'package:money/feature/auth/presentation/bloc/hero/hero_stats_state.dart';
-import 'package:money/feature/data/dataResource/lib/feature/auth/data/dataResource/hero_remote_data_source.dart';
+import 'package:money/feature/data/dataResource/hero_remote_data_source.dart';
 
 class HeroStatsBloc extends Bloc<HeroStatsEvent, HeroStatsState> {
   final HeroRemoteDataSource remoteDataSource;

@@ -1,17 +1,11 @@
 // lib/widgets/header.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/dictionary/titles.dart';
-import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
-import 'package:money/feature/auth/presentation/bloc/search/search_event.dart';
-import 'package:money/feature/auth/presentation/bloc/search/search_state.dart';
-
-import 'package:money/widgets/global/CustomIconButton.dart';
-import 'package:money/widgets/global/app_search_field.dart';
+import 'package:money/feature/auth/presentation/pages/search/search_sheet.dart';
+import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/global/notification_bell.dart';
-import 'package:money/widgets/search/search_results_panel.dart';
 
 class Header extends StatefulWidget {
   const Header({super.key});
@@ -21,123 +15,138 @@ class Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<Header> {
-  bool _isSearchVisible = false;
-  final TextEditingController _searchController = TextEditingController();
-  late final SearchBloc _searchBloc;
   String _userName = 'کاربر عزیز';
 
   @override
   void initState() {
     super.initState();
-    _searchBloc = GetIt.I<SearchBloc>();
-
-    final storedName = GetIt.I<TokenStorage>().getName();
-    if (storedName != null && storedName.isNotEmpty) {
-      _userName = storedName;
-    }
+    final stored = GetIt.I<TokenStorage>().getName();
+    if (stored != null && stored.isNotEmpty) _userName = stored;
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _searchBloc.close();
-    super.dispose();
-  }
-
-  void _toggleSearch() {
-    setState(() {
-      _isSearchVisible = !_isSearchVisible;
-      if (!_isSearchVisible) {
-        _searchController.clear();
-        _searchBloc.add(const SearchCleared());
-      }
-    });
+  String get _greeting {
+    final h = DateTime.now().hour;
+    if (h < 5) return 'شب بخیر';
+    if (h < 12) return 'صبح بخیر';
+    if (h < 17) return 'ظهر بخیر';
+    if (h < 20) return 'عصر بخیر';
+    return 'شب بخیر';
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _searchBloc,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        width: double.maxFinite,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+    final initial = _userName.isEmpty
+        ? '؟'
+        : _userName.characters.first.toUpperCase();
+
+    return Container(
+      width: double.maxFinite,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [Color(0xFF4F28DF), Color(0xFF947BEE)],
+                  ),
+                ),
+                child: Text(
+                  initial,
+                  style: sans(
+                    size: 18,
+                    weight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      Titles.hello,
-                      style: const TextStyle(fontSize: 12, fontFamily: 'sans'),
+                      '${Titles.hello} · $_greeting',
+                      style: sans(size: 11, color: Colors.grey.shade600),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       '$_userName 👋',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: sans(
+                        size: 15,
+                        weight: FontWeight.bold,
                         color: Colors.black,
-                        fontFamily: 'sans',
                       ),
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    CustomIconButton(
-                      onPressed: _toggleSearch,
-                      icon: _isSearchVisible ? Icons.close : Icons.search,
-                    ),
-                    const SizedBox(width: 12),
-                    const NotificationBell(),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              const NotificationBell(),
+            ],
+          ),
+          const SizedBox(height: 14),
 
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: _isSearchVisible
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Column(
-                        children: [
-                          BlocBuilder<SearchBloc, SearchState>(
-                            buildWhen: (p, c) => p.status != c.status,
-                            builder: (context, state) => AppSearchField(
-                              controller: _searchController,
-                              hintText: Titles.searchText,
-                              isLoading: state.status == SearchStatus.loading,
-                              onChanged: (v) => context.read<SearchBloc>().add(
-                                SearchQueryChanged(v),
-                              ),
-                            ),
-                          ),
-                          SearchResultsPanel(
-                            onContactTap: (contact) {
-                              // TODO: ناوبری به صفحه‌ی مخاطب
-                              Navigator.pushNamed(
-                                context,
-                                '/contact',
-                                arguments: contact.contactId,
-                              );
-                            },
-                            onDebtTap: (debt) {
-                              // TODO: ناوبری به جزئیات بدهی/طلب
-                            },
-                          ),
-                        ],
+          // نوار جستجو (با لمس، شیت جستجو باز می‌شود)
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: () => showSearchSheet(context),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: kAccent),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        Titles.searchText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: sans(size: 13, color: Colors.grey.shade500),
                       ),
-                    )
-                  : const SizedBox.shrink(),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: kAccent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        size: 16,
+                        color: kAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

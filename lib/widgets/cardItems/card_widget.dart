@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/bus/debt_change_bus.dart';
 import 'package:money/core/network/backend_message.dart';
-import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/debt/debt_details_sheet.dart';
 import 'package:money/feature/data/dataResource/debt_remote_data_source.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
+import 'package:money/helper/utils/input_utils.dart';
 import 'package:money/layouts/confirm_demand_layout.dart';
 import 'package:money/widgets/contact/contact_style.dart';
-
 import 'package:money/widgets/report/report_format.dart';
 
-enum _CardAction { none, delete, star }
+enum _CardAction { none, delete, star, pay }
+
+enum _DueState { paid, overdue, today, soon, normal, unknown }
 
 class CardWidget extends StatefulWidget {
   const CardWidget({super.key, required this.d, this.onChanged});
@@ -24,44 +25,87 @@ class CardWidget extends StatefulWidget {
 }
 
 class _CardWidgetState extends State<CardWidget> {
+  static const _green = Color(0xFF10B981);
+  static const _red = Color(0xFFEF4444);
+  static const _amber = Color(0xFFF59E0B);
+  static const _blue = Color(0xFF3B82F6);
+
   final DebtRemoteDataSource _ds = GetIt.I<DebtRemoteDataSource>();
   _CardAction _action = _CardAction.none;
 
   SearchDebt get d => widget.d;
 
-  int get _price => int.tryParse(d.wholePrice) ?? 0;
+  // ───────────── مقادیر محاسبه‌شده ─────────────
+  double get _price => parseAmount(d.wholePrice) ?? 0;
   bool get _isDebt => d.isDebt;
   bool get _unpaid => !d.payStatus;
-  int get _remaining => _unpaid ? _price : 0;
-  bool get _overdue =>
-      _unpaid && d.endedDate != null && d.endedDate!.isBefore(DateTime.now());
+  double get _remaining => _unpaid ? _price : 0;
+  Color get _typeColor => _isDebt ? _red : _green;
 
-  Color get _typeColor => _isDebt
-      ? const Color.fromRGBO(239, 68, 68, 1)
-      : const Color.fromRGBO(49, 190, 145, 1);
-
-  (String, Color, Color) get _badge {
-    if (!_unpaid) {
-      return (
-        'تسویه شده',
-        const Color.fromRGBO(49, 190, 145, 1),
-        const Color.fromRGBO(240, 253, 244, 1),
-      );
-    }
-    if (_overdue) {
-      return (
-        'معوق',
-        const Color.fromRGBO(176, 123, 77, 1),
-        const Color.fromRGBO(254, 243, 199, 1),
-      );
-    }
-    return (
-      'باز',
-      const Color.fromRGBO(73, 120, 236, 1),
-      const Color.fromRGBO(239, 246, 255, 1),
-    );
+  /// تعداد روز تا سررسید (منفی = معوق)؛ فقط بر اساس تاریخ، نه ساعت
+  int? get _daysLeft {
+    final e = d.endedDate;
+    if (e == null) return null;
+    final u = e.toUtc();
+    final n = DateTime.now().toUtc();
+    return DateTime.utc(
+      u.year,
+      u.month,
+      u.day,
+    ).difference(DateTime.utc(n.year, n.month, n.day)).inDays;
   }
 
+  _DueState get _due {
+    if (!_unpaid) return _DueState.paid;
+    final days = _daysLeft;
+    if (days == null) return _DueState.unknown;
+    if (days < 0) return _DueState.overdue;
+    if (days == 0) return _DueState.today;
+    if (days <= 3) return _DueState.soon;
+    return _DueState.normal;
+  }
+
+  Color get _dueColor => switch (_due) {
+    _DueState.paid => _green,
+    _DueState.overdue => _red,
+    _DueState.today => const Color(0xFFF97316),
+    _DueState.soon => _amber,
+    _DueState.normal => _blue,
+    _DueState.unknown => Colors.blueGrey,
+  };
+
+  String get _dueText {
+    final days = _daysLeft;
+    return switch (_due) {
+      _DueState.paid => 'تسویه شده',
+      _DueState.overdue => '${fa('${days!.abs()}')} روز معوق',
+      _DueState.today => 'امروز سررسید است',
+      _DueState.soon || _DueState.normal => '${fa('$days')} روز تا سررسید',
+      _DueState.unknown => 'بدون سررسید',
+    };
+  }
+
+  IconData get _dueIcon => switch (_due) {
+    _DueState.paid => Icons.check_circle_rounded,
+    _DueState.overdue => Icons.warning_amber_rounded,
+    _DueState.today => Icons.alarm_rounded,
+    _DueState.soon => Icons.schedule_rounded,
+    _DueState.normal => Icons.hourglass_bottom_rounded,
+    _DueState.unknown => Icons.help_outline_rounded,
+  };
+
+  /// پیشرفت زمانی: از تاریخ ثبت تا سررسید (۰ تا ۱)
+  double get _timeProgress {
+    if (!_unpaid) return 1;
+    final s = d.registerdDate, e = d.endedDate;
+    if (s == null || e == null) return 0;
+    final total = e.difference(s).inMinutes;
+    if (total <= 0) return _due == _DueState.overdue ? 1 : 0;
+    final elapsed = DateTime.now().difference(s).inMinutes;
+    return (elapsed / total).clamp(0.0, 1.0).toDouble();
+  }
+
+  // ───────────── عملیات ─────────────
   void _snack(String m, bool err) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -85,7 +129,7 @@ class _CardWidgetState extends State<CardWidget> {
     try {
       await op();
       widget.onChanged?.call();
-      DebtChangeBus.instance.notifyChanged(); // 👈 همین یک خط کم بود
+      DebtChangeBus.instance.notifyChanged();
       _snack(okMsg, false);
     } catch (e) {
       _snack(backendMessage(e), true);
@@ -113,17 +157,27 @@ class _CardWidgetState extends State<CardWidget> {
     );
   }
 
+  Future<void> _togglePaid() {
+    final paid = _unpaid; // اگر پرداخت‌نشده است، تسویه کن
+    return _run(
+      _CardAction.pay,
+      () => _ds.setPaid(d, paid: paid),
+      paid ? 'به‌عنوان تسویه‌شده ثبت شد' : 'به پرداخت‌نشده برگشت',
+    );
+  }
+
   Future<void> _delete() async {
     final name = d.contactName.trim();
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'حذف رکورد',
           style: sans(size: 15, weight: FontWeight.bold),
         ),
         content: Text(
-          'آیا از حذف رکورد «${name.isEmpty ? 'این مورد' : name}» مطمئن هستی؟',
+          'آیا از حذف رکورد «${name.isEmpty ? 'این مورد' : name}» مطمئن هستی؟\nتصاویر پیوست‌شده هم حذف می‌شوند.',
           style: sans(size: 13),
         ),
         actions: [
@@ -146,330 +200,303 @@ class _CardWidgetState extends State<CardWidget> {
     }
   }
 
+  // ───────────── UI ─────────────
   @override
   Widget build(BuildContext context) {
-    final (badgeText, badgeFg, badgeBg) = _badge;
-    final name = d.contactName.trim();
-    final desc = (d.description ?? '').trim();
-    final progress = _unpaid ? 0.0 : 1.0;
-    final starred = d.isStarred;
+    final busy = _action != _CardAction.none;
 
-    return Card(
-      elevation: 5,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ), // 👈 فاصله
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _details, // 👈 tap = جزئیات
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 12, right: 12, left: 12),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEEF0F4)),
+        boxShadow: [
+          BoxShadow(
+            color: _typeColor.withValues(alpha: 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Material(
+          color: Colors.white,
+          child: InkWell(
+            onTap: busy ? null : _details,
+            child: IntrinsicHeight(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // نوار رنگی نوع رکورد
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    width: 5,
                     decoration: BoxDecoration(
-                      color: badgeBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _unpaid
-                              ? Icons.hourglass_bottom
-                              : Icons.check_circle_outline,
-                          size: 12,
-                          color: badgeFg,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          badgeText,
-                          style: TextStyle(
-                            fontFamily: 'sans',
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: badgeFg,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 32, 3, 136),
-                            Color.fromARGB(255, 79, 40, 223),
-                            Color.fromARGB(255, 107, 76, 219),
-                            Color.fromARGB(255, 148, 123, 238),
-                          ],
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        name.isEmpty ? '؟' : name.substring(0, 1),
-                        style: const TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                name.isEmpty ? '—' : name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'sans',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            if (starred) ...[
-                              const SizedBox(width: 5),
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 16,
-                                color: Colors.amber,
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          desc.isEmpty ? (_isDebt ? 'بدهی' : 'طلب') : desc,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'sans',
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.calendar_today_sharp,
-                              size: 12,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              'سررسید: ${d.endedDate == null ? '—' : jalaliDate(d.endedDate!)}',
-                              style: const TextStyle(
-                                fontFamily: 'sans',
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        ScreenDictionary.wholePrice,
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 12,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(
-                            _isDebt ? Icons.trending_down : Icons.trending_up,
-                            size: 14,
-                            color: _typeColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            money(_price),
-                            style: TextStyle(
-                              fontFamily: 'sans',
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: _typeColor,
-                            ),
-                          ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          _typeColor,
+                          _typeColor.withValues(alpha: 0.45),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        ScreenDictionary.reminded,
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 12,
-                          color: Colors.blueGrey,
-                        ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _header(busy),
+                          const SizedBox(height: 14),
+                          _amountBox(),
+                          if ((d.description ?? '').trim().isNotEmpty ||
+                              d.covers.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            _noteRow(),
+                          ],
+                          const SizedBox(height: 14),
+                          _timeline(),
+                          const SizedBox(height: 14),
+                          _payButton(),
+                        ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _remaining == 0 ? 'تسویه' : money(_remaining),
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: _remaining == 0
-                              ? const Color.fromRGBO(49, 190, 145, 1)
-                              : Colors.red,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
 
-            Container(
-              padding: const EdgeInsets.all(15),
+  // ───── سربرگ: آواتار + نام + ستاره + منو ─────
+  Widget _header(bool busy) {
+    final name = d.contactName.trim();
+    final starred = d.isStarred;
+
+    return Row(
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: _isDebt
+                  ? const [Color(0xFFEF4444), Color(0xFFF97316)]
+                  : const [Color(0xFF059669), Color(0xFF34D399)],
+            ),
+          ),
+          child: Text(
+            name.isEmpty ? '؟' : name.characters.first,
+            style: sans(size: 18, weight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name.isEmpty ? '—' : name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: sans(size: 15, weight: FontWeight.bold),
+              ),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  Icon(
+                    Icons.phone_outlined,
+                    size: 12,
+                    color: Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      d.contactPhoneNumber.isEmpty
+                          ? '—'
+                          : fa(d.contactPhoneNumber),
+                      overflow: TextOverflow.ellipsis,
+                      style: sans(size: 11, color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        _starButton(starred),
+        PopupMenuButton<String>(
+          enabled: !busy,
+          tooltip: 'گزینه‌ها',
+          padding: EdgeInsets.zero,
+          icon: Icon(
+            Icons.more_vert_rounded,
+            color: Colors.grey.shade600,
+            size: 22,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          onSelected: (v) {
+            if (v == 'details') _details();
+            if (v == 'edit') _edit();
+            if (v == 'delete') _delete();
+          },
+          itemBuilder: (_) => [
+            _menuItem(
+              'details',
+              Icons.visibility_outlined,
+              'مشاهده جزئیات',
+              Colors.black87,
+            ),
+            _menuItem(
+              'edit',
+              Icons.edit_outlined,
+              'ویرایش',
+              const Color(0xFF4F6EF7),
+            ),
+            const PopupMenuDivider(height: 4),
+            _menuItem('delete', Icons.delete_outline_rounded, 'حذف', _red),
+          ],
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<String> _menuItem(String v, IconData i, String t, Color c) =>
+      PopupMenuItem<String>(
+        value: v,
+        height: 42,
+        child: Row(
+          children: [
+            Icon(i, size: 19, color: c),
+            const SizedBox(width: 10),
+            Text(t, style: sans(size: 13, color: c)),
+          ],
+        ),
+      );
+
+  Widget _starButton(bool starred) {
+    if (_action == _CardAction.star) {
+      return const SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.amber,
+            ),
+          ),
+        ),
+      );
+    }
+    return IconButton(
+      tooltip: starred ? 'برداشتن ستاره' : 'ستاره‌دار کردن',
+      visualDensity: VisualDensity.compact,
+      onPressed: _action != _CardAction.none ? null : _toggleStar,
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+        child: Icon(
+          starred ? Icons.star_rounded : Icons.star_border_rounded,
+          key: ValueKey(starred),
+          color: starred ? Colors.amber : Colors.grey.shade400,
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  // ───── باکس مبلغ و مانده ─────
+  Widget _amountBox() {
+    final remainingColor = _remaining == 0 ? _green : _red;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _typeColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _typeColor.withValues(alpha: 0.14)),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        ButtonsDictionary.paymentProgress,
-                        style: TextStyle(fontFamily: 'sans', fontSize: 13),
-                      ),
+                      _typeChip(),
+                      const SizedBox(width: 6),
                       Text(
-                        fa('${(progress * 100).round()}%'),
-                        style: const TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 13,
-                        ),
+                        'کل مبلغ',
+                        style: sans(size: 11, color: Colors.blueGrey),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
-                  LinearProgressIndicator(
-                    backgroundColor: const Color.fromRGBO(232, 236, 244, 1),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color.fromRGBO(249, 186, 46, 1),
-                    ),
-                    borderRadius: BorderRadius.circular(100),
-                    value: progress,
-                    minHeight: 10,
-                  ),
-                ],
-              ),
-            ),
-
-            Center(
-              child: SizedBox(
-                height: 1,
-                child: const Divider(
-                  height: 1,
-                  color: Color.fromARGB(255, 177, 174, 174),
-                  thickness: 1,
-                  endIndent: 1,
-                ),
-              ),
-            ),
-
-            Container(
-              padding: const EdgeInsets.all(1),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Center(
-                    child: SizedBox(
-                      height: 1,
-                      child: VerticalDivider(
-                        width: 1,
-                        color: Color.fromARGB(255, 177, 174, 174),
-                        thickness: 1,
-                        endIndent: 1,
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      money(_price),
+                      style: sans(
+                        size: 20,
+                        weight: FontWeight.bold,
+                        color: _typeColor,
                       ),
                     ),
                   ),
-                  _bottomBtn(
-                    icon: starred
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    iconColor: Colors.amber,
-                    label: starred
-                        ? ButtonsDictionary.deleteStars
-                        : 'ستاره‌دار کردن',
-                    textColor: Colors.black,
-                    busy: _action == _CardAction.star,
-                    onTap: _toggleStar,
-                  ),
-                  _bottomBtn(
-                    icon: Icons.create_outlined,
-                    iconColor: const Color.fromRGBO(153, 198, 243, 1),
-                    label: ButtonsDictionary.editItem,
-                    textColor: const Color.fromRGBO(114, 146, 238, 1),
-                    busy: false,
-                    onTap: _edit,
-                  ),
-                  _bottomBtn(
-                    icon: Icons.delete_outline_rounded,
-                    iconColor: Colors.red,
-                    label: ButtonsDictionary.deleteItem,
-                    textColor: const Color.fromRGBO(248, 67, 67, 1),
-                    busy: _action == _CardAction.delete,
-                    onTap: _delete,
-                  ),
                 ],
               ),
+            ),
+            VerticalDivider(
+              width: 24,
+              thickness: 1,
+              color: _typeColor.withValues(alpha: 0.18),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('مانده', style: sans(size: 11, color: Colors.blueGrey)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    if (_remaining == 0)
+                      const Padding(
+                        padding: EdgeInsetsDirectional.only(end: 4),
+                        child: Icon(
+                          Icons.verified_rounded,
+                          size: 16,
+                          color: _green,
+                        ),
+                      ),
+                    Text(
+                      _remaining == 0 ? 'تسویه' : money(_remaining),
+                      style: sans(
+                        size: 14,
+                        weight: FontWeight.bold,
+                        color: remainingColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -477,39 +504,216 @@ class _CardWidgetState extends State<CardWidget> {
     );
   }
 
-  Widget _bottomBtn({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required Color textColor,
-    required bool busy,
-    required VoidCallback onTap,
-  }) {
-    return TextButton(
-      onPressed: busy ? null : onTap,
-      child: Row(
-        children: [
-          busy
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: iconColor,
+  Widget _typeChip() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(
+      color: _typeColor,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      _isDebt ? 'بدهی' : 'طلب',
+      style: sans(size: 10, weight: FontWeight.bold, color: Colors.white),
+    ),
+  );
+
+  // ───── توضیحات + تعداد تصاویر ─────
+  Widget _noteRow() {
+    final desc = (d.description ?? '').trim();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (desc.isNotEmpty)
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F8FA),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.notes_rounded,
+                    size: 15,
+                    color: Colors.grey.shade500,
                   ),
-                )
-              : Icon(icon, color: iconColor, size: 20),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'sans',
-              color: textColor,
-              fontSize: 13,
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      desc,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: sans(size: 12, color: Colors.grey.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          const Spacer(),
+        if (d.covers.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF4FF),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.photo_library_outlined,
+                  size: 15,
+                  color: Color(0xFF4F6EF7),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  fa('${d.covers.length}'),
+                  style: sans(
+                    size: 12,
+                    weight: FontWeight.bold,
+                    color: const Color(0xFF4F6EF7),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
+      ],
+    );
+  }
+
+  // ───── خط زمانی سررسید ─────
+  Widget _timeline() {
+    final c = _dueColor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.event_rounded, size: 15, color: Colors.grey.shade500),
+            const SizedBox(width: 5),
+            Text(
+              'سررسید: ${d.endedDate == null ? '—' : jalaliDate(d.endedDate!)}',
+              style: sans(size: 12, color: Colors.grey.shade700),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: c.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_dueIcon, size: 13, color: c),
+                  const SizedBox(width: 4),
+                  Text(
+                    _dueText,
+                    style: sans(size: 11, weight: FontWeight.bold, color: c),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _timeProgress),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
+          builder: (_, v, __) => ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: v,
+              minHeight: 7,
+              backgroundColor: c.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation(c),
+            ),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              d.registerdDate == null
+                  ? ''
+                  : 'ثبت: ${jalaliDate(d.registerdDate!)}',
+              style: sans(size: 10, color: Colors.grey.shade500),
+            ),
+            Text(
+              _unpaid
+                  ? 'زمان سپری‌شده ${fa('${(_timeProgress * 100).round()}٪')}'
+                  : 'پرداخت کامل شد',
+              style: sans(size: 10, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ───── دکمه‌ی اصلی تسویه ─────
+  Widget _payButton() {
+    final paying = _action == _CardAction.pay;
+    final deleting = _action == _CardAction.delete;
+    final busy = _action != _CardAction.none;
+
+    final Widget icon = (paying || deleting)
+        ? SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: _unpaid ? Colors.white : Colors.grey.shade700,
+            ),
+          )
+        : Icon(_unpaid ? Icons.task_alt_rounded : Icons.undo_rounded, size: 18);
+
+    final label = Text(
+      deleting
+          ? 'در حال حذف...'
+          : (_unpaid
+                ? (_isDebt ? 'ثبت پرداخت بدهی' : 'ثبت دریافت طلب')
+                : 'بازگشت به پرداخت‌نشده'),
+      style: sans(size: 13, weight: FontWeight.bold),
+    );
+
+    return SizedBox(
+      height: 44,
+      child: _unpaid
+          ? ElevatedButton.icon(
+              onPressed: busy ? null : _togglePaid,
+              icon: icon,
+              label: label,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: _green,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: _green.withValues(alpha: 0.6),
+                disabledForegroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            )
+          : OutlinedButton.icon(
+              onPressed: busy ? null : _togglePaid,
+              icon: icon,
+              label: label,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey.shade700,
+                side: BorderSide(color: Colors.grey.shade300),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
     );
   }
 }

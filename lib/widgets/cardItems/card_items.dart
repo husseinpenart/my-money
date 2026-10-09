@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 import 'package:money/widgets/cardItems/card_widget.dart';
+import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/report/report_format.dart';
 
 class CardItems extends StatelessWidget {
@@ -17,71 +18,111 @@ class CardItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(1),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.all(2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${fa('${items.length}')} رکورد', // 👈 تعداد واقعی
-                  style: const TextStyle(
-                    fontFamily: 'sans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+    return Column(
+      children: [
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${fa('${items.length}')} رکورد',
+                  style: sans(
+                    size: 12,
+                    weight: FontWeight.w600,
+                    color: Colors.blueGrey.shade700,
                   ),
                 ),
-                GestureDetector(
-                  onTap: onSortTap, // 👈 مرتب‌سازی واقعی
-                  child: const Row(
+              ),
+              InkWell(
+                onTap: onSortTap,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kAccent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.filter_alt_outlined, size: 20, color: Color.fromRGBO(111, 151, 241, 1)),
-                      SizedBox(width: 4),
+                      const Icon(
+                        Icons.swap_vert_rounded,
+                        size: 18,
+                        color: kAccent,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        'مرتب سازی',
-                        style: TextStyle(
-                          fontFamily: 'sans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color.fromRGBO(111, 151, 241, 1),
+                        'مرتب‌سازی',
+                        style: sans(
+                          size: 12,
+                          weight: FontWeight.w600,
+                          color: kAccent,
                         ),
                       ),
                     ],
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.receipt_long_outlined,
+                  size: 48,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'موردی برای نمایش وجود ندارد',
+                  style: sans(size: 12, color: Colors.grey.shade600),
+                ),
               ],
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Center(
-                child: Text(
-                  'موردی برای نمایش وجود ندارد',
-                  style: TextStyle(fontFamily: 'sans', fontSize: 12, color: Colors.grey),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            // فضای پایین برای دکمه‌ی شناور (+)
+            padding: const EdgeInsets.only(bottom: 100),
+            itemCount: items.length,
+            itemBuilder: (context, i) => TweenAnimationBuilder<double>(
+              key: ValueKey(items[i].payId),
+              tween: Tween(begin: 0, end: 1),
+              duration: Duration(milliseconds: 300 + (i.clamp(0, 6) * 60)),
+              curve: Curves.easeOut,
+              builder: (_, v, child) => Opacity(
+                opacity: v,
+                child: Transform.translate(
+                  offset: Offset(0, 16 * (1 - v)),
+                  child: child,
                 ),
               ),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,                 // سازگار با SingleChildScrollView بیرونی
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: items.length,
-              itemBuilder: (context, i) => CardWidget(
-                d: items[i],
-                onChanged: onChanged,
-              ),
+              child: CardWidget(d: items[i], onChanged: onChanged),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
+  
