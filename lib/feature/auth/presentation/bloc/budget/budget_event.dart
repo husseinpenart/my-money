@@ -24,7 +24,13 @@ class BudgetProfileSaved extends BudgetEvent {
 
 class BudgetSalaryConfirmed extends BudgetEvent {
   final double amount;
-  const BudgetSalaryConfirmed(this.amount);
+  final int cycleKey;
+  final DateTime date;
+  const BudgetSalaryConfirmed({
+    required this.amount,
+    required this.cycleKey,
+    required this.date,
+  });
 }
 
 class BudgetItemSaved extends BudgetEvent {

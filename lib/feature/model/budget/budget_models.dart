@@ -220,8 +220,8 @@ class CategoryTotal {
 }
 
 class BudgetPlan {
-  final bool needsSetup, isCurrent, salaryConfirmed;
-  final int cycleKey, totalDays, daysLeft;
+  final bool needsSetup, isCurrent, salaryConfirmed, awaitingSalary;
+  final int cycleKey, pendingKey, totalDays, daysLeft, lateDays;
   final DateTime? start, end;
   final String salaryTitle;
   final double salary,
@@ -231,16 +231,22 @@ class BudgetPlan {
       free,
       remaining,
       dailyAllowance;
+  final double carryDeficit, leftover;
+  final double? projectedBalance;
   final List<PlanItem> items;
   final List<CategoryTotal> categories;
+  final List<PlanWarning> warnings;
 
   const BudgetPlan({
     required this.needsSetup,
     required this.isCurrent,
     required this.salaryConfirmed,
+    required this.awaitingSalary,
     required this.cycleKey,
+    required this.pendingKey,
     required this.totalDays,
     required this.daysLeft,
+    required this.lateDays,
     required this.start,
     required this.end,
     required this.salaryTitle,
@@ -251,17 +257,24 @@ class BudgetPlan {
     required this.free,
     required this.remaining,
     required this.dailyAllowance,
+    required this.carryDeficit,
+    required this.leftover,
+    required this.projectedBalance,
     required this.items,
     required this.categories,
+    required this.warnings,
   });
 
   factory BudgetPlan.fromJson(Map<String, dynamic> j) => BudgetPlan(
     needsSetup: j['needsSetup'] == true,
     isCurrent: j['isCurrent'] != false,
     salaryConfirmed: j['salaryConfirmed'] == true,
+    awaitingSalary: j['awaitingSalary'] == true,
     cycleKey: _i(j['cycleKey']),
+    pendingKey: _i(j['pendingKey']),
     totalDays: _i(j['totalDays']),
     daysLeft: _i(j['daysLeft']),
+    lateDays: _i(j['lateDays']),
     start: _dt(j['start']),
     end: _dt(j['end']),
     salaryTitle: (j['salaryTitle'] ?? 'حقوق').toString(),
@@ -272,8 +285,14 @@ class BudgetPlan {
     free: _d(j['free']),
     remaining: _d(j['remaining']),
     dailyAllowance: _d(j['dailyAllowance']),
+    carryDeficit: _d(j['carryDeficit']),
+    leftover: _d(j['leftover']),
+    projectedBalance: j['projectedBalance'] == null
+        ? null
+        : _d(j['projectedBalance']),
     items: _l(j['items']).map(PlanItem.fromJson).toList(),
     categories: _l(j['categories']).map(CategoryTotal.fromJson).toList(),
+    warnings: _l(j['warnings']).map(PlanWarning.fromJson).toList(),
   );
 }
 
@@ -283,6 +302,7 @@ class CycleSummary {
   final double salary, spent, saved;
   final bool estimated;
   final List<CategoryTotal> top;
+  final int shiftDays;
   const CycleSummary({
     required this.cycleKey,
     required this.count,
@@ -293,6 +313,7 @@ class CycleSummary {
     required this.saved,
     required this.estimated,
     required this.top,
+    required this.shiftDays,
   });
 
   factory CycleSummary.fromJson(Map<String, dynamic> j) => CycleSummary(
@@ -305,6 +326,7 @@ class CycleSummary {
     saved: _d(j['saved']),
     estimated: j['estimated'] == true,
     top: _l(j['topCategories']).map(CategoryTotal.fromJson).toList(),
+    shiftDays: _i(j['shiftDays']),
   );
 }
 
@@ -333,5 +355,27 @@ class ExpenseModel {
     note: j['note']?.toString(),
     amount: _d(j['amount']),
     date: _dt(j['date']),
+  );
+}
+
+class PlanWarning {
+  final String code, severity;
+  final double? amount;
+  final int? count;
+  final String? name;
+  const PlanWarning({
+    required this.code,
+    required this.severity,
+    this.amount,
+    this.count,
+    this.name,
+  });
+
+  factory PlanWarning.fromJson(Map<String, dynamic> j) => PlanWarning(
+    code: (j['code'] ?? '').toString(),
+    severity: (j['severity'] ?? 'info').toString(),
+    amount: j['amount'] == null ? null : _d(j['amount']),
+    count: j['count'] == null ? null : _i(j['count']),
+    name: j['name']?.toString(),
   );
 }

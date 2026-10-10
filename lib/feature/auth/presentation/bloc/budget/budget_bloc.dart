@@ -23,8 +23,8 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     on<BudgetSalaryConfirmed>(
       (e, emit) => _mutate(
         emit,
-        () => ds.confirmSalary(e.amount, state.plan?.cycleKey),
-        'حقوق این دوره ثبت شد',
+        () => ds.confirmSalary(e.amount, e.cycleKey, e.date),
+        'حقوق ثبت شد',
       ),
       transformer: sequential(),
     );

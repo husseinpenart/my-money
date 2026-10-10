@@ -50,10 +50,19 @@ class BudgetRemoteDataSource {
     _unwrap(res.data);
   }
 
-  Future<void> confirmSalary(double amount, int? cycle) async {
+  Future<void> confirmSalary(
+    double amount,
+    int? cycle,
+    DateTime? receivedDate,
+  ) async {
     final res = await apiClient.post<dynamic>(
       '/Budget/salary-confirm',
-      data: {'amount': amount, if (cycle != null) 'cycleKey': cycle},
+      data: {
+        'amount': amount,
+        if (cycle != null) 'cycleKey': cycle,
+        if (receivedDate != null)
+          'receivedDate': receivedDate.toUtc().toIso8601String(),
+      },
     );
     _unwrap(res.data);
   }

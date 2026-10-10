@@ -10,6 +10,9 @@ import 'package:money/widgets/budget/budget_widgets.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/report/report_format.dart';
 
+const _danger = Color(0xFFFCA5A5);
+const _ok = Color(0xFF86EFAC);
+
 class PlanTab extends StatelessWidget {
   const PlanTab({super.key});
 
@@ -23,7 +26,10 @@ class PlanTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BudgetBloc, BudgetState>(
       buildWhen: (p, c) =>
-          p.plan != c.plan || p.status != c.status || p.items != c.items,
+          p.plan != c.plan ||
+          p.status != c.status ||
+          p.items != c.items ||
+          p.profile != c.profile,
       builder: (context, s) {
         final plan = s.plan;
         if (plan == null) {
@@ -49,6 +55,9 @@ class PlanTab extends StatelessWidget {
           );
         }
 
+        final showBanner =
+            plan.isCurrent && (plan.awaitingSalary || !plan.salaryConfirmed);
+
         return RefreshIndicator(
           color: kAccent,
           onRefresh: () => _refresh(context),
@@ -58,8 +67,11 @@ class PlanTab extends StatelessWidget {
             children: [
               _CycleBar(plan: plan),
               const SizedBox(height: 12),
-              if (plan.isCurrent && !plan.salaryConfirmed)
-                _ConfirmBanner(plan: plan),
+              if (showBanner)
+                _ConfirmBanner(
+                  plan: plan,
+                  expected: s.profile?.amount ?? plan.salary,
+                ),
               _SummaryCard(plan: plan),
               const SizedBox(height: 12),
               ..._alerts(plan),
@@ -100,36 +112,19 @@ class PlanTab extends StatelessWidget {
     ),
   );
 
+  /// هشدارهای سرور + یادآوری سررسیدهای نزدیک (سمت کلاینت)
   List<Widget> _alerts(BudgetPlan p) {
-    final a = <(IconData, String, Color)>[];
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final a = <(IconData, String, Color)>[
+      for (final w in p.warnings) warningView(w),
+    ];
 
-    final overdue = p.items.where((i) => i.status == 'overdue').length;
-    if (overdue > 0) {
-      a.add((
-        Icons.warning_amber_rounded,
-        '${fa('$overdue')} مورد سررسیدگذشته هنوز پرداخت نشده است',
-        kRed,
-      ));
-    }
-    if (p.committed > p.salary) {
-      a.add((
-        Icons.error_outline,
-        'تعهدات این دوره (${money(p.committed)}) از حقوق بیشتر است',
-        kRed,
-      ));
-    } else if (p.free < 0) {
-      a.add((
-        Icons.trending_down,
-        'هزینه‌های خارج از برنامه از مبلغ آزاد بیشتر شده است',
-        kRed,
-      ));
-    }
     if (p.isCurrent) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
       for (final i in p.items) {
         final d = i.dueDate?.toLocal();
-        if (!i.isFixed || d == null || i.status == 'paid') continue;
+        if (!i.isFixed || d == null) continue;
+        if (i.status == 'paid' || i.status == 'overdue') continue;
         final days = DateTime(d.year, d.month, d.day).difference(today).inDays;
         if (days >= 0 && days <= 3) {
           a.add((
@@ -142,6 +137,7 @@ class PlanTab extends StatelessWidget {
         }
       }
     }
+
     return [
       for (final (icon, text, color) in a)
         Container(
@@ -175,7 +171,9 @@ class _CycleBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.read<BudgetBloc>();
     final range = (plan.start != null && plan.end != null)
-        ? '${jalaliDate(plan.start!)}  تا  ${jalaliDate(plan.end!)}'
+        ? plan.awaitingSalary
+              ? 'ادامه‌ی دوره‌ی قبل تا واریز حقوق'
+              : '${jalaliDate(plan.start!)}  تا  ${jalaliDate(plan.end!)}'
         : '';
     return Row(
       children: [
@@ -208,38 +206,54 @@ class _CycleBar extends StatelessWidget {
   }
 }
 
+// ───────────────────── بنر ثبت حقوق ─────────────────────
 class _ConfirmBanner extends StatelessWidget {
   final BudgetPlan plan;
-  const _ConfirmBanner({required this.plan});
+  final double expected;
+  const _ConfirmBanner({required this.plan, required this.expected});
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xFFEFF4FF),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Row(
-      children: [
-        const Icon(Icons.payments_outlined, color: kAccent),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'حقوق این دوره را دریافت کردی؟ مبلغ واقعی را ثبت کن تا محاسبه دقیق شود.',
-            style: sans(size: 12),
+  Widget build(BuildContext context) {
+    final late = plan.awaitingSalary;
+    final color = late ? kAmber : kAccent;
+    final text = !late
+        ? 'حقوق این دوره را دریافت کردی؟ مبلغ واقعی را ثبت کن تا محاسبه دقیق شود.'
+        : plan.lateDays <= 0
+        ? 'امروز روز حقوق است. وقتی واریز شد، ثبتش کن تا دوره‌ی جدید شروع شود.'
+        : 'حقوق ${fa('${plan.lateDays}')} روز دیر کرده. تا واریز، خرج‌ها از دوره‌ی قبل کم می‌شوند. بعد از واریز ثبتش کن.';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            late ? Icons.hourglass_top_rounded : Icons.payments_outlined,
+            color: color,
           ),
-        ),
-        TextButton(
-          onPressed: () => showSalaryConfirmSheet(context, plan.salary),
-          child: Text(
-            'ثبت',
-            style: sans(size: 12, weight: FontWeight.bold, color: kAccent),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: sans(size: 12))),
+          TextButton(
+            onPressed: () => showSalaryConfirmSheet(
+              context,
+              expected: expected,
+              cycleKey: plan.pendingKey,
+              late: late,
+            ),
+            child: Text(
+              late ? 'حقوق رسید' : 'ثبت',
+              style: sans(size: 12, weight: FontWeight.bold, color: color),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 // ───────────────────── خلاصه ─────────────────────
@@ -250,10 +264,14 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = plan;
-    final used = p.salary <= 0
-        ? 0.0
-        : (p.spent / p.salary).clamp(0.0, 1.0).toDouble();
-    final over = p.spent > p.salary;
+    final base = p.salary - p.carryDeficit;
+    final used = base <= 0
+        ? (p.spent > 0 ? 1.0 : 0.0)
+        : (p.spent / base).clamp(0.0, 1.0).toDouble();
+    final over = p.spent > base;
+    final chipText = p.awaitingSalary
+        ? 'تخمینی'
+        : (p.salaryConfirmed ? 'تأییدشده' : 'ثابت ماهانه');
 
     Widget mini(String label, String value, Color c) => Expanded(
       child: Container(
@@ -304,14 +322,13 @@ class _SummaryCard extends StatelessWidget {
             children: [
               Text(p.salaryTitle, style: sans(size: 12, color: Colors.white70)),
               const SizedBox(width: 6),
-              StatusChip(
-                p.salaryConfirmed ? 'تأییدشده' : 'ثابت ماهانه',
-                p.salaryConfirmed ? const Color(0xFF86EFAC) : Colors.white70,
-              ),
+              StatusChip(chipText, p.salaryConfirmed ? _ok : Colors.white70),
               const Spacer(),
               if (p.isCurrent)
                 Text(
-                  '${fa('${p.daysLeft}')} روز تا حقوق بعدی',
+                  p.awaitingSalary
+                      ? 'در انتظار حقوق'
+                      : '${fa('${p.daysLeft}')} روز تا حقوق بعدی',
                   style: sans(size: 11, color: Colors.white70),
                 ),
             ],
@@ -330,7 +347,7 @@ class _SummaryCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                pct(p.salary <= 0 ? 0 : p.spent / p.salary),
+                pct(base <= 0 ? 0 : p.spent / base),
                 style: sans(size: 11, color: Colors.white),
               ),
             ],
@@ -342,9 +359,7 @@ class _SummaryCard extends StatelessWidget {
               value: used,
               minHeight: 8,
               backgroundColor: Colors.white24,
-              valueColor: AlwaysStoppedAnimation(
-                over ? const Color(0xFFFCA5A5) : const Color(0xFF86EFAC),
-              ),
+              valueColor: AlwaysStoppedAnimation(over ? _danger : _ok),
             ),
           ),
           const SizedBox(height: 14),
@@ -352,11 +367,7 @@ class _SummaryCard extends StatelessWidget {
             children: [
               mini('تعهدات دوره', money(p.committed), Colors.white),
               const SizedBox(width: 8),
-              mini(
-                'مبلغ آزاد',
-                money(p.free),
-                p.free < 0 ? const Color(0xFFFCA5A5) : const Color(0xFF86EFAC),
-              ),
+              mini('مبلغ آزاد', money(p.free), p.free < 0 ? _danger : _ok),
               const SizedBox(width: 8),
               mini(
                 'سقف خرج روزانه',
@@ -365,14 +376,41 @@ class _SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             'مانده‌ی حقوق: ${money(p.remaining)}',
             style: sans(
               size: 11,
-              color: p.remaining < 0 ? const Color(0xFFFCA5A5) : Colors.white70,
+              color: p.remaining < 0 ? _danger : Colors.white70,
             ),
           ),
+          if (p.carryDeficit > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                'کسری دوره‌ی قبل: ${money(p.carryDeficit)} از حقوق کم شده',
+                style: sans(size: 11, color: _danger),
+              ),
+            )
+          else if (p.leftover > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                'مانده‌ی دوره‌ی قبل: ${money(p.leftover)} (به بودجه اضافه نشده)',
+                style: sans(size: 11, color: Colors.white70),
+              ),
+            ),
+          if (p.projectedBalance != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                'پیش‌بینی پایان دوره: ${money(p.projectedBalance!)}',
+                style: sans(
+                  size: 11,
+                  color: p.projectedBalance! < 0 ? _danger : Colors.white70,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -494,6 +532,7 @@ class _PlanItemTile extends StatelessWidget {
   }
 }
 
+// ───────────────────── تفکیک دسته‌ها ─────────────────────
 class _CategoriesCard extends StatelessWidget {
   final List<CategoryTotal> cats;
   const _CategoriesCard({required this.cats});

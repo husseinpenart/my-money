@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/budget/budget_bloc.dart';
@@ -5,6 +7,7 @@ import 'package:money/feature/auth/presentation/bloc/budget/budget_event.dart';
 import 'package:money/feature/auth/presentation/bloc/budget/budget_state.dart';
 import 'package:money/feature/model/budget/budget_models.dart';
 import 'package:money/helper/utils/thousands_formatter.dart';
+import 'package:money/widgets/budget/budget_widgets.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/report/report_format.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
@@ -23,13 +26,23 @@ Future<void> _show(BuildContext context, Widget child) {
 
 Future<void> showProfileSheet(BuildContext c, SalaryProfile? p) =>
     _show(c, _ProfileSheet(profile: p));
-Future<void> showSalaryConfirmSheet(BuildContext c, double current) =>
-    _show(c, _SalaryConfirmSheet(current: current));
+
+Future<void> showSalaryConfirmSheet(
+  BuildContext c, {
+  required double expected,
+  required int cycleKey,
+  bool late = false,
+}) => _show(
+  c,
+  _SalaryConfirmSheet(expected: expected, cycleKey: cycleKey, late: late),
+);
+
 Future<void> showItemSheet(
   BuildContext c, {
   BudgetItem? item,
   required int curKey,
 }) => _show(c, _ItemSheet(item: item, curKey: curKey));
+
 Future<void> showExpenseSheet(
   BuildContext c, {
   required List<BudgetItem> items,
@@ -74,12 +87,18 @@ String? _amountValidator(String? v) {
 double _amount(String text) =>
     double.parse(ThousandsInputFormatter.digitsOnly(text));
 
+String _fmtJ(Jalali j) => fa(
+  '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}',
+);
+
 // ───────────────────── قاب مشترک ─────────────────────
 class _Frame extends StatefulWidget {
   final String title, submitLabel;
   final GlobalKey<FormState> formKey;
   final Widget child;
-  final VoidCallback onSubmit;
+
+  /// می‌تواند async باشد (مثلاً تأیید مبلغ بزرگ)
+  final FutureOr<void> Function() onSubmit;
   const _Frame({
     required this.title,
     required this.submitLabel,
@@ -95,10 +114,10 @@ class _Frame extends StatefulWidget {
 class _FrameState extends State<_Frame> {
   String? _error;
 
-  void _go() {
+  Future<void> _go() async {
     if (!widget.formKey.currentState!.validate()) return;
     setState(() => _error = null);
-    widget.onSubmit();
+    await widget.onSubmit();
   }
 
   @override
@@ -214,7 +233,7 @@ class _FrameState extends State<_Frame> {
   }
 }
 
-// ───────────────────── حقوق ─────────────────────
+// ───────────────────── تنظیم حقوق ─────────────────────
 class _ProfileSheet extends StatefulWidget {
   final SalaryProfile? profile;
   const _ProfileSheet({required this.profile});
@@ -298,7 +317,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            'دوره‌ی مالی از همین روز شروع می‌شود. اگر ماهی این روز را نداشته باشد، آخرین روز آن ماه حساب می‌شود.',
+            'این روز «موعد» حقوق است. اگر حقوق دیرتر یا زودتر رسید، موقع ثبت تاریخ واقعی را وارد می‌کنی و مرز دوره‌ها خودکار تنظیم می‌شود. اگر ماهی این روز را نداشته باشد، آخرین روز آن ماه حساب می‌شود.',
             style: sans(size: 11, color: Colors.grey.shade600),
           ),
         ],
@@ -307,9 +326,16 @@ class _ProfileSheetState extends State<_ProfileSheet> {
   }
 }
 
+// ───────────────────── ثبت حقوق (مبلغ + تاریخ واقعی) ─────────────────────
 class _SalaryConfirmSheet extends StatefulWidget {
-  final double current;
-  const _SalaryConfirmSheet({required this.current});
+  final double expected;
+  final int cycleKey;
+  final bool late;
+  const _SalaryConfirmSheet({
+    required this.expected,
+    required this.cycleKey,
+    required this.late,
+  });
 
   @override
   State<_SalaryConfirmSheet> createState() => _SalaryConfirmSheetState();
@@ -318,28 +344,63 @@ class _SalaryConfirmSheet extends StatefulWidget {
 class _SalaryConfirmSheetState extends State<_SalaryConfirmSheet> {
   final _key = GlobalKey<FormState>();
   late final _c = TextEditingController(
-    text: ThousandsInputFormatter.format(widget.current.round().toString()),
+    text: ThousandsInputFormatter.format(widget.expected.round().toString()),
   );
+  final _dateC = TextEditingController();
+  Jalali _date = Jalali.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _dateC.text = _fmtJ(_date);
+  }
 
   @override
   void dispose() {
     _c.dispose();
+    _dateC.dispose();
     super.dispose();
+  }
+
+  Future<void> _pick() async {
+    FocusScope.of(context).unfocus();
+    final now = Jalali.now();
+    final p = await showPersianDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: now.addDays(-40),
+      lastDate: now, // تاریخ آینده مجاز نیست
+      initialEntryMode: PersianDatePickerEntryMode.calendar,
+      initialDatePickerMode: PersianDatePickerMode.day,
+      locale: const Locale('fa', 'IR'),
+    );
+    if (p == null) return;
+    setState(() {
+      _date = p;
+      _dateC.text = _fmtJ(p);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return _Frame(
-      title: 'حقوق دریافت‌شده در این دوره',
-      submitLabel: 'ثبت مبلغ واقعی',
+      title: widget.late ? 'ثبت حقوقِ دیرکرده' : 'حقوق دریافت‌شده',
+      submitLabel: 'ثبت حقوق',
       formKey: _key,
-      onSubmit: () => context.read<BudgetBloc>().add(
-        BudgetSalaryConfirmed(_amount(_c.text)),
-      ),
+      onSubmit: () {
+        final d = _date.toDateTime();
+        context.read<BudgetBloc>().add(
+          BudgetSalaryConfirmed(
+            amount: _amount(_c.text),
+            cycleKey: widget.cycleKey,
+            date: DateTime.utc(d.year, d.month, d.day, 12),
+          ),
+        );
+      },
       child: Column(
         children: [
           Text(
-            'اگر مبلغ واقعی (با اضافه‌کار، پاداش یا کسورات) فرق دارد، همین‌جا اصلاح کن. برنامه‌ی این دوره با همین مبلغ محاسبه می‌شود.',
+            'مبلغ و تاریخِ واقعیِ واریز را وارد کن. دوره‌ی مالی از همین تاریخ شروع می‌شود و خرج‌های قبل از آن به دوره‌ی قبل می‌روند. اگر مبلغ با اضافه‌کار، پاداش یا کسورات فرق دارد، همین‌جا اصلاح کن.',
             style: sans(size: 12, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 14),
@@ -350,6 +411,14 @@ class _SalaryConfirmSheetState extends State<_SalaryConfirmSheet> {
             style: sans(size: 14),
             decoration: _dec('مبلغ دریافتی', Icons.payments_outlined),
             validator: _amountValidator,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _dateC,
+            readOnly: true,
+            onTap: _pick,
+            style: sans(size: 14),
+            decoration: _dec('تاریخ واریز', Icons.calendar_month_outlined),
           ),
         ],
       ),
@@ -416,7 +485,9 @@ class _ItemSheetState extends State<_ItemSheet> {
           isFixed: _fixed,
           frequencyMonths: _freq,
           startKey: _freq == 1
-              ? (widget.item?.startKey ?? widget.curKey)
+              ? (widget.item != null && widget.item!.startKey > 0
+                    ? widget.item!.startKey
+                    : widget.curKey)
               : _startKey,
           dueDay: due.clamp(1, 31),
         ),
@@ -577,7 +648,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   @override
   void initState() {
     super.initState();
-    _dateC.text = _fmt(_date);
+    _dateC.text = _fmtJ(_date);
   }
 
   @override
@@ -589,17 +660,14 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
     super.dispose();
   }
 
-  String _fmt(Jalali j) => fa(
-    '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}',
-  );
-
   Future<void> _pickDate() async {
     FocusScope.of(context).unfocus();
+    final now = Jalali.now();
     final p = await showPersianDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: Jalali(1400, 1),
-      lastDate: Jalali(1450, 12),
+      firstDate: Jalali(now.year - 2, 1, 1),
+      lastDate: now, // هزینه‌ی آینده مجاز نیست
       initialEntryMode: PersianDatePickerEntryMode.calendar,
       initialDatePickerMode: PersianDatePickerMode.day,
       locale: const Locale('fa', 'IR'),
@@ -607,20 +675,55 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
     if (p == null) return;
     setState(() {
       _date = p;
-      _dateC.text = _fmt(p);
+      _dateC.text = _fmtJ(p);
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    final amt = _amount(_amountC.text);
+    final bloc = context.read<BudgetBloc>();
+    final plan = bloc.state.plan;
+
+    // مبلغ بسیار بزرگ نسبت به حقوق: قبل از ثبت تأیید گرفته می‌شود
+    if (plan != null && plan.salary > 0 && amt > plan.salary * 0.5) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'مبلغ بزرگ',
+            style: sans(size: 15, weight: FontWeight.bold),
+          ),
+          content: Text(
+            'مبلغ ${money(amt)} بیش از نصف حقوق این دوره است. مطمئنی درست وارد کرده‌ای؟',
+            style: sans(size: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('اصلاح می‌کنم', style: sans(size: 13)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('بله، ثبت شود', style: sans(size: 13)),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+    }
+
     final d = _date.toDateTime();
     final item = widget.items.where((i) => i.itemId == _itemId).firstOrNull;
-    context.read<BudgetBloc>().add(
+    bloc.add(
       BudgetExpenseAdded(
         itemId: _itemId,
         title: _title.text,
         note: _note.text,
         category: item?.category ?? _category,
-        amount: _amount(_amountC.text),
+        amount: amt,
         date: DateTime.utc(d.year, d.month, d.day, 12),
       ),
     );
