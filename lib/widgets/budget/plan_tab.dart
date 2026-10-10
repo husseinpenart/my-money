@@ -72,7 +72,11 @@ class PlanTab extends StatelessWidget {
                   plan: plan,
                   expected: s.profile?.amount ?? plan.salary,
                 ),
-              _SummaryCard(plan: plan),
+              _SummaryCard(
+                plan: plan,
+                expected: s.profile?.amount ?? plan.salary,
+                profile: s.profile,
+              ),
               const SizedBox(height: 12),
               ..._alerts(plan),
               _sectionTitle(
@@ -259,7 +263,13 @@ class _ConfirmBanner extends StatelessWidget {
 // ───────────────────── خلاصه ─────────────────────
 class _SummaryCard extends StatelessWidget {
   final BudgetPlan plan;
-  const _SummaryCard({required this.plan});
+  final double expected;
+  final SalaryProfile? profile;
+  const _SummaryCard({
+    required this.plan,
+    required this.expected,
+    required this.profile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -331,24 +341,47 @@ class _SummaryCard extends StatelessWidget {
                       : '${fa('${p.daysLeft}')} روز تا حقوق بعدی',
                   style: sans(size: 11, color: Colors.white70),
                 ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            money(p.salary),
-            style: sans(size: 26, weight: FontWeight.bold, color: Colors.white),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Text(
-                'خرج‌شده ${money(p.spent)}',
-                style: sans(size: 11, color: Colors.white),
-              ),
-              const Spacer(),
-              Text(
-                pct(base <= 0 ? 0 : p.spent / base),
-                style: sans(size: 11, color: Colors.white),
+              PopupMenuButton<String>(
+                tooltip: 'ویرایش حقوق',
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onSelected: (v) {
+                  if (v == 'profile') {
+                    showProfileSheet(context, profile);
+                  } else {
+                    showSalaryConfirmSheet(
+                      context,
+                      expected: p.salaryConfirmed ? p.salary : expected,
+                      cycleKey: p.isCurrent ? p.pendingKey : p.cycleKey,
+                      late: p.awaitingSalary,
+                    );
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'profile',
+                    child: Text(
+                      'تغییر حقوق ثابت و روز موعد',
+                      style: sans(size: 13),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'actual',
+                    child: Text(
+                      p.salaryConfirmed
+                          ? 'اصلاح حقوق واقعی این دوره'
+                          : 'ثبت حقوق واقعی این دوره',
+                      style: sans(size: 13),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

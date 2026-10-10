@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 👈 haptic
+import 'package:flutter/services.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/budget/budget_page.dart';
 import 'package:money/layouts/HomeLayouts.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
+import 'package:money/widgets/drawer/app_drawer.dart'; // 👈 از widgets/drawer
+import 'package:money/widgets/drawer/drawer_scope.dart'; // 👈 از widgets/drawer
 
 const _navActive = Color.fromRGBO(78, 129, 239, 1);
 const _navInactive = Color.fromRGBO(163, 168, 176, 1);
@@ -16,7 +18,6 @@ typedef _NavItemData = ({String label, IconData active, IconData inactive});
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -25,6 +26,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _pages = const [
     Homelayouts(),
@@ -57,15 +59,20 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   void _onItemTapped(int index) {
-    if (index == _selectedIndex) return; // 👈 rebuild بی‌خود نه
-    HapticFeedback.selectionClick(); // 👈 حس فیزیکی
+    if (index == _selectedIndex) return;
+    HapticFeedback.selectionClick();
     setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      key: _scaffoldKey,
+      drawer: const AppDrawer(),
+      body: DrawerScope(
+        scaffoldKey: _scaffoldKey,
+        child: _pages[_selectedIndex],
+      ),
       bottomNavigationBar: _BottomBar(
         index: _selectedIndex,
         items: _items,
@@ -83,7 +90,6 @@ class _BottomBar extends StatelessWidget {
     required this.items,
     required this.onTap,
   });
-
   final int index;
   final List<_NavItemData> items;
   final ValueChanged<int> onTap;
@@ -95,7 +101,7 @@ class _BottomBar extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: const Border(
-          top: BorderSide(color: Color(0xFFF1F3F6), width: 1), // 👈 لبه‌ی مویی
+          top: BorderSide(color: Color(0xFFF1F3F6), width: 1),
         ),
         boxShadow: [
           BoxShadow(
@@ -133,7 +139,6 @@ class _NavItem extends StatelessWidget {
     required this.isActive,
     required this.onTap,
   });
-
   final _NavItemData data;
   final bool isActive;
   final VoidCallback onTap;
@@ -141,14 +146,12 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isActive ? _navActive : _navInactive;
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 👇 آیکون: فعال کمی بزرگ‌تر و بالا‌آمده (lift)
           AnimatedSlide(
             duration: _dur,
             curve: _curve,
@@ -179,7 +182,6 @@ class _NavItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          // 👇 نقطه‌ی درخشان (به‌جای کپسول/پس‌زمینه) — slot ثابت تا پرش نکند
           SizedBox(
             height: 12,
             child: Center(

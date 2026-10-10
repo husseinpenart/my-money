@@ -1,10 +1,10 @@
-// lib/widgets/header.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/search/search_sheet.dart';
 import 'package:money/widgets/contact/contact_style.dart';
+import 'package:money/widgets/drawer/drawer_menu_button.dart'; // 👈 جدید
 import 'package:money/widgets/global/notification_bell.dart';
 
 class Header extends StatefulWidget {
@@ -35,10 +35,6 @@ class _HeaderState extends State<Header> {
 
   @override
   Widget build(BuildContext context) {
-    final initial = _userName.isEmpty
-        ? '؟'
-        : _userName.characters.first.toUpperCase();
-
     return Container(
       width: double.maxFinite,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -47,10 +43,11 @@ class _HeaderState extends State<Header> {
         children: [
           Row(
             children: [
+              // 👈 دکمه‌ی منو داخل باکس گرادیانی هم‌اندازه‌ی آواتار قبلی
               Container(
                 width: 44,
                 height: 44,
-                alignment: Alignment.center,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   gradient: const LinearGradient(
@@ -59,14 +56,7 @@ class _HeaderState extends State<Header> {
                     colors: [Color(0xFF4F28DF), Color(0xFF947BEE)],
                   ),
                 ),
-                child: Text(
-                  initial,
-                  style: sans(
-                    size: 18,
-                    weight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: const DrawerMenuButton(color: Colors.white),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -96,7 +86,6 @@ class _HeaderState extends State<Header> {
           ),
           const SizedBox(height: 14),
 
-          // نوار جستجو (با لمس، شیت جستجو باز می‌شود)
           Material(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
