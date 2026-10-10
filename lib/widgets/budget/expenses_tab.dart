@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/gestures.dart'; // 👈 برای PointerDeviceKind
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -37,18 +38,21 @@ class _ExpensesTabState extends State<ExpensesTab> {
   void initState() {
     super.initState();
     _cycle = context.read<BudgetBloc>().state.plan?.cycleKey;
-    _scroll.addListener(() {
-      if (_scroll.hasClients &&
-          _scroll.position.pixels >= _scroll.position.maxScrollExtent - 120) {
-        _load(reset: false);
-      }
-    });
+    _scroll.addListener(_onScroll);
     _load(reset: true);
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 120) {
+      _load(reset: false);
+    }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _scroll.removeListener(_onScroll);
     _scroll.dispose();
     super.dispose();
   }
@@ -115,8 +119,9 @@ class _ExpensesTabState extends State<ExpensesTab> {
         ],
       ),
     );
-    if (ok == true && mounted)
+    if (ok == true && mounted) {
       context.read<BudgetBloc>().add(BudgetExpenseDeleted(e.expenseId));
+    }
   }
 
   @override
@@ -124,178 +129,245 @@ class _ExpensesTabState extends State<ExpensesTab> {
     return BlocListener<BudgetBloc, BudgetState>(
       listenWhen: (p, c) =>
           p.version != c.version || p.plan?.cycleKey != c.plan?.cycleKey,
-      listener: (context, s) {
+      listener: (_, s) {
         _cycle = s.plan?.cycleKey;
         _load(reset: true);
       },
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: AppSearchField(
-              hintText: 'جستجوی عنوان یا یادداشت',
-              autofocus: false,
-              isLoading: _loading,
-              onChanged: (v) {
-                _debounce?.cancel();
-                _debounce = Timer(const Duration(milliseconds: 400), () {
-                  _query = v.trim();
-                  _load(reset: true);
-                });
-              },
-            ),
-          ),
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: ChoiceChip(
-                    label: Text('همه', style: sans(size: 12)),
-                    selected: _category == null,
-                    showCheckmark: false,
-                    selectedColor: kAccent.withValues(alpha: 0.15),
-                    onSelected: (_) {
-                      _category = null;
-                      _load(reset: true);
-                    },
-                  ),
-                ),
-                for (final c in BudgetCategory.all)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: ChoiceChip(
-                      avatar: Icon(c.icon, size: 15, color: c.color),
-                      label: Text(c.label, style: sans(size: 12)),
-                      selected: _category == c.key,
-                      showCheckmark: false,
-                      selectedColor: c.color.withValues(alpha: 0.15),
-                      onSelected: (_) {
-                        _category = _category == c.key ? null : c.key;
-                        _load(reset: true);
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 6, 18, 4),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                '${fa('$_total')} هزینه در این دوره',
-                style: sans(size: 11, color: Colors.grey.shade600),
+      child: CustomScrollView(
+        controller: _scroll,
+        // ✅ کلید سازگاری وب + موبایل
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          // ─── سرچ ───────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: AppSearchField(
+                hintText: 'جستجوی عنوان یا یادداشت',
+                autofocus: false,
+                isLoading: _loading,
+                onChanged: (v) {
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 400), () {
+                    _query = v.trim();
+                    _load(reset: true);
+                  });
+                },
               ),
             ),
           ),
-          Expanded(child: _body()),
+
+          // ─── چیپ‌های دسته‌بندی (اسکرول افقی قطعی روی وب+موبایل) ───
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 44,
+              child: ScrollConfiguration(
+                // 👈 ماوس/ترک‌پد/قلم هم drag می‌کنند (پیش‌فرض فقط لمس بود)
+                behavior: const ScrollBehavior().copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.trackpad,
+                    PointerDeviceKind.stylus,
+                  },
+                ),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  // 👈 فیزیک صریح تا gesture افقی به خود لیست برسد
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _chip(
+                      label: 'همه',
+                      selected: _category == null,
+                      onTap: () {
+                        setState(() => _category = null);
+                        _load(reset: true);
+                      },
+                    ),
+                    for (final c in BudgetCategory.all)
+                      _chip(
+                        label: c.label,
+                        icon: c.icon,
+                        color: c.color,
+                        selected: _category == c.key,
+                        onTap: () {
+                          setState(
+                            () => _category = _category == c.key ? null : c.key,
+                          );
+                          _load(reset: true);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ─── تعداد ────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 6, 18, 4),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  '${fa('$_total')} هزینه در این دوره',
+                  style: sans(size: 11, color: Colors.grey.shade600),
+                ),
+              ),
+            ),
+          ),
+
+          // ─── محتوای اصلی ──────────────────────────────────
+          ..._buildSliverBody(),
         ],
       ),
     );
   }
 
-  Widget _body() {
+  Widget _chip({
+    required String label,
+    IconData? icon,
+    Color? color,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final accent = color ?? kAccent;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 8),
+      child: ChoiceChip(
+        avatar: icon != null ? Icon(icon, size: 15, color: accent) : null,
+        label: Text(label, style: sans(size: 12)),
+        selected: selected,
+        showCheckmark: false,
+        selectedColor: accent.withValues(alpha: 0.15),
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
+
+  List<Widget> _buildSliverBody() {
+    // حالت لودینگ اولیه
     if (_loading && _items.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: kAccent));
-    }
-    if (_error != null && _items.isEmpty) {
-      return EmptyBox(
-        icon: Icons.error_outline,
-        text: _error!,
-        action: 'تلاش دوباره',
-        onAction: () => _load(reset: true),
-      );
-    }
-    if (_items.isEmpty) {
-      return const EmptyBox(
-        icon: Icons.receipt_long_outlined,
-        text: 'هزینه‌ای در این دوره ثبت نشده است',
-      );
+      return [
+        const SliverFillRemaining(
+          child: Center(child: CircularProgressIndicator(color: kAccent)),
+        ),
+      ];
     }
 
-    return ListView.builder(
-      controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-      itemCount: _items.length + (_loadingMore ? 1 : 0),
-      itemBuilder: (context, i) {
-        if (i >= _items.length) {
-          return const Padding(
-            padding: EdgeInsets.all(14),
-            child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: kAccent,
-                ),
-              ),
-            ),
-          );
-        }
-        final e = _items[i];
-        final cat = BudgetCategory.of(e.category);
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-          decoration: cardDeco(),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: cat.color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(cat.icon, size: 18, color: cat.color),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      e.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: sans(size: 13, weight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      [
-                        if (e.date != null) jalaliDate(e.date!),
-                        cat.label,
-                        if ((e.note ?? '').isNotEmpty) e.note!,
-                      ].join('  ·  '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: sans(size: 11, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                money(e.amount),
-                style: sans(size: 13, weight: FontWeight.bold, color: kRed),
-              ),
-              IconButton(
-                tooltip: 'حذف',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _confirmDelete(e),
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  size: 20,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-            ],
+    // حالت خطا
+    if (_error != null && _items.isEmpty) {
+      return [
+        SliverFillRemaining(
+          child: EmptyBox(
+            icon: Icons.error_outline,
+            text: _error!,
+            action: 'تلاش دوباره',
+            onAction: () => _load(reset: true),
           ),
-        );
-      },
-    );
+        ),
+      ];
+    }
+
+    // حالت خالی
+    if (_items.isEmpty) {
+      return [
+        const SliverFillRemaining(
+          child: EmptyBox(
+            icon: Icons.receipt_long_outlined,
+            text: 'هزینه‌ای در این دوره ثبت نشده است',
+          ),
+        ),
+      ];
+    }
+
+    return [
+      // ─── لیست آیتم‌ها ───────────────────────────────────
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, i) {
+            final e = _items[i];
+            final cat = BudgetCategory.of(e.category);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+              decoration: cardDeco(),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: cat.color.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(cat.icon, size: 18, color: cat.color),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          e.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: sans(size: 13, weight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          [
+                            if (e.date != null) jalaliDate(e.date!),
+                            cat.label,
+                            if ((e.note ?? '').isNotEmpty) e.note!,
+                          ].join('  ·  '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: sans(size: 11, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    money(e.amount),
+                    style: sans(size: 13, weight: FontWeight.bold, color: kRed),
+                  ),
+                  IconButton(
+                    tooltip: 'حذف',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _confirmDelete(e),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }, childCount: _items.length),
+        ),
+      ),
+
+      // ─── اندیکاتور لود بیشتر یا فاصله پایین ─────────────
+      SliverToBoxAdapter(
+        child: _loadingMore
+            ? const Padding(
+                padding: EdgeInsets.all(14),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: kAccent,
+                    ),
+                  ),
+                ),
+              )
+            : const SizedBox(height: 32),
+      ),
+    ];
   }
 }
