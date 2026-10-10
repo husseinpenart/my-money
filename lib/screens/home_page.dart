@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/dictionary/titles.dart';
+import 'package:money/feature/auth/presentation/pages/budget/budget_page.dart';
 import 'package:money/layouts/HomeLayouts.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
@@ -20,6 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // 👈 لاگین اسکرین را از اینجا حذف کردیم (تعداد ویجت‌ها و آیکون‌ها باید برابر باشد)
   final List<Widget> _pages = const [
     Homelayouts(),
+    BudgetPage(),
     ReportPage(),
     ContactPage(),
     // Center(child: Text('تنظیمات')),
@@ -47,6 +49,10 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home, size: 20),
             label: BottomNavigations.home,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calculate),
+            label: ScreenDictionary.calculationItems,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.business),

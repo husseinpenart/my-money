@@ -207,7 +207,7 @@ class _LoginViewState extends State<_LoginView> {
                               AppTextField(
                                 controller: _phoneController,
                                 label: 'شماره موبایل',
-                                hint: '0912 000 0000',
+                                // hint: '0912 000 0000',
                                 icon: Icons.phone_outlined,
                                 keyboardType: TextInputType.phone,
                                 maxLength: 11,

@@ -2,11 +2,13 @@
 import 'package:get_it/get_it.dart';
 import 'package:money/core/network/notification_read_store.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
+import 'package:money/feature/auth/presentation/bloc/budget/budget_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/hero/hero_stats_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/notification/notification_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
+import 'package:money/feature/data/dataResource/budget_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/debt_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/hero_remote_data_source.dart';
@@ -95,5 +97,12 @@ Future<void> configureDependencies() async {
       remote: getIt<NotificationRemoteDataSource>(),
       store: getIt<NotificationReadStore>(),
     ),
+  );
+
+  getIt.registerLazySingleton<BudgetRemoteDataSource>(
+    () => BudgetRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<BudgetBloc>(
+    () => BudgetBloc(ds: getIt<BudgetRemoteDataSource>()),
   );
 }

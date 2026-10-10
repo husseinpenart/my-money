@@ -243,7 +243,7 @@ class _RegisterViewState extends State<_RegisterView> {
                               AppTextField(
                                 controller: _nameController,
                                 label: 'نام و نام خانوادگی',
-                                hint: 'مثال: محمد رضایی',
+                                // hint: 'مثال: محمد رضایی',
                                 icon: Icons.person_outline_rounded,
                                 onChanged: (_) =>
                                     setState(() {}), // 👈 بررسی لحظه‌ای
@@ -254,7 +254,7 @@ class _RegisterViewState extends State<_RegisterView> {
                               AppTextField(
                                 controller: _phoneController,
                                 label: 'شماره موبایل',
-                                hint: '0912 000 0000',
+                                // hint: '0912 000 0000',
                                 icon: Icons.phone_outlined,
                                 keyboardType: TextInputType.phone,
                                 maxLength: 11,
