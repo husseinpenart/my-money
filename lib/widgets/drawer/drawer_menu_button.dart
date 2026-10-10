@@ -19,7 +19,7 @@ class DrawerMenuButton extends StatelessWidget {
           : null,
       onPressed: () {
         HapticFeedback.selectionClick();
-        DrawerScope.of(context).open();
+        DrawerScope.open(context); // 👈 امن، بدون کرش
       },
       icon: Icon(Icons.menu_rounded, color: color ?? Colors.black87),
     );

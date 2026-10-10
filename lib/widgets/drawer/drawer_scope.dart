@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
 
-/// با پیچیدن دور body‌ی اسکفولدِ بیرونی، هر descendant (حتی داخل Scaffoldهای
-/// تودرتو) می‌تواند درازِ بیرونی را باز کند.
+/// راه‌ای امن برای بازکردن درازِ بیرونی از هر عمقی از tree.
+/// اگر `DrawerScope` دور body پیچیده شده باشد از `scaffoldKey` استفاده می‌کند؛
+/// در غیر این صورت به‌صورت fallback نزدیک‌ترین `Scaffold` بالایی را پیدا می‌کند.
+/// به همین دلیل هرگز روی null کرش نمی‌کند.
 class DrawerScope extends InheritedWidget {
-  const DrawerScope({
-    super.key,
-    required this.scaffoldKey,
-    required super.child,
-  });
+  const DrawerScope({super.key, this.scaffoldKey, required super.child});
 
-  final GlobalKey<ScaffoldState> scaffoldKey;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
-  static DrawerScope? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<DrawerScope>();
-
-  static DrawerScope of(BuildContext context) {
-    final scope = maybeOf(context);
-    assert(
-      scope != null,
-      'DrawerScope not found — آیا body را در آن پیچیده‌ای؟',
-    );
-    return scope!;
+  static void open(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<DrawerScope>();
+    final key = scope?.scaffoldKey;
+    if (key != null) {
+      key.currentState?.openDrawer();
+      return;
+    }
+    // fallback: بدون GlobalKey هم کار می‌کند
+    Scaffold.maybeOf(context)?.openDrawer();
   }
 
-  void open() => scaffoldKey.currentState?.openDrawer();
-
   @override
-  bool updateShouldNotify(DrawerScope old) => false;
+  bool updateShouldNotify(DrawerScope old) => old.scaffoldKey != scaffoldKey;
 }

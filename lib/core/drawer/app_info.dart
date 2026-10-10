@@ -8,7 +8,7 @@ class AppInfo {
   //   flutter:
   //     assets:
   //       - assets/images/
-  static const String logoAsset = 'assets/images/logo.png';
+  static const String logoAsset = 'assets/images/logo.jpeg';
 
   static const String appName = 'مدیریت مالی';
   static const String appTagline = 'طلب و بدهی‌ات را ساده مدیریت کن';

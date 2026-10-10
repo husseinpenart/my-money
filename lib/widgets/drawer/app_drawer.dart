@@ -38,7 +38,9 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   Future<void> _logout() async {
-    Navigator.of(context).pop(); // بستن دراز
+    // 👈 نکته‌ی مهم: dialog را با context فعلی (که هنوز داخل drawer و valid است)
+    //    باز می‌کنیم. اگر اول drawer را pop کنیم، context می‌میرد و dialog
+    //    نمایش داده نمی‌شود → logout هرگز اجرا نمی‌شد (باگ قبلی).
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -62,8 +64,10 @@ class _AppDrawerState extends State<AppDrawer> {
     );
     if (ok != true || !mounted) return;
 
-    GetIt.I<TokenStorage>().clearAll(); // 👈 توکن + نام + کش‌ها پاک می‌شود
+    GetIt.I<TokenStorage>().clearAll();
 
+    // pushAndRemoveUntil کل stack را پاک می‌کند؛ Scaffold قبلی (با drawer باز)
+    // از screen خارج می‌شود و دراز هم خودبه‌خود بسته می‌شود.
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const IntroPage()),
       (_) => false,
