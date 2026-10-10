@@ -24,3 +24,17 @@ class RegisterSubmitted extends AuthEvent {
     required this.agreedToTerms,
   });
 }
+
+class ResetPasswordSubmitted extends AuthEvent {
+  final String phoneNumber;
+  final String recoveryCode;
+  final String newPassword;
+  final String confirmedPassword;
+
+  const ResetPasswordSubmitted({
+    required this.phoneNumber,
+    required this.recoveryCode,
+    required this.newPassword,
+    required this.confirmedPassword,
+  });
+}

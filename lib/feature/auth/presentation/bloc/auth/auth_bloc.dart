@@ -14,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     : super(const AuthInitial()) {
     on<RegisterSubmitted>(_onRegisterSubmitted);
     on<LoginSubmitted>(_onLoginSubmitted);
+    on<ResetPasswordSubmitted>(_onResetPassword);
   }
 
   Future<void> _onRegisterSubmitted(
@@ -45,6 +46,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // در صورت ثبت‌نام موفق، نام کاربر نیز ذخیره می‌شود
       await tokenStorage.saveName(event.name);
 
+      String? code;
+      if (response is Map<String, dynamic>) {
+        final d = response['data'];
+        if (d is Map<String, dynamic>) code = d['recoveryCode']?.toString();
+      }
+
+      final msg = _responseMessage(
+        response,
+        fallback: 'ثبت‌نام با موفقیت انجام شد.',
+      );
+
+      if (code != null && code.isNotEmpty) {
+        emit(AuthRecoverySuccess(message: msg, recoveryCode: code));
+      } else {
+        emit(AuthSuccess(message: msg));
+      }
       emit(
         AuthSuccess(
           message: _responseMessage(
@@ -166,5 +183,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     }
     return null;
+  }
+
+  Future<void> _onResetPassword(
+    ResetPasswordSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final dynamic response = await remoteDataSource.resetPassword(
+        phoneNumber: event.phoneNumber,
+        recoveryCode: event.recoveryCode,
+        newPassword: event.newPassword,
+        confirmedPassword: event.confirmedPassword,
+      );
+
+      if (_isFailedResponse(response)) {
+        emit(
+          AuthFailure(
+            message: _responseMessage(
+              response,
+              fallback: 'بازیابی رمز ناموفق بود.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      String? code;
+      if (response is Map<String, dynamic>) {
+        final d = response['data'];
+        if (d is Map<String, dynamic>) code = d['recoveryCode']?.toString();
+      }
+
+      emit(
+        AuthRecoverySuccess(
+          message: _responseMessage(response, fallback: 'رمز عبور تغییر کرد.'),
+          recoveryCode: code ?? '',
+        ),
+      );
+    } catch (error) {
+      emit(AuthFailure(message: backendMessage(error)));
+    }
   }
 }

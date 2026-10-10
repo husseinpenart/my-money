@@ -21,3 +21,14 @@ class AuthFailure extends AuthState {
 
   const AuthFailure({required this.message});
 }
+
+/// بعد از بازیابی موفق؛ کد بازیابی جدید باید به کاربر نشان داده شود
+class AuthRecoverySuccess extends AuthState {
+  final String message;
+  final String recoveryCode;
+
+  const AuthRecoverySuccess({
+    required this.message,
+    required this.recoveryCode,
+  });
+}

@@ -8,6 +8,7 @@ import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_state.dart';
+import 'package:money/feature/auth/presentation/pages/auth/forgot_password_screen.dart';
 import 'package:money/helper/utils/string_utils.dart';
 import 'package:money/screens/home_page.dart';
 import 'package:money/theme/app_colors.dart';
@@ -228,18 +229,7 @@ class _LoginViewState extends State<_LoginView> {
                                 onChanged: (_) => setState(() {}),
                               ),
 
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton(
-                                  onPressed: isLoading ? null : () {},
-                                  child: const Text(
-                                    'فراموشی رمز عبور؟',
-                                    style: TextStyle(fontSize: 12.5),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 30),
 
                               PrimaryButton(
                                 label: isLoading
@@ -249,7 +239,21 @@ class _LoginViewState extends State<_LoginView> {
                                 loading: isLoading,
                                 onPressed: _submit,
                               ),
-
+                              const SizedBox(height: 20),
+                              TextButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ForgotPasswordScreen(),
+                                        ),
+                                      ),
+                                child: const Text(
+                                  'فراموشی رمز عبور؟',
+                                  style: TextStyle(fontSize: 12.5),
+                                ),
+                              ),
                               if (activeErrors.isNotEmpty) ...[
                                 const SizedBox(height: 16),
                                 Container(

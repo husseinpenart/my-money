@@ -19,6 +19,7 @@ import 'package:money/widgets/auth/hero_header.dart';
 import 'package:money/widgets/auth/password_strength_meter.dart';
 import 'package:money/widgets/auth/policy_bottom_sheet.dart';
 import 'package:money/widgets/auth/primary_button.dart';
+import 'package:money/widgets/auth/recovery_code_dialog.dart';
 import 'package:money/widgets/auth/switch_link.dart';
 
 import 'login_screen.dart';
@@ -52,7 +53,7 @@ class _RegisterViewState extends State<_RegisterView> {
 
   bool _agreed = false;
   bool _agreeError = false;
-
+  bool _showingRecovery = false;
   // 👈 لیست خطاهای دریافتی از سرور
   List<String> _serverErrors = [];
 
@@ -96,9 +97,17 @@ class _RegisterViewState extends State<_RegisterView> {
   }
 
   void _submit() {
+    if (!_agreed) {
+      setState(() {
+        _agreeError = true;
+        _serverErrors = ['لطفاً شرایط و قوانین را بپذیرید.'];
+      });
+      return;
+    }
+
     setState(() {
-      _serverErrors = []; // پاک کردن خطاهای قبلی قبل از ارسال جدید
-      _agreeError = !_agreed;
+      _serverErrors = [];
+      _agreeError = false;
     });
 
     context.read<AuthBloc>().add(
@@ -110,21 +119,16 @@ class _RegisterViewState extends State<_RegisterView> {
         agreedToTerms: _agreed,
       ),
     );
-
-    if (!_agreed) {
-      setState(() {
-        _serverErrors = ['لطفاً شرایط و قوانین را بپذیرید.'];
-      });
-      return;
-    }
   }
 
-  void _onAuthStateChanged(BuildContext context, AuthState state) {
+  Future<void> _onAuthStateChanged(
+    BuildContext context,
+    AuthState state,
+  ) async {
     if (!mounted) return;
 
     if (state is AuthFailure) {
       setState(() {
-        // جدا کردن خطاهای چندخطی سرور و تبدیل به لیست
         _serverErrors = state.message
             .split('\n')
             .map((e) => e.trim())
@@ -134,8 +138,17 @@ class _RegisterViewState extends State<_RegisterView> {
       return;
     }
 
-    if (state is AuthSuccess) {
+    if (state is AuthRecoverySuccess) {
+      if (_showingRecovery) return; // جلوگیری از باز شدن دوباره
+      _showingRecovery = true;
+
       setState(() => _serverErrors = []);
+
+      // تا کاربر تیک «ذخیره کردم» را نزند و «بستن» را نزند، اینجا می‌ماند
+      await showRecoveryCodeDialog(context, state.recoveryCode);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Directionality(
@@ -151,6 +164,30 @@ class _RegisterViewState extends State<_RegisterView> {
         ),
       );
 
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      return;
+    }
+
+    // ثبت‌نام بدون کد بازیابی (حالت قدیمی)
+    if (state is AuthSuccess) {
+      if (_showingRecovery) return;
+      setState(() => _serverErrors = []);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              state.message.isEmpty
+                  ? 'ثبت‌نام با موفقیت انجام شد'
+                  : state.message,
+            ),
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
         Navigator.of(context).pushReplacement(

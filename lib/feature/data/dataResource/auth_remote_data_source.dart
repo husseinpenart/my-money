@@ -38,4 +38,33 @@ class AuthRemoteDataSource {
 
     return response.data;
   }
+
+  Future<dynamic> resetPassword({
+    required String phoneNumber,
+    required String recoveryCode,
+    required String newPassword,
+    required String confirmedPassword,
+  }) async {
+    final Response<dynamic> response = await apiClient.post<dynamic>(
+      '/AuthControllers/reset-password',
+      requiresAuth: false,
+      data: {
+        'phoneNumber': phoneNumber,
+        'recoveryCode': recoveryCode,
+        'newPassword': newPassword,
+        'confirmedPassword': confirmedPassword,
+      },
+    );
+    return response.data;
+  }
+
+  Future<dynamic> generateRecoveryCode({
+    required String currentPassword,
+  }) async {
+    final Response<dynamic> response = await apiClient.post<dynamic>(
+      '/AuthControllers/recovery-code',
+      data: {'currentPassword': currentPassword},
+    );
+    return response.data;
+  }
 }
