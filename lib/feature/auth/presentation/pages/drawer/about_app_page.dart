@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/core/drawer/app_info.dart';
-import 'package:money/feature/auth/presentation/pages/drawer/privacy_page.dart'; // 👈 اضافه شد
+import 'package:money/feature/auth/presentation/pages/drawer/privacy_page.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/drawer/section_card.dart';
 
@@ -29,6 +29,7 @@ class AboutAppPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // هدر معرفی
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -93,10 +94,11 @@ class AboutAppPage extends StatelessWidget {
             icon: Icons.auto_awesome_rounded,
             title: 'چرا این اپ؟',
             child: Text(
-              'مدیریت طلب و بدهی نباید استرس‌آور باشد. این اپ با زبانی ساده و '
-              'بدون شلوغی، به تو کمک می‌کند یادت بماند به whom بدهکار هستی، '
-              'چه کسی به تو بدهکار است، و چقدر از هر کدام تسویه شده. '
-              'همه‌چیز در یک جا، سریع و قابل‌اعتماد.',
+              'مدیریت امور مالی نباید پراکنده و استرس‌آور باشد. این اپ سه نیاز '
+              'اصلی را در یک جا جمع می‌کند: پیگیری دقیق طلب و بدهی، بودجه‌بندی '
+              'واقع‌گرایانه‌ی ماهانه، و گزارش‌هایی که نشان می‌دهند پولت کجاست و '
+              'چه چیزی معوق مانده. هدف، شفافیت و تصمیم‌گیری آگاهانه است؛ بدون '
+              'شلوغی و بدون اصطلاحات پیچیده.',
               style: sans(size: 12.5, color: _grey700).copyWith(height: 1.8),
             ),
           ),
@@ -110,10 +112,22 @@ class AboutAppPage extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(f.icon, size: 18, color: _brand), // 👈 بدون cast
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(f.icon, size: 18, color: _brand),
+                        ),
                         const SizedBox(width: 10),
-                        Expanded(child: Text(f.title, style: sans(size: 12.5))),
+                        Expanded(
+                          child: Text(
+                            f.title,
+                            style: sans(
+                              size: 12.5,
+                              color: _grey700,
+                            ).copyWith(height: 1.5),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -129,8 +143,10 @@ class AboutAppPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'داده‌های تو فقط مال خودت است. ما مخاطبین را بدون اجازه‌ی تو '
-                  'ذخیره یا ارسال نمی‌کنیم و هرگز اطلاعاتت را نمی‌فروشیم.',
+                  'داده‌های تو صرفاً مال خودت است. اطلاعات مخاطبین فقط با اجازه‌ی '
+                  'خودت و فقط برای راحتی انتخاب طرف حساب خوانده می‌شود؛ ذخیره‌ی '
+                  'سراسری، ارسال یا فروش آن وجود ندارد. هر رکورد و تصویر نیز تنها '
+                  'در حساب خودت قابل مشاهده است.',
                   style: sans(
                     size: 12.5,
                     color: _grey700,
@@ -160,7 +176,7 @@ class AboutAppPage extends StatelessWidget {
             title: 'پشتیبانی',
             color: _green,
             child: Text(
-              'سوال، پیشنهاد یا گزارش باگ داری؟ ما را بنویس:\n${AppInfo.supportEmail}',
+              'برای گزارش باگ، پیشنهاد قابلیت یا هر پرسش: ${AppInfo.supportEmail}',
               style: sans(size: 12.5, color: _grey700).copyWith(height: 1.8),
             ),
           ),
@@ -168,7 +184,7 @@ class AboutAppPage extends StatelessWidget {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              'ساخته‌شده با ❤️ برای مدیریت آسان‌تر پول',
+              'ساخته‌شده با دقت برای مدیریت آسان‌تر امور مالی',
               style: sans(size: 11, color: _grey500),
             ),
           ),

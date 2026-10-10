@@ -5,23 +5,31 @@ import 'package:money/widgets/contact/contact_style.dart';
 const _grey500 = Color(0xFF9E9E9E);
 const _brand = Color(0xFF4E81EF);
 
+/// فیلدی که با تپ، مقدار خام را کپی می‌کند.
+/// [display] اختیاری است: اگر دادی، همان نمایش داده می‌شود ولی [value] کپی می‌شود
+/// (مناسب URL های بلند: کوتاه نشان بده، کامل کپی کن).
 class CopyableField extends StatelessWidget {
   const CopyableField({
     super.key,
     required this.label,
     required this.value,
+    this.display,
     this.icon,
     this.color = _brand,
     this.mono = true,
   });
 
   final String label;
-  final String value;
+  final String value; // مقدار خام (کپی می‌شود)
+  final String? display; // مقدار نمایشی (اختیاری)
   final IconData? icon;
   final Color color;
   final bool mono;
 
-  String get _display => mono ? _group(value) : value;
+  String get _shown {
+    if (display != null) return display!;
+    return mono ? _group(value) : value;
+  }
 
   static String _group(String s) {
     final b = StringBuffer();
@@ -80,7 +88,9 @@ class CopyableField extends StatelessWidget {
                     Text(label, style: sans(size: 11, color: _grey500)),
                     const SizedBox(height: 3),
                     Text(
-                      _display,
+                      _shown,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: mono ? 'monospace' : 'sans',
                         fontSize: 14,
