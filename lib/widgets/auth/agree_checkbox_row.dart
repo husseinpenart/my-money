@@ -44,7 +44,9 @@ class _AgreeCheckboxRowState extends State<AgreeCheckboxRow> {
 
   @override
   Widget build(BuildContext context) {
-    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+    // 👈 اگر تم فونت را ست کرده باشد از آن استفاده می‌کند، وگرنه 'sans'
+    final fontFamily =
+        Theme.of(context).textTheme.bodyMedium?.fontFamily ?? 'sans';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,11 +61,17 @@ class _AgreeCheckboxRowState extends State<AgreeCheckboxRow> {
               color: widget.value ? AppColors.purple3 : Colors.transparent,
               borderRadius: BorderRadius.circular(7),
               border: Border.all(
-                color: widget.hasError ? AppColors.danger : (widget.value ? AppColors.purple3 : const Color(0xFFC3C8D4)),
+                color: widget.hasError
+                    ? AppColors.danger
+                    : (widget.value
+                          ? AppColors.purple3
+                          : const Color(0xFFC3C8D4)),
                 width: 1.7,
               ),
             ),
-            child: widget.value ? const Icon(Icons.check, size: 13, color: Colors.white) : null,
+            child: widget.value
+                ? const Icon(Icons.check, size: 13, color: Colors.white)
+                : null,
           ),
         ),
         const SizedBox(width: 10),
@@ -72,18 +80,30 @@ class _AgreeCheckboxRowState extends State<AgreeCheckboxRow> {
             onTap: () => widget.onChanged(!widget.value),
             child: RichText(
               text: TextSpan(
-                style: TextStyle(fontSize: 12.5, color: const Color(0xFF6B7280), fontWeight: FontWeight.w500, height: 1.9, fontFamily: fontFamily),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: const Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
+                  height: 1.9,
+                  fontFamily: fontFamily, // 👈 فونت فارسی
+                ),
                 children: [
                   const TextSpan(text: 'با ثبت‌نام، '),
                   TextSpan(
                     text: 'شرایط استفاده',
-                    style: const TextStyle(color: AppColors.purple3, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      color: AppColors.purple3,
+                      fontWeight: FontWeight.w700,
+                    ),
                     recognizer: _termsRecognizer,
                   ),
                   const TextSpan(text: ' و '),
                   TextSpan(
                     text: 'سیاست حریم خصوصی',
-                    style: const TextStyle(color: AppColors.purple3, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      color: AppColors.purple3,
+                      fontWeight: FontWeight.w700,
+                    ),
                     recognizer: _privacyRecognizer,
                   ),
                   const TextSpan(text: ' را می‌پذیرم'),

@@ -50,16 +50,17 @@ dependencies:
   file_picker: ^11.0.3
   http_parser: ^4.1.2
   flutter_launcher_icons: ^0.14.4
+  package_info_plus: ^9.0.1
   
 flutter_launcher_icons:
   android: true
   ios: false
+  image_path: "assets/images/logo.png"
   web:
     generate: true
     image_path: "assets/images/logo.png"
     background_color: "#ffffff"
     theme_color: "#ffffff"
-
 
 dev_dependencies:
   flutter_test:

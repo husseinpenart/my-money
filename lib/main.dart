@@ -2,31 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/di/injection.dart';
-import 'package:money/core/storage/token_storage.dart'; // 👈 اضافه کردن اینپورت
+import 'package:money/core/drawer/app_info.dart'; // 👈 جدید
+import 'package:money/core/storage/token_storage.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/screens/home_page.dart';
-import 'package:money/screens/intro_page.dart'; // 👈 اضافه کردن اینپورت
+import 'package:money/screens/intro_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await configureDependencies();
 
-  // 👈 بررسی وجود توکن
+  // 👈 نسخه‌ی واقعیِ بیلد را می‌خواند (باید قبل از runApp باشد)
+  await AppInfo.init();
+
+  // بررسی وجود توکن
   final tokenStorage = GetIt.I<TokenStorage>();
-  final token = tokenStorage
-      .getToken(); // نکته: اگر اسم متد خواندن توکن در کلاست متفاوت است، آن را تغییر بده
+  final token = tokenStorage.getToken();
   final bool isLoggedIn = token != null && token.isNotEmpty;
 
-  // وضعیت لاگین را به اپلیکیشن پاس می‌دهیم
   runApp(MoneyApp(isLoggedIn: isLoggedIn));
 }
 
 class MoneyApp extends StatefulWidget {
-  final bool isLoggedIn; // 👈 دریافت وضعیت لاگین
+  final bool isLoggedIn;
 
   const MoneyApp({super.key, required this.isLoggedIn});
+
   @override
   State<MoneyApp> createState() => _MoneyAppState();
 }
@@ -47,6 +50,7 @@ class _MoneyAppState extends State<MoneyApp> {
       title: Titles.topTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'sans',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 93, 0, 255),
         ),
@@ -61,10 +65,9 @@ class _MoneyAppState extends State<MoneyApp> {
           modalBackgroundColor: Colors.amberAccent,
         ),
       ),
-      // 👈 تصمیم‌گیری برای نمایش صفحه اول:
       home: widget.isLoggedIn
-          ? const MyHomePage(title: Titles.mainTitle) // کاربر لاگین است
-          : const IntroPage(), // کاربر لاگین نیست
+          ? const MyHomePage(title: Titles.mainTitle)
+          : const IntroPage(),
     );
   }
 }

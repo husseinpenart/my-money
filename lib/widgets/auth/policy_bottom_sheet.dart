@@ -36,7 +36,7 @@ class _PolicySheetContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.65,
+      initialChildSize: 0.7,
       minChildSize: 0.4,
       maxChildSize: 0.92,
       expand: false,
@@ -64,7 +64,14 @@ class _PolicySheetContent extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'sans', // 👈 فونت فارسی
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   _CloseButton(onTap: () => Navigator.of(context).pop()),
                 ],
               ),
@@ -79,11 +86,24 @@ class _PolicySheetContent extends StatelessWidget {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(section.heading, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                        Text(
+                          section.heading,
+                          style: const TextStyle(
+                            fontFamily: 'sans', // 👈
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           section.body,
-                          style: const TextStyle(fontSize: 13.5, height: 2.0, color: Color(0xFF535A6B), fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            fontFamily: 'sans', // 👈
+                            fontSize: 13.5,
+                            height: 2.0,
+                            color: Color(0xFF535A6B),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     );
@@ -109,8 +129,15 @@ class _CloseButton extends StatelessWidget {
       child: Container(
         width: 30,
         height: 30,
-        decoration: const BoxDecoration(color: Color(0xFFF0F2F6), shape: BoxShape.circle),
-        child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF6B7280)),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF0F2F6),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.close_rounded,
+          size: 16,
+          color: Color(0xFF6B7280),
+        ),
       ),
     );
   }

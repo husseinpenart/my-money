@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// تمام مقادیر قابل‌ویرایش اپ در یک فایل.
 class AppInfo {
@@ -9,8 +10,22 @@ class AppInfo {
   static const String appName = 'مدیریت مالی';
   static const String appTagline = 'مدیریت هوشمند طلب، بدهی و بودجه';
 
-  static const String version = '1.0.0';
-  static const String buildNumber = '1';
+  // 👇 این دو دیگر const نیستند؛ در runtime از بیلد واقعی پر می‌شوند.
+  // مقادیر پایین فقط fallback‌اند (اگر خواندن نسخه شکست بخورد، اپ کرش نمی‌کند).
+  static String version = '1.0.0';
+  static String buildNumber = '1';
+
+  /// نسخه‌ی واقعیِ build شده را از پلتفرم می‌خواند.
+  /// باید قبل از runApp صدا زده شود (در main.dart).
+  static Future<void> init() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (info.version.isNotEmpty) version = info.version;
+      if (info.buildNumber.isNotEmpty) buildNumber = info.buildNumber;
+    } catch (_) {
+      // خواندن نشد → همان fallback بالا می‌ماند.
+    }
+  }
 
   // تاریخ‌ها شمسی‌اند
   static const String releaseDate = '۱۴۰۵/۰۷/۱۹';
@@ -85,6 +100,9 @@ class AppInfo {
     ),
   ];
 
+  // 👇 changelog تاریخِ ثابتِ هر انتشار است؛ پس version هر entry یک رشته‌ی
+  // const می‌ماند (نه AppInfo.version). وقتی نسخه بالا رفت، یک ChangeLog
+  // جدید با عدد جدید به این لیست اضافه کن — entry قبلی دست نمی‌خورد.
   static const List<ChangeLog> changelog = [
     ChangeLog('1.0.0', releaseDate, [
       'انتشار اولیه‌ی اپلیکیشن',
