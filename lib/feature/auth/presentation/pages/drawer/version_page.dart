@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:money/core/drawer/app_info.dart';
 import 'package:money/feature/auth/presentation/pages/drawer/about_app_page.dart';
 import 'package:money/feature/auth/presentation/pages/drawer/privacy_page.dart';
@@ -7,13 +9,37 @@ import 'package:money/widgets/drawer/section_card.dart';
 
 const _brand = Color(0xFF4E81EF);
 const _blueGrey = Color(0xFF607D8B);
-const _grey700 = Color(0xFF616161);
 const _grey600 = Color(0xFF757575);
 const _grey500 = Color(0xFF9E9E9E);
 const _grey400 = Color(0xFFBDBDBD);
 
 class VersionPage extends StatelessWidget {
   const VersionPage({super.key});
+
+  String get _platform =>
+      kIsWeb ? 'web' : defaultTargetPlatform.name; // android | iOS | ...
+
+  Future<void> _copyInfo(BuildContext context) async {
+    final text =
+        '${AppInfo.appName} v${AppInfo.version} '
+        '(build ${AppInfo.buildNumber}) | $_platform';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          width: 260,
+          duration: const Duration(seconds: 2),
+          backgroundColor: const Color(0xFF111827),
+          content: Text(
+            'اطلاعات نسخه کپی شد',
+            style: sans(size: 12, color: Colors.white),
+          ),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,19 +96,16 @@ class VersionPage extends StatelessWidget {
                   'ساخت: ${AppInfo.buildNumber}   ·   انتشار: ${AppInfo.releaseDate}',
                   style: sans(size: 12, color: _grey600),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'پلتفرم: $_platform',
+                  style: sans(size: 11, color: _grey500),
+                ),
                 const SizedBox(height: 14),
                 OutlinedButton.icon(
-                  onPressed: () => ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      const SnackBar(
-                        behavior: SnackBarBehavior.floating,
-                        width: 230,
-                        content: Text('همیشه به‌روز هستید ✅'),
-                      ),
-                    ),
-                  icon: const Icon(Icons.system_update_alt_rounded, size: 16),
-                  label: Text('بررسی بروزرسانی', style: sans(size: 12)),
+                  onPressed: () => _copyInfo(context),
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  label: Text('کپی اطلاعات نسخه', style: sans(size: 12)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _brand,
                     side: const BorderSide(color: _brand),
@@ -90,6 +113,11 @@ class VersionPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'هنگام گزارش مشکل به پشتیبانی بفرست',
+                  style: sans(size: 10.5, color: _grey500),
                 ),
               ],
             ),
@@ -150,7 +178,6 @@ class VersionPage extends StatelessWidget {
             child: Column(
               children: [
                 _link(
-                  context,
                   'درباره برنامه',
                   Icons.info_outline_rounded,
                   () => Navigator.of(context).push(
@@ -159,7 +186,6 @@ class VersionPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _link(
-                  context,
                   'حریم خصوصی',
                   Icons.shield_outlined,
                   () => Navigator.of(context).push(
@@ -173,7 +199,7 @@ class VersionPage extends StatelessWidget {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              '© ${AppInfo.releaseDate.split('/').first} ${AppInfo.appName} — تمام حقوق محفوظ است.',
+              '© ${AppInfo.copyrightYear} ${AppInfo.appName} — تمام حقوق محفوظ است.',
               style: sans(size: 10.5, color: _grey500),
             ),
           ),
@@ -183,26 +209,19 @@ class VersionPage extends StatelessWidget {
     );
   }
 
-  Widget _link(
-    BuildContext context,
-    String t,
-    IconData ic,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Icon(ic, size: 18, color: _grey600),
-            const SizedBox(width: 10),
-            Expanded(child: Text(t, style: sans(size: 12.5))),
-            const Icon(Icons.chevron_left_rounded, size: 18, color: _grey400),
-          ],
-        ),
+  Widget _link(String t, IconData ic, VoidCallback onTap) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(10),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(ic, size: 18, color: _grey600),
+          const SizedBox(width: 10),
+          Expanded(child: Text(t, style: sans(size: 12.5))),
+          const Icon(Icons.chevron_left_rounded, size: 18, color: _grey400),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

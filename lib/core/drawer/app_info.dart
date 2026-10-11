@@ -4,24 +4,24 @@ import 'package:flutter/material.dart';
 class AppInfo {
   AppInfo._();
 
-  // 👇 فایل لوگو: assets/images/logo.jpeg (در pubspec.yaml زیر flutter.assets ثبت شده باشد)
+  // فایل لوگو باید در pubspec.yaml زیر flutter.assets ثبت شده باشد
   static const String logoAsset = 'assets/images/logo.png';
   static const String appName = 'مدیریت مالی';
   static const String appTagline = 'مدیریت هوشمند طلب، بدهی و بودجه';
 
   static const String version = '1.0.0';
   static const String buildNumber = '1';
-  static const String releaseDate = '۱۴۵/۰۷/۱۹';
-  static const String privacyUpdatedAt = '۱۴۰۵/۰۷/۱۹';
 
-  // 👇 پشتیبانی = ایمیل توسعه‌دهنده
+  // تاریخ‌ها شمسی‌اند
+  static const String releaseDate = '۱۴۰۵/۰۷/۱۹';
+  static const String privacyUpdatedAt = '۱۴۰۵/۰۷/۱۹';
+  static const String copyrightYear = '۱۴۰۵';
+
   static const String supportEmail = 'hussainasadi1996@gmail.com';
 
   static const Developer developer = Developer(
     name: 'حسین اسدی',
-    // 👈 به‌جای «فول‌استک» (که برای کاربر عادی بی‌معنی است)
     role: 'مهندس نرم‌افزار',
-    // 👈 بدون اصطلاح فنی؛ با اعتبار واقعی و به زبان کاربر
     bio:
         'بیش از ۹ سال است نرم‌افزار می‌سازم و در پروژه‌هایی دست داشته‌ام که '
         'ده‌ها هزار نفر از آن‌ها استفاده کرده‌اند. این اپ را با همان وسواسی '
@@ -33,24 +33,30 @@ class AppInfo {
     email: 'hussainasadi1996@gmail.com',
   );
 
-  // 👇 دو شماره کارت (رقم‌ها بدون فاصله)
   static const List<BankCard> cards = [
     BankCard(bank: 'بلو بانک', number: '6219861878226967'),
     BankCard(bank: 'بانک دی', number: '5029381062878418'),
   ];
 
-  // 👇 قابلیت‌های واقعی، بر اساس صفحات اپ
   static const List<Feature> features = [
     Feature(
       'ثبت و پیگیری طلب و بدهی با وضعیت پرداخت',
       Icons.swap_vert_circle_outlined,
     ),
     Feature(
+      'اعلان سررسید: معوق، امروز و ۳ روز مانده',
+      Icons.notifications_active_outlined,
+    ),
+    Feature(
       'بودجه‌بندی ماهانه با حقوق و سقف خرج روزانه',
       Icons.savings_outlined,
     ),
     Feature(
-      'دسته‌بندی هوشمند هزینه‌ها (قبوض، بیمه، حمل‌ونقل و…)',
+      'مدیریت حقوق دیرکرده، کسری و بیش‌خرجی با هشدار هوشمند',
+      Icons.event_repeat_rounded,
+    ),
+    Feature(
+      'دسته‌بندی هزینه‌ها (قبوض، بیمه، خودرو، خرید خانه و…)',
       Icons.category_outlined,
     ),
     Feature(
@@ -61,22 +67,32 @@ class AppInfo {
       'روند ماهانه و سن مطالبات به تفکیک مخاطب',
       Icons.query_stats_rounded,
     ),
-    Feature('جستجو، فیلتر و مرتب‌سازی پیشرفته', Icons.tune_rounded),
-    Feature('ستاره‌دار کردن موارد مهم و دسترسی سریع', Icons.star_rounded),
     Feature(
-      'مستندسازی هر رکورد با تصویر و مشاهده‌ی تمام‌صفحه',
+      'جستجوی سراسری در مخاطبین و رکوردها، با فیلتر و مرتب‌سازی',
+      Icons.tune_rounded,
+    ),
+    Feature(
+      'مستندسازی هر رکورد با چند تصویر و بزرگ‌نمایی',
       Icons.image_outlined,
     ),
-    Feature('امنیت داده و جداسازی کامل هر حساب کاربری', Icons.shield_outlined),
+    Feature(
+      'بازیابی رمز عبور با کد بازیابی، بدون نیاز به پیامک یا ایمیل',
+      Icons.vpn_key_outlined,
+    ),
+    Feature(
+      'جداسازی کامل داده‌ی هر حساب و امکان حذف کامل حساب',
+      Icons.shield_outlined,
+    ),
   ];
 
   static const List<ChangeLog> changelog = [
-    ChangeLog('1.0.0', '۱۴۰/۰۷/۹', [
+    ChangeLog('1.0.0', releaseDate, [
       'انتشار اولیه‌ی اپلیکیشن',
-      'ماژول طلب و بدهی با فیلتر، مرتب‌سازی و ویرایش',
-      'ماژول بودجه: برنامه، هزینه‌ها، تاریخچه و تنظیمات',
+      'ماژول طلب و بدهی با فیلتر، مرتب‌سازی، ویرایش و تصاویر پیوست',
+      'ماژول بودجه: برنامه، هزینه‌ها، تاریخچه و تنظیمات، با پشتیبانی از حقوق دیرکرده',
       'ماژول گزارش: شاخص‌ها، دونات، روند ماهانه و معوقات',
-      'دسترسی سریع، موارد مهم و جستجوی سراسری',
+      'اعلان سررسید، جستجوی سراسری و صفحه‌ی جزئیات مخاطب',
+      'بازیابی رمز با کد بازیابی و امکان حذف حساب',
     ]),
   ];
 }

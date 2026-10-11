@@ -6,6 +6,7 @@ import 'package:money/widgets/drawer/section_card.dart';
 const _sky = Color(0xFF0EA5E9);
 const _purple = Color(0xFF7C3AED);
 const _green = Color(0xFF10B981);
+const _amber = Color(0xFFD97706);
 const _blueGrey = Color(0xFF607D8B);
 const _grey700 = Color(0xFF616161);
 
@@ -58,9 +59,9 @@ class PrivacyPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'این سیاست با زبانی ساده نوشته شده تا بدانی دقیقاً چه '
-                        'اطلاعاتی ذخیره می‌شود و چرا. هیچ فروش یا اشتراک‌گذاری '
-                        'اطلاعات شخصی وجود ندارد.',
+                        'این سیاست ساده نوشته شده تا بدانی دقیقاً چه اطلاعاتی '
+                        'ذخیره می‌شود و چرا. اطلاعات شخصی تو فروخته یا برای '
+                        'تبلیغات به کسی داده نمی‌شود.',
                         style: sans(
                           size: 12,
                           color: const Color(0xFF047857),
@@ -81,15 +82,22 @@ class PrivacyPage extends StatelessWidget {
               children: [
                 BulletRow(
                   text:
-                      'طلب و بدهی‌هایی که خودت ثبت می‌کنی (مبلغ، تاریخ، توضیح، تصاویر).',
+                      'طلب و بدهی‌هایی که خودت ثبت می‌کنی (مبلغ، تاریخ، توضیح و تصاویر).',
                 ),
                 BulletRow(
-                  text: 'مخاطبانی که خودت انتخاب یا ثبت می‌کنی (نام و شماره).',
+                  text: 'مخاطبانی که خودت ثبت یا انتخاب می‌کنی (نام و شماره).',
                 ),
-                BulletRow(text: 'تصاویری که برای مستندسازی آپلود می‌کنی.'),
                 BulletRow(
                   text:
-                      'اطلاعات حساب کاربری برای ورود (ایمیل/شماره و رمز عبور رمزنگاری‌شده).',
+                      'اطلاعات بودجه: حقوق، قبض‌ها و بیمه‌های برنامه‌ریزی‌شده، هزینه‌ها و تاریخچه‌ی دوره‌ها.',
+                ),
+                BulletRow(
+                  text:
+                      'اطلاعات ورود: نام، شماره‌ی موبایل و رمز عبور (فقط به‌صورت رمزنگاری‌شده؛ متن اصلی رمز هرگز ذخیره نمی‌شود).',
+                ),
+                BulletRow(
+                  text:
+                      'کد بازیابی رمز: فقط نسخه‌ی رمزنگاری‌شده‌ی آن نگهداری می‌شود، پس ما هم نمی‌توانیم آن را ببینیم یا دوباره بفرستیم.',
                 ),
               ],
             ),
@@ -108,17 +116,16 @@ class PrivacyPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'برای اینکه هنگام ثبت طلب یا بدهی، مجبور نباشی نام و شماره‌ی طرف '
-                  'حساب را دستی تایپ کنی؛ لیست مخاطبین گوشی را می‌خوانیم تا بتوانی '
-                  'فقط با یک لمس، شخص موردنظر را انتخاب کنی.',
+                  'تا هنگام ثبت مخاطب جدید مجبور نباشی نام و شماره را دستی '
+                  'تایپ کنی. این قابلیت اختیاری است و در نسخه‌ی وب وجود ندارد.',
                   style: sans(
                     size: 12.5,
                     color: _grey700,
                   ).copyWith(height: 1.8),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Text(
-                  'نگران نباش؛ این‌طور کار می‌کند:',
+                  'این‌طور کار می‌کند:',
                   style: sans(size: 12.5, weight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
@@ -126,54 +133,42 @@ class PrivacyPage extends StatelessWidget {
                   children: [
                     BulletRow(
                       text:
-                          'فقط وقتی خودت روی «انتخاب از مخاطبین» می‌زنی، لیست نمایش داده می‌شود.',
+                          'فقط وقتی خودت «از مخاطبین گوشی» را انتخاب می‌کنی، لیست خوانده می‌شود.',
                     ),
                     BulletRow(
                       text:
-                          'ما کل مخاطبین تو را برای خودمان ذخیره یا ارسال نمی‌کنیم.',
+                          'کل مخاطبین تو ذخیره یا ارسال نمی‌شود؛ فقط نام و شماره‌ی مواردی که خودت تیک می‌زنی به حسابت اضافه می‌شود.',
                     ),
                     BulletRow(
                       text:
-                          'فقط نام و شماره‌ی همان کسی که خودت انتخاب می‌کنی، داخل رکورد تو ثبت می‌شود.',
-                    ),
-                    BulletRow(
-                      text:
-                          'اگر دسترسی را ندهی، هیچ‌چیز خراب نمی‌شود؛ می‌توانی دستی تایپ کنی.',
-                    ),
-                    BulletRow(
-                      text:
-                          'اطلاعات مخاطبین هرگز فروخته یا با شخص ثالثی به‌اشتراک گذاشته نمی‌شود.',
+                          'اگر دسترسی را ندهی، همه‌چیز کار می‌کند و می‌توانی مخاطب را دستی ثبت کنی.',
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.lightbulb_outline_rounded,
-                        color: Color(0xFF0284C7),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'خلاصه: این دسترسی برای راحتی توست، نه برای جمع‌آوری داده. '
-                          'کنترل کامل با خودته.',
-                          style: sans(
-                            size: 12,
-                            color: const Color(0xFF075985),
-                          ).copyWith(height: 1.6),
-                        ),
-                      ),
-                    ],
-                  ),
+              ],
+            ),
+          ),
+
+          SectionCard(
+            icon: Icons.phone_android_rounded,
+            title: 'اطلاعاتی که روی دستگاه خودت می‌ماند',
+            color: _amber,
+            child: const Column(
+              children: [
+                BulletRow(
+                  text:
+                      'نشست ورود (توکن)، برای اینکه هر بار مجبور به ورود نشوی.',
+                  color: _amber,
+                ),
+                BulletRow(
+                  text:
+                      'جستجوهای اخیر و وضعیت «خوانده‌شده» اعلان‌ها. این‌ها به سرور ارسال نمی‌شوند.',
+                  color: _amber,
+                ),
+                BulletRow(
+                  text:
+                      'با «خروج از حساب» همه‌ی این موارد از دستگاه پاک می‌شود.',
+                  color: _amber,
                 ),
               ],
             ),
@@ -186,20 +181,25 @@ class PrivacyPage extends StatelessWidget {
             child: const Column(
               children: [
                 BulletRow(
-                  text:
-                      'ورود با توکن رمزنگاری‌شده (JWT) و انتقال داده روی HTTPS.',
+                  text: 'ورود با توکن رمزنگاری‌شده (JWT) و ارتباط امن با سرور.',
                   icon: Icons.shield_outlined,
                   color: _purple,
                 ),
                 BulletRow(
                   text:
-                      'هر حساب کاملاً از دیگران جدا است؛ هیچ‌کس به داده‌ی تو دسترسی ندارد.',
+                      'هر حساب از دیگران جدا است؛ کاربران دیگر هیچ راهی برای دیدن داده‌ی تو ندارند.',
                   icon: Icons.shield_outlined,
                   color: _purple,
                 ),
                 BulletRow(
                   text:
-                      'تصاویر و رکوردها فقط برای نمایش در حساب خودت نگهداری می‌شوند.',
+                      'تلاش‌های پشت‌سرهم و اشتباه برای بازیابی رمز، موقتاً قفل می‌شود.',
+                  icon: Icons.shield_outlined,
+                  color: _purple,
+                ),
+                BulletRow(
+                  text:
+                      'دسترسی فنی به سرور فقط برای نگهداری سیستم و به‌صورت محدود است و داده‌ی تو برای هیچ هدف دیگری استفاده نمی‌شود.',
                   icon: Icons.shield_outlined,
                   color: _purple,
                 ),
@@ -215,16 +215,17 @@ class PrivacyPage extends StatelessWidget {
               children: [
                 BulletRow(
                   text:
-                      'هر زمان بخواهی می‌توانی رکورد یا مخاطب را ویرایش/حذف کنی.',
-                  color: _green,
-                ),
-                BulletRow(
-                  text: 'می‌توانی حساب و تمام داده‌هایت را حذف کنی.',
+                      'هر زمان بخواهی می‌توانی مخاطب، طلب، بدهی یا هزینه را ویرایش یا حذف کنی.',
                   color: _green,
                 ),
                 BulletRow(
                   text:
-                      'اجازه‌ی دسترسی به مخاطبین را هر وقت خواستی از تنظیمات گوشی thu جمع کنی.',
+                      'حذف کامل حساب: از «منو ← حذف حساب» با وارد کردن رمز عبور. مخاطبین، رکوردها، تصاویر، بودجه و اطلاعات ورود تو بلافاصله از سرور پاک می‌شود و قابل بازگشت نیست.',
+                  color: _green,
+                ),
+                BulletRow(
+                  text:
+                      'دسترسی به مخاطبین را هر وقت خواستی از تنظیمات دستگاه می‌توانی پس بگیری.',
                   color: _green,
                 ),
               ],
@@ -237,7 +238,7 @@ class PrivacyPage extends StatelessWidget {
             color: _blueGrey,
             child: Text(
               'این صفحه آخرین بار در ${AppInfo.privacyUpdatedAt} به‌روز شده است. '
-              'در صورت تغییرات مهم، از طریق اپ به تو اطلاع می‌دهیم.',
+              'در صورت تغییر مهم، همین‌جا و در تاریخچه‌ی نسخه‌ها اعلام می‌شود.',
               style: sans(size: 12.5, color: _grey700).copyWith(height: 1.8),
             ),
           ),

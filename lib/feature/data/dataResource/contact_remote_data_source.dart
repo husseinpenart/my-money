@@ -4,22 +4,56 @@ import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 
-
 class ContactRemoteDataSource {
   final ApiClient apiClient;
   ContactRemoteDataSource(this.apiClient);
 
-  Future<PagedResult<ContactModel>> getAll({
+  /// لیست صفحه‌بندی‌شده با جستجو، فیلتر و مرتب‌سازی سمت سرور
+  Future<PagedResult<ContactModel>> fetch({
     required int pageNumber,
     int pageSize = 20,
+    String query = '',
+    ContactFilter filter = ContactFilter.all,
+    ContactSort sort = ContactSort.newest,
+    CancelToken? cancelToken,
   }) async {
     final Response<dynamic> res = await apiClient.get<dynamic>(
-      '/Contact',
-      queryParameters: {'pageNumber': pageNumber, 'pageSize': pageSize},
+      '/Search',
+      cancelToken: cancelToken,
+      queryParameters: {
+        'type': 'contacts',
+        'pageNumber': pageNumber,
+        'pageSize': pageSize,
+        'sortBy': sort.apiKey,
+        'desc': sort.desc,
+        if (query.isNotEmpty) 'query': query,
+        if (filter == ContactFilter.demander) ...{
+          'recordType': 'Receivable',
+          'payStatus': false,
+        },
+        if (filter == ContactFilter.debtor) ...{
+          'recordType': 'Debt',
+          'payStatus': false,
+        },
+      },
     );
-    return PagedResult.parse<ContactModel>(
-      _unwrap(res.data),
-      ContactModel.fromJson,
+
+    final data = _unwrap(res.data);
+    final raw = data is Map<String, dynamic> ? data['contacts'] : null;
+    return PagedResult.parse<ContactModel>(raw, ContactModel.fromJson);
+  }
+
+  /// شمارنده‌های دقیق (بدون وابستگی به صفحه‌های لودشده)
+  Future<ContactStats> stats() async {
+    final r = await Future.wait([
+      fetch(pageNumber: 1, pageSize: 1),
+      fetch(pageNumber: 1, pageSize: 1, filter: ContactFilter.demander),
+      fetch(pageNumber: 1, pageSize: 1, filter: ContactFilter.debtor),
+    ]);
+    return ContactStats(
+      total: r[0].totalItems,
+      demanders: r[1].totalItems,
+      debtors: r[2].totalItems,
     );
   }
 
@@ -46,6 +80,11 @@ class ContactRemoteDataSource {
     return _toContact(_unwrap(res.data));
   }
 
+  Future<ContactModel> getContactById(String contactId) async {
+    final res = await apiClient.get<dynamic>('/Contact/$contactId');
+    return _toContact(_unwrap(res.data));
+  }
+
   Future<void> delete(String contactId) async {
     final Response<dynamic> res = await apiClient.delete<dynamic>(
       '/Contact/$contactId',
@@ -53,24 +92,20 @@ class ContactRemoteDataSource {
     _unwrap(res.data);
   }
 
-  // ---------------------------------------------------------------
   ContactModel _toContact(dynamic data) {
     if (data is Map<String, dynamic>) return ContactModel.fromJson(data);
     throw ContactApiException('پاسخ نامعتبر از سرور');
   }
 
-  /// بدنه‌ی ApiResponseDto را باز می‌کند و در صورت خطا exception می‌اندازد
   dynamic _unwrap(dynamic body) {
     if (body is! Map<String, dynamic>) return null;
-
     final dynamic sc = body['statusCode'];
     final failed = body['success'] == false || (sc is int && sc >= 400);
     if (failed) {
-      final msgs = <String>[
-        ...extractApiMessages(body['errors']),
-        if (extractApiMessages(body['errors']).isEmpty)
-          ...extractApiMessages(body['message']),
-      ];
+      final errors = extractApiMessages(body['errors']);
+      final msgs = errors.isNotEmpty
+          ? errors
+          : extractApiMessages(body['message']);
       throw ContactApiException(
         msgs.isNotEmpty ? msgs.join('\n') : 'عملیات ناموفق بود',
       );

@@ -67,4 +67,12 @@ class AuthRemoteDataSource {
     );
     return response.data;
   }
+
+  Future<dynamic> deleteAccount({required String currentPassword}) async {
+    final Response<dynamic> response = await apiClient.delete<dynamic>(
+      '/AuthControllers/account',
+      data: {'currentPassword': currentPassword},
+    );
+    return response.data;
+  }
 }

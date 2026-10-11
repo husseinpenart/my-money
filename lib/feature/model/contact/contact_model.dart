@@ -1,6 +1,10 @@
 import 'package:money/feature/model/search_models/search_models.dart';
 import 'package:money/helper/utils/input_utils.dart';
 
+enum ContactFilter { all, demander, debtor }
+
+enum ContactSort { newest, oldest, name, mostDebts }
+
 class ContactModel {
   final String contactId;
   final String name;
@@ -55,4 +59,33 @@ class ContactApiException implements Exception {
   ContactApiException(this.message);
   @override
   String toString() => message;
+}
+
+extension ContactSortX on ContactSort {
+  String get label => switch (this) {
+    ContactSort.newest => 'جدیدترین',
+    ContactSort.oldest => 'قدیمی‌ترین',
+    ContactSort.name => 'نام (الفبایی)',
+    ContactSort.mostDebts => 'بیشترین تعداد رکورد',
+  };
+
+  String get apiKey => switch (this) {
+    ContactSort.newest || ContactSort.oldest => 'createdAt',
+    ContactSort.name => 'name',
+    ContactSort.mostDebts => 'debtCount',
+  };
+
+  bool get desc => switch (this) {
+    ContactSort.newest || ContactSort.mostDebts => true,
+    ContactSort.oldest || ContactSort.name => false,
+  };
+}
+
+class ContactStats {
+  final int total, demanders, debtors;
+  const ContactStats({
+    required this.total,
+    required this.demanders,
+    required this.debtors,
+  });
 }

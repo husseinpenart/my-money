@@ -9,8 +9,8 @@ class ApiClient {
   ApiClient(this.tokenStorage)
     : dio = Dio(
         BaseOptions(
-          // baseUrl: 'http://192.168.1.185:8085/api', 
-          baseUrl:'http://localhost:8085/api',
+          baseUrl: 'http://192.168.1.185:8085/api',
+          // baseUrl:'http://localhost:8085/api',
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 30),
           // Content-Type عمداً اینجا نیست؛ در _buildOptions بر اساس نوع data ست می‌شود
@@ -79,21 +79,23 @@ class ApiClient {
       options: _buildOptions(requiresAuth, data: data),
     );
   }
-Future<Response<T>> patch<T>(
-  String path, {
-  Object? data,
-  Map<String, dynamic>? queryParameters,
-  bool requiresAuth = true,
-  CancelToken? cancelToken,
-}) {
-  return dio.patch<T>(
-    path,
-    data: data,
-    queryParameters: queryParameters,
-    cancelToken: cancelToken,
-    options: _buildOptions(requiresAuth, data: data),
-  );
-}
+
+  Future<Response<T>> patch<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    bool requiresAuth = true,
+    CancelToken? cancelToken,
+  }) {
+    return dio.patch<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      cancelToken: cancelToken,
+      options: _buildOptions(requiresAuth, data: data),
+    );
+  }
+
   Options _buildOptions(bool requiresAuth, {Object? data}) {
     final token = tokenStorage.getToken();
     final headers = <String, dynamic>{};

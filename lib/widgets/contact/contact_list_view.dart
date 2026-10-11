@@ -5,13 +5,12 @@ import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_event.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_state.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
-import 'package:money/helper/utils/input_utils.dart';
 import 'package:money/screens/contact_details_sheet.dart';
 import 'package:money/widgets/contact/contact_card.dart';
 import 'package:money/widgets/contact/contact_form_sheet.dart';
 import 'package:money/widgets/contact/contact_style.dart';
-
-enum ContactFilter { all, demander, debtor }
+import 'package:money/widgets/global/app_search_field.dart';
+import 'package:money/widgets/report/report_format.dart';
 
 class ContactListView extends StatefulWidget {
   const ContactListView({super.key});
@@ -22,10 +21,7 @@ class ContactListView extends StatefulWidget {
 
 class _ContactListViewState extends State<ContactListView> {
   final ScrollController _scroll = ScrollController();
-  final TextEditingController _searchCtrl = TextEditingController();
-
-  String _query = '';
-  ContactFilter _filter = ContactFilter.all;
+  final TextEditingController _search = TextEditingController();
 
   @override
   void initState() {
@@ -38,13 +34,13 @@ class _ContactListViewState extends State<ContactListView> {
     _scroll
       ..removeListener(_onScroll)
       ..dispose();
-    _searchCtrl.dispose();
+    _search.dispose();
     super.dispose();
   }
 
   void _onScroll() {
     if (_scroll.hasClients &&
-        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) {
+        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 300) {
       context.read<ContactBloc>().add(const ContactsLoadMore());
     }
   }
@@ -55,16 +51,31 @@ class _ContactListViewState extends State<ContactListView> {
     return done.future;
   }
 
+  void _clearAll() {
+    _search.clear();
+    final bloc = context.read<ContactBloc>();
+    bloc.add(const ContactQueryChanged(''));
+    bloc.add(const ContactFilterChanged(ContactFilter.all));
+  }
+
+  Future<void> _open(ContactModel c) async {
+    final changed = await showContactDetails(context, c);
+    if (changed == true && mounted) {
+      context.read<ContactBloc>().add(const ContactsFetched());
+    }
+  }
+
   Future<void> _confirmDelete(ContactModel c) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'حذف مخاطب',
           style: sans(size: 15, weight: FontWeight.bold),
         ),
         content: Text(
-          'آیا از حذف «${c.name}» مطمئن هستی؟',
+          'آیا از حذف «${c.name}» مطمئن هستی؟\nمخاطبی که طلب یا بدهی ثبت‌شده دارد حذف نمی‌شود.',
           style: sans(size: 13),
         ),
         actions: [
@@ -87,182 +98,373 @@ class _ContactListViewState extends State<ContactListView> {
     }
   }
 
-  List<ContactModel> _apply(List<ContactModel> items) {
-    final q = normalizeDigits(_query.trim().toLowerCase());
-    return items.where((c) {
-      if (_filter == ContactFilter.demander && !c.hasUnpaidReceivable) {
-        return false;
-      }
-      if (_filter == ContactFilter.debtor && !c.hasUnpaidDebt) return false;
-      if (q.isNotEmpty) {
-        final hay =
-            '${normalizeDigits(c.name.toLowerCase())} ${normalizeDigits(c.phoneNumber)}';
-        if (!hay.contains(q)) return false;
-      }
-      return true;
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ───── نوار جستجو ─────
-        TextField(
-          controller: _searchCtrl,
-          onChanged: (v) => setState(() => _query = v),
-          style: sans(size: 13),
-          decoration: InputDecoration(
-            hintText: 'جستجوی نام یا شماره...',
-            hintStyle: sans(size: 13, color: Colors.grey.shade400),
-            prefixIcon: const Icon(Icons.search, color: kAccent),
-            suffixIcon: _query.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () {
-                      _searchCtrl.clear();
-                      setState(() => _query = '');
-                    },
-                  ),
-            isDense: true,
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: kAccent, width: 1.5),
-            ),
-          ),
+        BlocBuilder<ContactBloc, ContactState>(
+          buildWhen: (p, c) => p.stats != c.stats || p.filter != c.filter,
+          builder: (context, s) => _StatTiles(state: s),
         ),
         const SizedBox(height: 12),
-
-        // ───── چیپ‌های فیلتر ─────
-        Row(
-          children: [
-            _chip('همه', ContactFilter.all),
-            const SizedBox(width: 8),
-            _chip('طلبکار', ContactFilter.demander),
-            const SizedBox(width: 8),
-            _chip('بدهکار', ContactFilter.debtor),
-          ],
+        BlocBuilder<ContactBloc, ContactState>(
+          buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
+          builder: (context, s) => AppSearchField(
+            controller: _search,
+            autofocus: false,
+            hintText: 'جستجوی نام یا شماره...',
+            isLoading: s.isRefreshing && s.query.isNotEmpty,
+            onChanged: (v) =>
+                context.read<ContactBloc>().add(ContactQueryChanged(v)),
+          ),
         ),
-        const SizedBox(height: 14),
-
-        // ───── لیست ─────
+        const SizedBox(height: 10),
+        BlocBuilder<ContactBloc, ContactState>(
+          buildWhen: (p, c) =>
+              p.totalItems != c.totalItems ||
+              p.sort != c.sort ||
+              p.status != c.status ||
+              p.hasActiveFilter != c.hasActiveFilter,
+          builder: (context, s) => _Toolbar(state: s, onClear: _clearAll),
+        ),
+        BlocBuilder<ContactBloc, ContactState>(
+          buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
+          builder: (context, s) => AnimatedOpacity(
+            duration: const Duration(milliseconds: 150),
+            opacity: s.isRefreshing ? 1 : 0,
+            child: const LinearProgressIndicator(minHeight: 2, color: kAccent),
+          ),
+        ),
+        const SizedBox(height: 6),
         Expanded(
           child: BlocBuilder<ContactBloc, ContactState>(
             buildWhen: (p, c) =>
                 p.status != c.status ||
                 p.items != c.items ||
                 p.isLoadingMore != c.isLoadingMore ||
-                p.error != c.error,
-            builder: (context, state) {
-              if (state.status == ContactsStatus.initial ||
-                  (state.status == ContactsStatus.loading &&
-                      state.items.isEmpty)) {
-                return const Center(
-                  child: CircularProgressIndicator(color: kAccent),
-                );
-              }
-
-              if (state.status == ContactsStatus.failure &&
-                  state.items.isEmpty) {
-                return _Message(
-                  icon: Icons.error_outline,
-                  text: state.error ?? 'خطا در دریافت مخاطبین',
-                  actionLabel: 'تلاش دوباره',
-                  onAction: () =>
-                      context.read<ContactBloc>().add(const ContactsFetched()),
-                );
-              }
-
-              if (state.items.isEmpty) {
-                return _Message(
-                  icon: Icons.contacts_outlined,
-                  text: 'هنوز مخاطبی ثبت نکرده‌ای',
-                  actionLabel: 'افزودن مخاطب',
-                  onAction: () => showContactFormSheet(context),
-                );
-              }
-
-              final visible = _apply(state.items);
-
-              if (visible.isEmpty) {
-                return _Message(
-                  icon: Icons.filter_alt_off_outlined,
-                  text: 'موردی با این جستجو/فیلتر پیدا نشد',
-                );
-              }
-
-              return RefreshIndicator(
-                color: kAccent,
-                onRefresh: _refresh,
-                child: ListView.separated(
-                  controller: _scroll,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(2, 2, 2, 24),
-                  itemCount: visible.length + (state.isLoadingMore ? 1 : 0),
-                  separatorBuilder: (_, __) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) {
-                    if (i >= visible.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Center(
-                          child: SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: kAccent,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    final c = visible[i];
-                    return InkWell(
-                      // 👈 tap = جزئیات حساب‌کتاب (بدون دست‌زدن به ContactCard)
-                      onTap: () => showContactDetails(context, c),
-                      borderRadius: BorderRadius.circular(14),
-                      child: ContactCard(
-                        key: ValueKey(c.contactId),
-                        contact: c,
-                        onEdit: () => showContactFormSheet(context, contact: c),
-                        onDelete: () => _confirmDelete(c),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
+                p.hasMore != c.hasMore ||
+                p.error != c.error ||
+                p.hasActiveFilter != c.hasActiveFilter,
+            builder: (context, s) => _body(s),
           ),
         ),
       ],
     );
   }
 
-  Widget _chip(String label, ContactFilter f) {
-    final selected = _filter == f;
-    return ChoiceChip(
-      label: Text(label, style: sans(size: 12)),
-      selected: selected,
-      onSelected: (_) => setState(() => _filter = f),
-      selectedColor: kAccent.withValues(alpha: 0.12),
-      labelStyle: sans(
-        size: 12,
-        color: selected ? kAccent : Colors.grey.shade600,
-        weight: selected ? FontWeight.bold : null,
+  Widget _body(ContactState s) {
+    if (s.status == ContactsStatus.initial ||
+        (s.status == ContactsStatus.loading && s.items.isEmpty)) {
+      return const _Skeleton();
+    }
+
+    if (s.status == ContactsStatus.failure && s.items.isEmpty) {
+      return _Message(
+        icon: Icons.error_outline,
+        text: s.error ?? 'خطا در دریافت مخاطبین',
+        actionLabel: 'تلاش دوباره',
+        onAction: () =>
+            context.read<ContactBloc>().add(const ContactsFetched()),
+      );
+    }
+
+    if (s.items.isEmpty) {
+      return s.hasActiveFilter
+          ? _Message(
+              icon: Icons.search_off_rounded,
+              text: 'مخاطبی با این جستجو یا فیلتر پیدا نشد',
+              actionLabel: 'پاک کردن جستجو و فیلتر',
+              onAction: _clearAll,
+            )
+          : _Message(
+              icon: Icons.contacts_outlined,
+              text: 'هنوز مخاطبی ثبت نکرده‌ای',
+              actionLabel: 'افزودن مخاطب',
+              onAction: () => showContactFormSheet(context),
+            );
+    }
+
+    return RefreshIndicator(
+      color: kAccent,
+      onRefresh: _refresh,
+      child: ListView.separated(
+        controller: _scroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          2,
+          6,
+          2,
+          100,
+        ), // فضا برای دکمه‌ی شناور
+        itemCount: s.items.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, i) {
+          if (i >= s.items.length) return _footer(s);
+          final c = s.items[i];
+          return ContactCard(
+            key: ValueKey(c.contactId),
+            contact: c,
+            onOpen: () => _open(c),
+            onEdit: () => showContactFormSheet(context, contact: c),
+            onDelete: () => _confirmDelete(c),
+          );
+        },
       ),
-      showCheckmark: false,
-      side: BorderSide(color: selected ? kAccent : Colors.grey.shade300),
+    );
+  }
+
+  Widget _footer(ContactState s) {
+    if (s.isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2, color: kAccent),
+          ),
+        ),
+      );
+    }
+    if (s.hasMore) {
+      // اگر اسکرول به انتها نرسید (صفحه‌ی بلند)، دستی هم می‌شود ادامه داد
+      return Center(
+        child: TextButton(
+          onPressed: () =>
+              context.read<ContactBloc>().add(const ContactsLoadMore()),
+          child: Text('نمایش بیشتر', style: sans(size: 12, color: kAccent)),
+        ),
+      );
+    }
+    if (s.items.length > 5) {
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Center(
+          child: Text(
+            'همه‌ی مخاطبین نمایش داده شد',
+            style: sans(size: 11, color: Colors.grey.shade500),
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
+// ───────────────────── شمارنده‌ها (هم‌زمان فیلتر) ─────────────────────
+class _StatTiles extends StatelessWidget {
+  final ContactState state;
+  const _StatTiles({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final st = state.stats;
+    String n(int? v) => v == null ? '—' : fa('$v');
+
+    Widget tile(String label, String value, Color c, ContactFilter f) {
+      final selected = state.filter == f;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => context.read<ContactBloc>().add(
+            ContactFilterChanged(selected ? ContactFilter.all : f),
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: selected
+                  ? c.withValues(alpha: 0.16)
+                  : c.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected ? c : c.withValues(alpha: 0.18),
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  value,
+                  style: sans(size: 16, weight: FontWeight.bold, color: c),
+                ),
+                const SizedBox(height: 3),
+                Text(label, style: sans(size: 11, color: c)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        tile('همه', n(st?.total), const Color(0xFF396EEC), ContactFilter.all),
+        tile(
+          'طلبکار',
+          n(st?.demanders),
+          const Color(0xFF10B981),
+          ContactFilter.demander,
+        ),
+        tile(
+          'بدهکار',
+          n(st?.debtors),
+          const Color(0xFFEF4444),
+          ContactFilter.debtor,
+        ),
+      ],
+    );
+  }
+}
+
+// ───────────────────── تعداد + مرتب‌سازی ─────────────────────
+class _Toolbar extends StatelessWidget {
+  final ContactState state;
+  final VoidCallback onClear;
+  const _Toolbar({required this.state, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    final loaded = state.status == ContactsStatus.success;
+    return Row(
+      children: [
+        Text(
+          loaded ? '${fa('${state.totalItems}')} مخاطب' : '',
+          style: sans(
+            size: 12,
+            weight: FontWeight.w600,
+            color: Colors.blueGrey.shade700,
+          ),
+        ),
+        if (state.hasActiveFilter)
+          TextButton(
+            onPressed: onClear,
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            child: Text(
+              'پاک کردن فیلترها',
+              style: sans(size: 11, color: Colors.red.shade400),
+            ),
+          ),
+        const Spacer(),
+        PopupMenuButton<ContactSort>(
+          tooltip: 'مرتب‌سازی',
+          initialValue: state.sort,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          onSelected: (v) =>
+              context.read<ContactBloc>().add(ContactSortChanged(v)),
+          itemBuilder: (_) => [
+            for (final s in ContactSort.values)
+              PopupMenuItem(
+                value: s,
+                child: Row(
+                  children: [
+                    Icon(
+                      s == state.sort ? Icons.check_rounded : null,
+                      size: 18,
+                      color: kAccent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(s.label, style: sans(size: 13)),
+                  ],
+                ),
+              ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: kAccent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.swap_vert_rounded, size: 18, color: kAccent),
+                const SizedBox(width: 4),
+                Text(
+                  state.sort.label,
+                  style: sans(
+                    size: 12,
+                    weight: FontWeight.w600,
+                    color: kAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ───────────────────── اسکلت بارگذاری ─────────────────────
+class _Skeleton extends StatelessWidget {
+  const _Skeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bar(double w, double h) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEDEFF4),
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
+
+    return ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(2, 6, 2, 0),
+      itemCount: 4,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, __) => Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFEEF0F4)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEDEFF4),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    bar(120, 14),
+                    const SizedBox(height: 8),
+                    bar(80, 10),
+                  ],
+                ),
+                const Spacer(),
+                bar(60, 14),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              height: 54,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F5F8),
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -282,24 +484,27 @@ class _Message extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 44, color: Colors.grey.shade400),
-          const SizedBox(height: 10),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: sans(size: 13, color: Colors.grey.shade600),
-          ),
-          if (actionLabel != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onAction,
-              child: Text(actionLabel!, style: sans(size: 12)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 46, color: Colors.grey.shade300),
+            const SizedBox(height: 10),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: sans(size: 13, color: Colors.grey.shade600),
             ),
+            if (actionLabel != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: onAction,
+                child: Text(actionLabel!, style: sans(size: 12)),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

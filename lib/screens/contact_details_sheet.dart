@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/model/DebtReceviable/cover_image.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 import 'package:money/helper/utils/number_helper.dart';
-import 'package:money/widgets/DebtReceviable/cover_image_view.dart'; // 👈 برای تامبنیل
-// 👇 اگر اسم فایل CoverViewerPage فرق داشت، فقط این import را اصلاح کن
+import 'package:money/layouts/confirm_demand_layout.dart';
+import 'package:money/widgets/DebtReceviable/cover_image_view.dart';
 import 'package:money/widgets/DebtReceviable/cover_viewer.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
-Future<void> showContactDetails(BuildContext context, ContactModel contact) {
-  return showModalBottomSheet<void>(
+/// خروجی: true یعنی حداقل یک تراکنش این مخاطب ویرایش/حذف شده
+Future<bool?> showContactDetails(BuildContext context, ContactModel contact) {
+  return showModalBottomSheet<bool?>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -20,7 +23,6 @@ Future<void> showContactDetails(BuildContext context, ContactModel contact) {
   );
 }
 
-// ───────── helpers ─────────
 String _group(int v) {
   final neg = v < 0;
   final s = v.abs().toString();
@@ -44,17 +46,56 @@ String _date(DateTime? dt) {
 
 int _toInt(dynamic v) => int.tryParse(v?.toString() ?? '') ?? 0;
 
-class ContactDetailsSheet extends StatelessWidget {
+class ContactDetailsSheet extends StatefulWidget {
   const ContactDetailsSheet({super.key, required this.contact});
-
   final ContactModel contact;
 
-  // 👈 فیلد مدل = debts (نه debtReceivable)
-  List<SearchDebt> get _tx => contact.debts;
+  @override
+  State<ContactDetailsSheet> createState() => _ContactDetailsSheetState();
+}
+
+class _ContactDetailsSheetState extends State<ContactDetailsSheet> {
+  late ContactModel _contact;
+  bool _dirty = false;
+  final ContactRemoteDataSource _ds = GetIt.I<ContactRemoteDataSource>();
+
+  @override
+  void initState() {
+    super.initState();
+    _contact = widget.contact;
+  }
+
+  Future<void> _reload() async {
+    try {
+      final page = await _ds.fetch(
+        pageNumber: 1,
+        pageSize: 50,
+        query: _contact.name,
+      );
+      ContactModel? fresh;
+      for (final c in page.items) {
+        if (c.contactId == _contact.contactId) {
+          fresh = c;
+          break;
+        }
+      }
+      if (!mounted) return;
+      if (fresh != null) setState(() => _contact = fresh!); // 👈 این خط
+    } catch (_) {
+      // best-effort؛ _dirty مانده و بعد از بستن شیت لیست refresh می‌شود
+    }
+  }
+
+  Future<void> _onTxEdited() async {
+    _dirty = true;
+    await _reload();
+  }
+
+  void _close() => Navigator.of(context).pop(_dirty ? true : null);
 
   @override
   Widget build(BuildContext context) {
-    final list = _tx;
+    final list = _contact.debts;
     final receivable = list
         .where((d) => !d.isDebt)
         .fold<int>(0, (s, d) => s + _toInt(d.wholePrice));
@@ -83,8 +124,6 @@ class ContactDetailsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-
-          // هدر مخاطب
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -105,8 +144,8 @@ class ContactDetailsSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    contact.name.isNotEmpty
-                        ? contact.name.characters.first
+                    _contact.name.isNotEmpty
+                        ? _contact.name.characters.first
                         : '؟',
                     style: sans(
                       size: 18,
@@ -121,28 +160,23 @@ class ContactDetailsSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        contact.name,
+                        _contact.name,
                         style: sans(size: 16, weight: FontWeight.bold),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        NumberHelper.toPersianDigits(contact.phoneNumber),
+                        NumberHelper.toPersianDigits(_contact.phoneNumber),
                         style: sans(size: 12, color: Colors.grey.shade600),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
+                IconButton(onPressed: _close, icon: const Icon(Icons.close)),
               ],
             ),
           ),
           const SizedBox(height: 12),
           const Divider(thickness: 0.5, height: 1),
-
-          // جمع طلب / بدهی
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -167,8 +201,6 @@ class ContactDetailsSheet extends StatelessWidget {
               ],
             ),
           ),
-
-          // تراکنش‌ها
           Flexible(
             child: list.isEmpty
                 ? const Padding(
@@ -184,7 +216,8 @@ class ContactDetailsSheet extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                     itemCount: list.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) => _TransactionCard(d: list[i]),
+                    itemBuilder: (context, i) =>
+                        _TransactionCard(d: list[i], onEdited: _onTxEdited),
                   ),
           ),
         ],
@@ -229,8 +262,9 @@ class _SummaryBox extends StatelessWidget {
 }
 
 class _TransactionCard extends StatefulWidget {
-  const _TransactionCard({required this.d});
+  const _TransactionCard({required this.d, required this.onEdited});
   final SearchDebt d;
+  final VoidCallback onEdited;
 
   @override
   State<_TransactionCard> createState() => _TransactionCardState();
@@ -252,7 +286,6 @@ class _TransactionCardState extends State<_TransactionCard> {
   }
 
   List<CoverImage> _toCovers(SearchDebt d) {
-    // covers الان List<String> غیر-null است → بدون ??
     return [
       for (var i = 0; i < d.covers.length; i++)
         CoverImage(
@@ -268,8 +301,13 @@ class _TransactionCardState extends State<_TransactionCard> {
       context,
       controller: _ctrl,
       initialIndex: index,
-      editable: false, // فقط نمایش/زوم/اسلاید، بدون افزودن/حذف
+      editable: false,
     );
+  }
+
+  Future<void> _edit() async {
+    final ok = await showDebtFormSheet(context, initial: widget.d);
+    if (ok == true) widget.onEdited();
   }
 
   @override
@@ -326,6 +364,22 @@ class _TransactionCardState extends State<_TransactionCard> {
                             color: Colors.amber,
                           ),
                         ],
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'ویرایش',
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          onPressed: _edit,
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: kAccent,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -395,12 +449,10 @@ class _TransactionCardState extends State<_TransactionCard> {
               ),
             ],
           ),
-
           if (desc.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(desc, style: sans(size: 12, color: Colors.grey.shade700)),
           ],
-
           if (covers.isNotEmpty) ...[
             const SizedBox(height: 10),
             Wrap(
@@ -418,7 +470,6 @@ class _TransactionCardState extends State<_TransactionCard> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            // 👈 از CoverImageView موجود → resolveFileUrl اصلاح‌شده
                             CoverImageView(image: covers[i], fit: BoxFit.cover),
                             Positioned(
                               right: 4,

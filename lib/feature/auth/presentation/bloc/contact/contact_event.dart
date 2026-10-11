@@ -1,12 +1,12 @@
 import 'dart:async';
-
+import 'package:money/feature/model/contact/contact_list_options.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 
 abstract class ContactEvent {
   const ContactEvent();
 }
 
-/// دریافت (یا بازخوانی) صفحه‌ی اول. [done] برای بستن RefreshIndicator
+/// صفحه‌ی اول + شمارنده‌ها. [done] برای بستن RefreshIndicator
 class ContactsFetched extends ContactEvent {
   final Completer<void>? done;
   const ContactsFetched({this.done});
@@ -16,13 +16,27 @@ class ContactsLoadMore extends ContactEvent {
   const ContactsLoadMore();
 }
 
+class ContactQueryChanged extends ContactEvent {
+  final String query;
+  const ContactQueryChanged(this.query);
+}
+
+class ContactFilterChanged extends ContactEvent {
+  final ContactFilter filter;
+  const ContactFilterChanged(this.filter);
+}
+
+class ContactSortChanged extends ContactEvent {
+  final ContactSort sort;
+  const ContactSortChanged(this.sort);
+}
+
 class ContactCreated extends ContactEvent {
   final String name;
   final String phoneNumber;
   const ContactCreated({required this.name, required this.phoneNumber});
 }
 
-/// ثبت گروهی از مخاطبین گوشی
 class ContactsImported extends ContactEvent {
   final List<PhoneEntry> entries;
   const ContactsImported(this.entries);
