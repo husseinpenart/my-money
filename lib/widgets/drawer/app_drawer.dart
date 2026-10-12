@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/cache/contact_cache.dart';
+import 'package:money/core/di/injection.dart';
 import 'package:money/core/drawer/app_info.dart';
 import 'package:money/core/storage/session/session_cleaner.dart';
 import 'package:money/core/storage/token_storage.dart';
@@ -82,7 +84,7 @@ class _AppDrawerState extends State<AppDrawer> {
     final nav = Navigator.of(context);
     final deleted = await showDeleteAccountDialog(context);
     if (!deleted) return;
-
+    await getIt<ContactCache>().clear();
     await SessionCleaner.clear();
     _toIntro(nav);
   }

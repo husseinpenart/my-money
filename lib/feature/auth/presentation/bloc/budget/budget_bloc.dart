@@ -88,8 +88,9 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     Emitter<BudgetState> emit,
   ) async {
     try {
-      if (state.plan == null)
+      if (state.plan == null) {
         emit(state.copyWith(status: BudgetStatus.loading, clearError: true));
+      }
       await _loadAll(emit);
     } catch (err) {
       if (state.plan == null) {

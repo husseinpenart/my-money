@@ -1,9 +1,7 @@
-import 'package:money/feature/model/contact/contact_list_options.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 
 enum ContactsStatus { initial, loading, success, failure }
 
-/// پیام یک‌بارمصرف (اسنک‌بار). هر نمونه‌ی جدید = یک رویداد جدید
 class ContactFeedback {
   final String message;
   final bool isError;
@@ -15,12 +13,16 @@ class ContactState {
   final ContactsStatus status;
   final List<ContactModel> items;
   final int pageNumber, totalPages, totalItems;
-  final bool isLoadingMore, isSubmitting, isRefreshing;
+  final bool isLoadingMore, isSubmitting;
+
+  /// true یعنی در حال همگام‌سازی با سرور
+  final bool isRefreshing;
   final int importDone, importTotal;
   final String query;
   final ContactFilter filter;
   final ContactSort sort;
   final ContactStats? stats;
+  final DateTime? lastSyncedAt;
   final String? error;
   final ContactFeedback? feedback;
 
@@ -39,6 +41,7 @@ class ContactState {
     this.filter = ContactFilter.all,
     this.sort = ContactSort.newest,
     this.stats,
+    this.lastSyncedAt,
     this.error,
     this.feedback,
   });
@@ -61,6 +64,7 @@ class ContactState {
     ContactFilter? filter,
     ContactSort? sort,
     ContactStats? stats,
+    DateTime? lastSyncedAt,
     String? error,
     bool clearError = false,
     ContactFeedback? feedback,
@@ -79,6 +83,7 @@ class ContactState {
     filter: filter ?? this.filter,
     sort: sort ?? this.sort,
     stats: stats ?? this.stats,
+    lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     error: clearError ? null : (error ?? this.error),
     feedback: feedback ?? this.feedback,
   );

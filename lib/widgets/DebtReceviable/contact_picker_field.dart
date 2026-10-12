@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:money/feature/model/search_models/search_filter.dart';
@@ -118,42 +119,30 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
   }
 
   Future<void> _load({required bool reset}) async {
-    if (!reset && (_loadingMore || _loading || _page >= _totalPages)) return;
-    final req = ++_req;
-    setState(() {
-      if (reset) {
-        _loading = true;
-        _error = null;
-      } else {
-        _loadingMore = true;
-      }
-    });
+    final cache = GetIt.I<ContactCache>();
+    final all = cache.query(query: _query);
 
-    try {
-      final res = await _ds.search(
-        query: _query,
-        filter: const SearchFilter(type: SearchType.contacts),
-        pageNumber: reset ? 1 : _page + 1,
-        pageSize: 20,
-      );
-      if (!mounted || req != _req) return;
-      setState(() {
-        _items = reset
-            ? res.contacts.items
-            : [..._items, ...res.contacts.items];
-        _page = res.contacts.pageNumber;
-        _totalPages = res.contacts.totalPages;
-        _loading = false;
-        _loadingMore = false;
-      });
-    } catch (e) {
-      if (!mounted || req != _req) return;
-      setState(() {
-        _loading = false;
-        _loadingMore = false;
-        _error = backendMessage(e);
-      });
-    }
+    setState(() {
+      _items = all
+          .take(reset ? 20 : _items.length + 20)
+          .map(
+            (c) => SearchContact(
+              contactId: c.contactId,
+              name: c.name,
+              phoneNumber: c.phoneNumber,
+              createdAt: c.createdAt,
+              debts: c.debts,
+            ),
+          )
+          .toList();
+      _page = 1;
+      _totalPages = _items.length < all.length
+          ? 2
+          : 1; // یعنی هنوز صفحه‌ی بعد هست
+      _loading = false;
+      _loadingMore = false;
+      _error = null;
+    });
   }
 
   @override

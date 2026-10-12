@@ -1,15 +1,24 @@
 import 'dart:async';
-import 'package:money/feature/model/contact/contact_list_options.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 
 abstract class ContactEvent {
   const ContactEvent();
 }
 
-/// صفحه‌ی اول + شمارنده‌ها. [done] برای بستن RefreshIndicator
+/// ورود به صفحه: اگر کش دارد فقط محلی، وگرنه اولین دانلود
 class ContactsFetched extends ContactEvent {
   final Completer<void>? done;
   const ContactsFetched({this.done});
+}
+
+/// دکمه‌ی رفرش / کشیدن به پایین: همگام‌سازی با سرور
+class ContactsRefreshed extends ContactEvent {
+  final Completer<void>? done;
+  const ContactsRefreshed({this.done});
+}
+
+class ContactsLocalChanged extends ContactEvent {
+  const ContactsLocalChanged();
 }
 
 class ContactsLoadMore extends ContactEvent {

@@ -1,5 +1,7 @@
-// lib/core/di/injection.dart (یا هر فایلی که داری)
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/cache/contact_cache.dart';
+import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/notification_read_store.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/budget/budget_bloc.dart';
@@ -15,6 +17,7 @@ import 'package:money/feature/data/dataResource/hero_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/notification_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/report_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
+import 'package:money/feature/data/dataResource/sync_remote_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/token_storage.dart';
@@ -24,20 +27,21 @@ import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
 final GetIt getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
-  // ۱. اول خود SharedPreferences را مقداردهی می‌کنیم
+  // ۱. SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
 
-  // ۲. توکن استوریج با نمونه‌ی آماده ساخته می‌شود
+  // ۲. TokenStorage
   getIt.registerSingleton<TokenStorage>(
     TokenStorage(getIt<SharedPreferences>()),
   );
 
-  // ۳. بقیه سرویس‌ها
+  // ۳. ApiClient
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(getIt<TokenStorage>()),
   );
 
+  // ───────────── Auth ─────────────
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSource(getIt<ApiClient>()),
   );
@@ -49,6 +53,7 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  // ───────────── Search ─────────────
   getIt.registerLazySingleton<SearchRemoteDataSource>(
     () => SearchRemoteDataSource(getIt<ApiClient>()),
   );
@@ -57,41 +62,80 @@ Future<void> configureDependencies() async {
     () => SearchBloc(remoteDataSource: getIt<SearchRemoteDataSource>()),
   );
 
-  getIt.registerLazySingleton<ContactRemoteDataSource>(
-    () => ContactRemoteDataSource(getIt<ApiClient>()),
+  // ───────────── Cache / Sync ─────────────
+  getIt.registerLazySingleton<ContactCache>(
+    () => ContactCache(getIt<SharedPreferences>()),
   );
 
-  getIt.registerFactory<ContactBloc>(
-    () => ContactBloc(remoteDataSource: getIt<ContactRemoteDataSource>()),
+  getIt.registerLazySingleton<SyncRemoteDataSource>(
+    () => SyncRemoteDataSource(getIt<ApiClient>()),
+  );
+
+  getIt.registerLazySingleton<SyncRepository>(
+    () => SyncRepository(getIt<SyncRemoteDataSource>(), getIt<ContactCache>()),
+  );
+
+  // ───────────── Contact / Debt Data Sources ─────────────
+  getIt.registerLazySingleton<ContactRemoteDataSource>(
+    () => ContactRemoteDataSource(getIt<ApiClient>(), getIt<ContactCache>()),
   );
 
   getIt.registerLazySingleton<DebtRemoteDataSource>(
-    () => DebtRemoteDataSource(getIt<ApiClient>()),
+    () => DebtRemoteDataSource(getIt<ApiClient>(), getIt<ContactCache>()),
   );
+
+  // ───────────── Contact Bloc ─────────────
+  getIt.registerFactory<ContactBloc>(
+    () => ContactBloc(
+      remote: getIt<ContactRemoteDataSource>(),
+      cache: getIt<ContactCache>(),
+      sync: getIt<SyncRepository>(),
+    ),
+  );
+
+  // نسخه‌ی سرور را بعد از هر Command از هدر بخوان
+  getIt<ApiClient>().dio.interceptors.add(
+    InterceptorsWrapper(
+      onResponse: (response, handler) {
+        final v = int.tryParse(response.headers.value('x-data-version') ?? '');
+        if (v != null) getIt<ContactCache>().noteServerVersion(v);
+        handler.next(response);
+      },
+    ),
+  );
+
+  // ───────────── Debt Form Bloc ─────────────
   getIt.registerFactory<DebtFormBloc>(
     () => DebtFormBloc(remoteDataSource: getIt<DebtRemoteDataSource>()),
   );
 
+  // ───────────── Report ─────────────
   getIt.registerLazySingleton<ReportRemoteDataSource>(
     () => ReportRemoteDataSource(getIt<ApiClient>()),
   );
+
   getIt.registerFactory<ReportBloc>(
     () => ReportBloc(remoteDataSource: getIt<ReportRemoteDataSource>()),
   );
 
+  // ───────────── Hero ─────────────
   getIt.registerLazySingleton<HeroRemoteDataSource>(
     () => HeroRemoteDataSource(getIt<ApiClient>()),
   );
+
   getIt.registerFactory<HeroStatsBloc>(
     () => HeroStatsBloc(getIt<HeroRemoteDataSource>()),
   );
 
+  // ───────────── Notification ─────────────
   getIt.registerLazySingleton<NotificationReadStore>(
     () => NotificationReadStore(getIt<SharedPreferences>()),
   );
+
   getIt.registerLazySingleton<NotificationRemoteDataSource>(
     () => NotificationRemoteDataSource(getIt<ApiClient>()),
   );
+
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(
       remote: getIt<NotificationRemoteDataSource>(),
@@ -99,9 +143,11 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  // ───────────── Budget ─────────────
   getIt.registerLazySingleton<BudgetRemoteDataSource>(
     () => BudgetRemoteDataSource(getIt<ApiClient>()),
   );
+
   getIt.registerFactory<BudgetBloc>(
     () => BudgetBloc(ds: getIt<BudgetRemoteDataSource>()),
   );

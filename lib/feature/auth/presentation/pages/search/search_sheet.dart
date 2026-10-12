@@ -498,8 +498,7 @@ class _Highlight extends StatelessWidget {
     required this.text,
     required this.query,
     required this.style,
-    this.maxLines = 1,
-  });
+  }) : maxLines = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -726,8 +725,9 @@ class _DebtTile extends StatelessWidget {
       u.month,
       u.day,
     ).difference(DateTime.utc(n.year, n.month, n.day)).inDays;
-    if (days < 0)
+    if (days < 0) {
       return ('${fa('${days.abs()}')} روز معوق', const Color(0xFFEF4444));
+    }
     if (days == 0) return ('امروز سررسید', const Color(0xFFF97316));
     if (days <= 3) return ('${fa('$days')} روز مانده', const Color(0xFFF59E0B));
     return ('${fa('$days')} روز مانده', Colors.blueGrey);

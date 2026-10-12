@@ -10,6 +10,7 @@ import 'package:money/widgets/contact/contact_card.dart';
 import 'package:money/widgets/contact/contact_form_sheet.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/global/app_search_field.dart';
+import 'package:money/widgets/global/sync_bar.dart';
 import 'package:money/widgets/report/report_format.dart';
 
 class ContactListView extends StatefulWidget {
@@ -47,7 +48,7 @@ class _ContactListViewState extends State<ContactListView> {
 
   Future<void> _refresh() {
     final done = Completer<void>();
-    context.read<ContactBloc>().add(ContactsFetched(done: done));
+    context.read<ContactBloc>().add(ContactsRefreshed(done: done));
     return done.future;
   }
 
@@ -58,10 +59,12 @@ class _ContactListViewState extends State<ContactListView> {
     bloc.add(const ContactFilterChanged(ContactFilter.all));
   }
 
+  // 👈 async تا هم type-safe باشد (showContactDetails -> Future<bool?>)
+  //    هم ویرایشِ انجام‌شده داخل شیت، لیست را refresh کند.
   Future<void> _open(ContactModel c) async {
     final changed = await showContactDetails(context, c);
     if (changed == true && mounted) {
-      context.read<ContactBloc>().add(const ContactsFetched());
+      context.read<ContactBloc>().add(const ContactsRefreshed());
     }
   }
 
@@ -102,23 +105,28 @@ class _ContactListViewState extends State<ContactListView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ۱) شمارنده‌ها — یک‌بار
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.stats != c.stats || p.filter != c.filter,
           builder: (context, s) => _StatTiles(state: s),
         ),
         const SizedBox(height: 12),
+
+        // ۲) جستجو — یک‌بار (hint کامل + spinner هنگام refresh)
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AppSearchField(
             controller: _search,
             autofocus: false,
-            hintText: 'جستجوی نام یا شماره...',
+            hintText: 'جستجوی نام، شماره یا توضیحات...',
             isLoading: s.isRefreshing && s.query.isNotEmpty,
             onChanged: (v) =>
                 context.read<ContactBloc>().add(ContactQueryChanged(v)),
           ),
         ),
         const SizedBox(height: 10),
+
+        // ۳) نوار ابزار: تعداد + مرتب‌سازی + پاک‌کردن فیلتر
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) =>
               p.totalItems != c.totalItems ||
@@ -127,6 +135,8 @@ class _ContactListViewState extends State<ContactListView> {
               p.hasActiveFilter != c.hasActiveFilter,
           builder: (context, s) => _Toolbar(state: s, onClear: _clearAll),
         ),
+
+        // ۴) نوار پیشرفت هنگام refresh
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AnimatedOpacity(
@@ -136,6 +146,22 @@ class _ContactListViewState extends State<ContactListView> {
           ),
         ),
         const SizedBox(height: 6),
+
+        // ۵) نوار همگام‌سازی (آخرین بروزرسانی)
+        BlocBuilder<ContactBloc, ContactState>(
+          buildWhen: (p, c) =>
+              p.lastSyncedAt != c.lastSyncedAt ||
+              p.isRefreshing != c.isRefreshing,
+          builder: (context, s) => SyncBar(
+            syncedAt: s.lastSyncedAt,
+            busy: s.isRefreshing,
+            onRefresh: () =>
+                context.read<ContactBloc>().add(const ContactsRefreshed()),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // ۶) لیست
         Expanded(
           child: BlocBuilder<ContactBloc, ContactState>(
             buildWhen: (p, c) =>
@@ -164,7 +190,7 @@ class _ContactListViewState extends State<ContactListView> {
         text: s.error ?? 'خطا در دریافت مخاطبین',
         actionLabel: 'تلاش دوباره',
         onAction: () =>
-            context.read<ContactBloc>().add(const ContactsFetched()),
+            context.read<ContactBloc>().add(const ContactsRefreshed()),
       );
     }
 
@@ -227,7 +253,6 @@ class _ContactListViewState extends State<ContactListView> {
       );
     }
     if (s.hasMore) {
-      // اگر اسکرول به انتها نرسید (صفحه‌ی بلند)، دستی هم می‌شود ادامه داد
       return Center(
         child: TextButton(
           onPressed: () =>

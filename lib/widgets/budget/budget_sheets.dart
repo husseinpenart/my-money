@@ -540,7 +540,7 @@ class _ItemSheetState extends State<_ItemSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _category,
+            initialValue: _category,
             decoration: _dec('دسته', BudgetCategory.of(_category).icon),
             items: [
               for (final c in BudgetCategory.all)
@@ -565,7 +565,7 @@ class _ItemSheetState extends State<_ItemSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
-            value: _freq,
+            initialValue: _freq,
             decoration: _dec('تکرار', Icons.repeat),
             items: [
               for (final e in kFrequencies.entries)
@@ -599,7 +599,7 @@ class _ItemSheetState extends State<_ItemSheet> {
           if (_freq > 1) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
-              value: _startKey,
+              initialValue: _startKey,
               decoration: _dec(
                 'اولین ماه سررسید',
                 Icons.calendar_month_outlined,
@@ -739,7 +739,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       child: Column(
         children: [
           DropdownButtonFormField<String?>(
-            value: _itemId,
+            initialValue: _itemId,
             isExpanded: true,
             decoration: _dec('مربوط به کدام آیتم برنامه؟', Icons.link),
             items: [
@@ -774,7 +774,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
           if (_itemId == null) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: _dec('دسته', BudgetCategory.of(_category).icon),
               items: [
                 for (final c in BudgetCategory.all)

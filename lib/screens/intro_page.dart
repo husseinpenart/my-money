@@ -56,6 +56,7 @@ class _IntroPageState extends State<IntroPage> {
             children: [
               PageView(
                 controller: _controller,
+
                 onPageChanged: (index) {
                   setState(() {
                     _currentPage = index;
@@ -284,6 +285,7 @@ class _IntroPageState extends State<IntroPage> {
           Container(
             width: 140,
             height: 140,
+
             decoration: BoxDecoration(
               color: Colors.white.withAlpha(30),
               borderRadius: BorderRadius.circular(36),
@@ -299,7 +301,7 @@ class _IntroPageState extends State<IntroPage> {
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Vazir',
+              fontFamily: 'sans',
             ),
           ),
           const SizedBox(height: 16),

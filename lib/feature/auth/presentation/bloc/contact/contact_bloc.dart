@@ -1,190 +1,164 @@
+import 'dart:async';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:money/core/cache/contact_cache.dart';
+import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_event.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_state.dart';
-import 'package:money/feature/model/contact/contact_list_options.dart';
-import 'package:money/feature/model/contact/contact_model.dart';
-import 'package:money/feature/model/search_models/search_models.dart';
-// مسیر DataSource را مطابق پروژه‌ات تنظیم کن
 import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
+import 'package:money/feature/model/contact/contact_model.dart';
 
 class ContactBloc extends Bloc<ContactEvent, ContactState> {
-  final ContactRemoteDataSource remoteDataSource;
+  final ContactRemoteDataSource remote;
+  final ContactCache cache;
+  final SyncRepository sync;
 
   static const int _pageSize = 20;
-  static const Duration _debounce = Duration(milliseconds: 400);
+  int _visible = _pageSize;
+  late final VoidCallback _onCache;
 
-  /// با هر بارگذاری صفحه‌ی اول زیاد می‌شود تا پاسخ‌های قدیمی نادیده گرفته شوند
-  int _gen = 0;
-  CancelToken? _cancel;
-
-  ContactBloc({required this.remoteDataSource}) : super(const ContactState()) {
-    on<ContactsFetched>(_onFetched, transformer: restartable());
-    on<ContactQueryChanged>(_onQuery, transformer: restartable());
-    on<ContactFilterChanged>(_onFilter, transformer: restartable());
-    on<ContactSortChanged>(_onSort, transformer: restartable());
-    on<ContactsLoadMore>(_onLoadMore, transformer: droppable());
+  ContactBloc({required this.remote, required this.cache, required this.sync})
+    : super(const ContactState()) {
+    on<ContactsFetched>(_onFetched);
+    on<ContactsRefreshed>(_onRefreshed, transformer: droppable());
+    on<ContactsLocalChanged>((e, emit) => _project(emit));
+    on<ContactQueryChanged>(_onQuery);
+    on<ContactFilterChanged>(_onFilter);
+    on<ContactSortChanged>(_onSort);
+    on<ContactsLoadMore>(_onLoadMore);
     on<ContactCreated>(_onCreated, transformer: sequential());
     on<ContactsImported>(_onImported, transformer: sequential());
     on<ContactUpdated>(_onUpdated, transformer: sequential());
     on<ContactDeleted>(_onDeleted, transformer: sequential());
+
+    // هر تغییر کش (Command یا همگام‌سازی) خودکار روی لیست اعمال می‌شود
+    _onCache = () {
+      if (!isClosed) add(const ContactsLocalChanged());
+    };
+    cache.addListener(_onCache);
   }
 
-  // ───────────── دریافت و فیلتر ─────────────
+  // ───────────── نمایش (محلی، بدون شبکه) ─────────────
+  void _project(Emitter<ContactState> emit, {ContactsStatus? status}) {
+    final all = cache.query(
+      query: state.query,
+      filter: state.filter,
+      sort: state.sort,
+    );
+    final shown = all.take(_visible).toList();
+    emit(
+      state.copyWith(
+        status:
+            status ?? (cache.hasData ? ContactsStatus.success : state.status),
+        items: shown,
+        totalItems: all.length,
+        pageNumber: shown.isEmpty ? 1 : (shown.length / _pageSize).ceil(),
+        totalPages: (all.length / _pageSize).ceil(),
+        stats: cache.stats,
+        lastSyncedAt: cache.syncedAt,
+        isLoadingMore: false,
+        clearError: true,
+      ),
+    );
+  }
+
   Future<void> _onFetched(ContactsFetched e, Emitter<ContactState> emit) async {
     try {
-      if (state.items.isEmpty) {
-        emit(state.copyWith(status: ContactsStatus.loading, clearError: true));
+      if (cache.hasData) {
+        _project(emit);
+        return;
       }
-      await _fetchFirst(emit, withStats: true);
+      emit(state.copyWith(status: ContactsStatus.loading, clearError: true));
+      await _sync(emit, toast: false);
     } finally {
-      if (e.done != null && !e.done!.isCompleted) e.done!.complete();
+      _complete(e.done);
     }
   }
 
-  Future<void> _onQuery(
-    ContactQueryChanged e,
+  Future<void> _onRefreshed(
+    ContactsRefreshed e,
     Emitter<ContactState> emit,
   ) async {
-    final q = e.query.trim();
-    if (q == state.query) return;
-    emit(state.copyWith(query: q, isRefreshing: true));
-    await Future<void>.delayed(_debounce); // debounce
-    if (emit.isDone) return;
-    await _fetchFirst(emit);
-  }
-
-  Future<void> _onFilter(
-    ContactFilterChanged e,
-    Emitter<ContactState> emit,
-  ) async {
-    emit(state.copyWith(filter: e.filter, isRefreshing: true));
-    await _fetchFirst(emit);
-  }
-
-  Future<void> _onSort(ContactSortChanged e, Emitter<ContactState> emit) async {
-    emit(state.copyWith(sort: e.sort, isRefreshing: true));
-    await _fetchFirst(emit);
-  }
-
-  Future<void> _fetchFirst(
-    Emitter<ContactState> emit, {
-    bool withStats = false,
-  }) async {
-    final gen = ++_gen;
-    _cancel?.cancel();
-    final token = _cancel = CancelToken();
-
     try {
-      final r = await Future.wait<dynamic>([
-        remoteDataSource.fetch(
-          pageNumber: 1,
-          pageSize: _pageSize,
-          query: state.query,
-          filter: state.filter,
-          sort: state.sort,
-          cancelToken: token,
-        ),
-        if (withStats) remoteDataSource.stats(),
-      ]);
-      if (gen != _gen || emit.isDone) return;
+      await _sync(emit, toast: true);
+    } finally {
+      _complete(e.done);
+    }
+  }
 
-      final page = r[0] as PagedResult<ContactModel>;
+  Future<void> _sync(Emitter<ContactState> emit, {required bool toast}) async {
+    emit(state.copyWith(isRefreshing: true));
+    try {
+      final r = await sync.refresh();
+      _project(emit, status: ContactsStatus.success);
       emit(
         state.copyWith(
-          status: ContactsStatus.success,
-          items: page.items,
-          pageNumber: page.pageNumber,
-          totalPages: page.totalPages,
-          totalItems: page.totalItems,
           isRefreshing: false,
-          isLoadingMore: false,
-          stats: withStats ? r[1] as ContactStats : null,
-          clearError: true,
+          feedback: toast ? ContactFeedback.success(r.message) : null,
         ),
       );
     } catch (err) {
-      if (err is DioException && CancelToken.isCancel(err)) return;
-      if (gen != _gen || emit.isDone) return;
-      if (state.items.isEmpty) {
+      final msg = _msg(err);
+      if (cache.hasData) {
+        _project(emit);
         emit(
           state.copyWith(
-            status: ContactsStatus.failure,
             isRefreshing: false,
-            error: _msg(err),
+            feedback: ContactFeedback.error(msg),
           ),
         );
       } else {
         emit(
           state.copyWith(
+            status: ContactsStatus.failure,
             isRefreshing: false,
-            feedback: ContactFeedback.error(_msg(err)),
+            error: msg,
           ),
         );
       }
     }
   }
 
-  // ───────────── صفحه‌ی بعد ─────────────
-  Future<void> _onLoadMore(
-    ContactsLoadMore e,
-    Emitter<ContactState> emit,
-  ) async {
-    if (state.status != ContactsStatus.success ||
-        !state.hasMore ||
-        state.isLoadingMore ||
-        state.isRefreshing ||
-        state.isSubmitting) {
-      return;
-    }
-    final gen = _gen;
-    emit(state.copyWith(isLoadingMore: true));
-    try {
-      final next = await remoteDataSource.fetch(
-        pageNumber: state.pageNumber + 1,
-        pageSize: _pageSize,
-        query: state.query,
-        filter: state.filter,
-        sort: state.sort,
-      );
-      if (gen != _gen) {
-        emit(state.copyWith(isLoadingMore: false));
-        return;
-      }
-      final have = state.items.map((c) => c.contactId).toSet();
-      emit(
-        state.copyWith(
-          items: [
-            ...state.items,
-            ...next.items.where((c) => !have.contains(c.contactId)),
-          ],
-          pageNumber: next.pageNumber,
-          totalPages: next.totalPages,
-          totalItems: next.totalItems,
-          isLoadingMore: false,
-        ),
-      );
-    } catch (err) {
-      emit(
-        state.copyWith(
-          isLoadingMore: false,
-          feedback: ContactFeedback.error(_msg(err)),
-        ),
-      );
-    }
+  void _complete(Completer<void>? c) {
+    if (c != null && !c.isCompleted) c.complete();
   }
 
-  // ───────────── ساخت ─────────────
+  // ───────────── جستجو / فیلتر / مرتب‌سازی / صفحه‌ی بعد (محلی) ─────────────
+  void _onQuery(ContactQueryChanged e, Emitter<ContactState> emit) {
+    final q = e.query.trim();
+    if (q == state.query) return;
+    _visible = _pageSize;
+    emit(state.copyWith(query: q));
+    _project(emit);
+  }
+
+  void _onFilter(ContactFilterChanged e, Emitter<ContactState> emit) {
+    _visible = _pageSize;
+    emit(state.copyWith(filter: e.filter));
+    _project(emit);
+  }
+
+  void _onSort(ContactSortChanged e, Emitter<ContactState> emit) {
+    _visible = _pageSize;
+    emit(state.copyWith(sort: e.sort));
+    _project(emit);
+  }
+
+  void _onLoadMore(ContactsLoadMore e, Emitter<ContactState> emit) {
+    if (!state.hasMore) return;
+    _visible += _pageSize;
+    _project(emit);
+  }
+
+  // ───────────── Commandها (نتیجه مستقیم در کش اعمال می‌شود) ─────────────
   Future<void> _onCreated(ContactCreated e, Emitter<ContactState> emit) async {
     emit(state.copyWith(isSubmitting: true));
     try {
-      await remoteDataSource.create(name: e.name, phoneNumber: e.phoneNumber);
-      await _reloadQuiet(emit);
+      await remote.create(name: e.name, phoneNumber: e.phoneNumber);
       emit(
         state.copyWith(
-          status: ContactsStatus.success,
           isSubmitting: false,
           feedback: ContactFeedback.success('مخاطب با موفقیت ثبت شد'),
         ),
@@ -199,7 +173,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     }
   }
 
-  // ───────────── ثبت گروهی از مخاطبین گوشی ─────────────
   Future<void> _onImported(
     ContactsImported e,
     Emitter<ContactState> emit,
@@ -209,20 +182,20 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
 
     var ok = 0;
     String? firstError;
-    for (var i = 0; i < total; i++) {
-      try {
-        await remoteDataSource.create(
-          name: e.entries[i].name,
-          phoneNumber: e.entries[i].phoneNumber,
-        );
-        ok++;
-      } catch (err) {
-        firstError ??= _msg(err); // مثلاً مخاطب تکراری
+    await cache.runBatch(() async {
+      for (var i = 0; i < total; i++) {
+        try {
+          await remote.create(
+            name: e.entries[i].name,
+            phoneNumber: e.entries[i].phoneNumber,
+          );
+          ok++;
+        } catch (err) {
+          firstError ??= _msg(err); // مثلاً مخاطب تکراری
+        }
+        emit(state.copyWith(importDone: i + 1));
       }
-      emit(state.copyWith(importDone: i + 1));
-    }
-
-    await _reloadQuiet(emit);
+    });
 
     if (ok == 0) {
       emit(
@@ -240,7 +213,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     final failed = total - ok;
     emit(
       state.copyWith(
-        status: ContactsStatus.success,
         isSubmitting: false,
         importDone: 0,
         importTotal: 0,
@@ -253,11 +225,10 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     );
   }
 
-  // ───────────── ویرایش ─────────────
   Future<void> _onUpdated(ContactUpdated e, Emitter<ContactState> emit) async {
     emit(state.copyWith(isSubmitting: true));
     try {
-      final updated = await remoteDataSource.update(
+      await remote.update(
         contactId: e.contactId,
         name: e.name,
         phoneNumber: e.phoneNumber,
@@ -265,10 +236,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
       emit(
         state.copyWith(
           isSubmitting: false,
-          items: [
-            for (final c in state.items)
-              c.contactId == updated.contactId ? updated : c,
-          ],
           feedback: ContactFeedback.success('با موفقیت ویرایش شد'),
         ),
       );
@@ -282,24 +249,11 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     }
   }
 
-  // ───────────── حذف ─────────────
   Future<void> _onDeleted(ContactDeleted e, Emitter<ContactState> emit) async {
     try {
-      await remoteDataSource.delete(e.contactId);
-      final s = state.stats;
+      await remote.delete(e.contactId);
       emit(
-        state.copyWith(
-          items: state.items.where((c) => c.contactId != e.contactId).toList(),
-          totalItems: state.totalItems > 0 ? state.totalItems - 1 : 0,
-          stats: s == null
-              ? null
-              : ContactStats(
-                  total: s.total > 0 ? s.total - 1 : 0,
-                  demanders: s.demanders,
-                  debtors: s.debtors,
-                ),
-          feedback: ContactFeedback.success('با موفقیت حذف شد'),
-        ),
+        state.copyWith(feedback: ContactFeedback.success('با موفقیت حذف شد')),
       );
     } catch (err) {
       // مثلاً: «این مخاطب بدهی یا طلب ثبت‌شده دارد و قابل حذف نیست»
@@ -307,40 +261,12 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     }
   }
 
-  /// بعد از ساخت/ثبت گروهی؛ خطا نادیده گرفته می‌شود چون خود عملیات موفق بوده
-  Future<void> _reloadQuiet(Emitter<ContactState> emit) async {
-    final gen = ++_gen;
-    try {
-      final r = await Future.wait<dynamic>([
-        remoteDataSource.fetch(
-          pageNumber: 1,
-          pageSize: _pageSize,
-          query: state.query,
-          filter: state.filter,
-          sort: state.sort,
-        ),
-        remoteDataSource.stats(),
-      ]);
-      if (gen != _gen) return;
-      final page = r[0] as PagedResult<ContactModel>;
-      emit(
-        state.copyWith(
-          items: page.items,
-          pageNumber: page.pageNumber,
-          totalPages: page.totalPages,
-          totalItems: page.totalItems,
-          stats: r[1] as ContactStats,
-        ),
-      );
-    } catch (_) {}
-  }
-
   String _msg(Object e) =>
       e is ContactApiException ? e.message : backendMessage(e);
 
   @override
   Future<void> close() {
-    _cancel?.cancel();
+    cache.removeListener(_onCache);
     return super.close();
   }
 }

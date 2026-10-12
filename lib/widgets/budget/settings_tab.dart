@@ -128,8 +128,9 @@ class SettingsTab extends StatelessWidget {
         ],
       ),
     );
-    if (ok == true && context.mounted)
+    if (ok == true && context.mounted) {
       context.read<BudgetBloc>().add(BudgetItemDeleted(it.itemId!));
+    }
   }
 
   @override

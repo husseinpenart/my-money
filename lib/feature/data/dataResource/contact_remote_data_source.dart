@@ -1,61 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/network/backend_message.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
-import 'package:money/feature/model/search_models/search_models.dart';
 
 class ContactRemoteDataSource {
   final ApiClient apiClient;
-  ContactRemoteDataSource(this.apiClient);
-
-  /// لیست صفحه‌بندی‌شده با جستجو، فیلتر و مرتب‌سازی سمت سرور
-  Future<PagedResult<ContactModel>> fetch({
-    required int pageNumber,
-    int pageSize = 20,
-    String query = '',
-    ContactFilter filter = ContactFilter.all,
-    ContactSort sort = ContactSort.newest,
-    CancelToken? cancelToken,
-  }) async {
-    final Response<dynamic> res = await apiClient.get<dynamic>(
-      '/Search',
-      cancelToken: cancelToken,
-      queryParameters: {
-        'type': 'contacts',
-        'pageNumber': pageNumber,
-        'pageSize': pageSize,
-        'sortBy': sort.apiKey,
-        'desc': sort.desc,
-        if (query.isNotEmpty) 'query': query,
-        if (filter == ContactFilter.demander) ...{
-          'recordType': 'Receivable',
-          'payStatus': false,
-        },
-        if (filter == ContactFilter.debtor) ...{
-          'recordType': 'Debt',
-          'payStatus': false,
-        },
-      },
-    );
-
-    final data = _unwrap(res.data);
-    final raw = data is Map<String, dynamic> ? data['contacts'] : null;
-    return PagedResult.parse<ContactModel>(raw, ContactModel.fromJson);
-  }
-
-  /// شمارنده‌های دقیق (بدون وابستگی به صفحه‌های لودشده)
-  Future<ContactStats> stats() async {
-    final r = await Future.wait([
-      fetch(pageNumber: 1, pageSize: 1),
-      fetch(pageNumber: 1, pageSize: 1, filter: ContactFilter.demander),
-      fetch(pageNumber: 1, pageSize: 1, filter: ContactFilter.debtor),
-    ]);
-    return ContactStats(
-      total: r[0].totalItems,
-      demanders: r[1].totalItems,
-      debtors: r[2].totalItems,
-    );
-  }
+  final ContactCache cache;
+  ContactRemoteDataSource(this.apiClient, this.cache);
 
   Future<ContactModel> create({
     required String name,
@@ -65,7 +17,7 @@ class ContactRemoteDataSource {
       '/Contact',
       data: {'name': name, 'phoneNumber': phoneNumber},
     );
-    return _toContact(_unwrap(res.data));
+    return _apply(_unwrap(res.data));
   }
 
   Future<ContactModel> update({
@@ -77,12 +29,14 @@ class ContactRemoteDataSource {
       '/Contact/$contactId',
       data: {'name': name, 'phoneNumber': phoneNumber},
     );
-    return _toContact(_unwrap(res.data));
+    return _apply(_unwrap(res.data));
   }
 
   Future<ContactModel> getContactById(String contactId) async {
+    final cached = cache.byId(contactId);
+    if (cached != null) return cached;
     final res = await apiClient.get<dynamic>('/Contact/$contactId');
-    return _toContact(_unwrap(res.data));
+    return _apply(_unwrap(res.data));
   }
 
   Future<void> delete(String contactId) async {
@@ -90,11 +44,16 @@ class ContactRemoteDataSource {
       '/Contact/$contactId',
     );
     _unwrap(res.data);
+    cache.removeContact(contactId);
   }
 
-  ContactModel _toContact(dynamic data) {
-    if (data is Map<String, dynamic>) return ContactModel.fromJson(data);
-    throw ContactApiException('پاسخ نامعتبر از سرور');
+  /// پاسخ Command مستقیم به کش می‌رود؛ نیازی به Query دوباره نیست
+  ContactModel _apply(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      throw ContactApiException('پاسخ نامعتبر از سرور');
+    }
+    cache.applyContact(data);
+    return ContactModel.fromJson(data);
   }
 
   dynamic _unwrap(dynamic body) {

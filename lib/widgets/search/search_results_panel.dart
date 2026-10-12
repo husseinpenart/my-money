@@ -85,7 +85,7 @@ class _TypeTabs extends StatelessWidget {
                   style: const TextStyle(fontFamily: 'sans', fontSize: 12),
                 ),
                 selected: state.filter.type == type,
-                selectedColor: _accent.withOpacity(0.15),
+                selectedColor: _accent.withValues(alpha: 0.15),
                 showCheckmark: false,
                 onSelected: (_) => context.read<SearchBloc>().add(
                   SearchFilterChanged(state.filter.copyWith(type: type)),
@@ -116,7 +116,7 @@ class _DebtFilters extends StatelessWidget {
           style: const TextStyle(fontFamily: 'sans', fontSize: 11),
         ),
         selected: selected,
-        selectedColor: _accent.withOpacity(0.15),
+        selectedColor: _accent.withValues(alpha: 0.15),
         checkmarkColor: _accent,
         visualDensity: VisualDensity.compact,
         onSelected: (_) => onTap(),
@@ -326,7 +326,7 @@ class _ContactTile extends StatelessWidget {
       onTap: onTap == null ? null : () => onTap!(contact),
       leading: CircleAvatar(
         radius: 18,
-        backgroundColor: _accent.withOpacity(0.12),
+        backgroundColor: _accent.withValues(alpha: 0.12),
         child: Text(
           contact.name.isEmpty ? '?' : contact.name.characters.first,
           style: const TextStyle(
@@ -377,7 +377,7 @@ class _DebtTile extends StatelessWidget {
       onTap: onTap == null ? null : () => onTap!(debt),
       leading: CircleAvatar(
         radius: 18,
-        backgroundColor: color.withOpacity(0.12),
+        backgroundColor: color.withValues(alpha: 0.12),
         child: Icon(
           debt.isDebt ? Icons.arrow_upward : Icons.arrow_downward,
           size: 18,

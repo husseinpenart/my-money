@@ -16,8 +16,9 @@ class HistoryTab extends StatelessWidget {
     return BlocBuilder<BudgetBloc, BudgetState>(
       buildWhen: (p, c) => p.history != c.history || p.status != c.status,
       builder: (context, s) {
-        if (s.plan == null)
+        if (s.plan == null) {
           return const Center(child: CircularProgressIndicator(color: kAccent));
+        }
         if (s.history.isEmpty) {
           return const EmptyBox(
             icon: Icons.history_rounded,

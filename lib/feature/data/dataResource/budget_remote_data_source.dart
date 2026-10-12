@@ -13,8 +13,9 @@ class BudgetRemoteDataSource {
       queryParameters: {if (cycle != null) 'cycle': cycle},
     );
     final d = _unwrap(res.data);
-    if (d is! Map<String, dynamic>)
+    if (d is! Map<String, dynamic>) {
       throw BudgetApiException('پاسخ نامعتبر از سرور');
+    }
     return BudgetPlan.fromJson(d);
   }
 

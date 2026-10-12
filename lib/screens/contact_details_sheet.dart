@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/model/DebtReceviable/cover_image.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
@@ -58,6 +59,7 @@ class _ContactDetailsSheetState extends State<ContactDetailsSheet> {
   late ContactModel _contact;
   bool _dirty = false;
   final ContactRemoteDataSource _ds = GetIt.I<ContactRemoteDataSource>();
+  final ContactCache _cache = GetIt.I<ContactCache>();
 
   @override
   void initState() {
@@ -66,24 +68,8 @@ class _ContactDetailsSheetState extends State<ContactDetailsSheet> {
   }
 
   Future<void> _reload() async {
-    try {
-      final page = await _ds.fetch(
-        pageNumber: 1,
-        pageSize: 50,
-        query: _contact.name,
-      );
-      ContactModel? fresh;
-      for (final c in page.items) {
-        if (c.contactId == _contact.contactId) {
-          fresh = c;
-          break;
-        }
-      }
-      if (!mounted) return;
-      if (fresh != null) setState(() => _contact = fresh!); // 👈 این خط
-    } catch (_) {
-      // best-effort؛ _dirty مانده و بعد از بستن شیت لیست refresh می‌شود
-    }
+    final fresh = _cache.byId(_contact.contactId);
+    if (mounted && fresh != null) setState(() => _contact = fresh);
   }
 
   Future<void> _onTxEdited() async {
