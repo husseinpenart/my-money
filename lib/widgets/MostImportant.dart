@@ -1,4 +1,5 @@
-import 'package:flutter/gestures.dart'; // 👈 برای PointerDeviceKind
+import 'dart:math' as math;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/bus/debt_change_bus.dart';
@@ -66,9 +67,6 @@ class _MostimportantState extends State<Mostimportant> {
         ),
       );
 
-      // 👈 تشخیص قطعی «آیا اصلاً چیزی برای اسکرول هست؟»
-      debugPrint('>>> carousel starred count = ${starred.length}');
-
       setState(() {
         _raw = starred;
         _items = starred.map(_toCard).toList();
@@ -104,67 +102,94 @@ class _MostimportantState extends State<Mostimportant> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ───── هدر (دست‌نخورده) ─────
-        Container(
-          padding: const EdgeInsets.all(14),
+        // ───── هدر (فیکس: spacing:124 حذف شد) ─────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            spacing: 124,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween, // 👈 بدون spacing
             children: [
-              Text(
-                ScreenDictionary.mostSee,
-                style: const TextStyle(fontSize: 14, fontFamily: 'sans'),
+              // 👈 Flexible + ellipsis تا روی صفحه‌ی باریک نشکند
+              Flexible(
+                child: Text(
+                  ScreenDictionary.mostSee,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14, fontFamily: 'sans'),
+                ),
               ),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ImportantDebtsPage(),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ImportantDebtsPage(),
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'مشاهده همه',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'sans',
+                          color: Colors.blueGrey,
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'مشاهده همه',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'sans',
-                        color: Colors.blueGrey,
+                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        ScreenDictionary.importantOnes,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'sans',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    ScreenDictionary.importantOnes,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'sans',
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
         ),
 
         // ───── کاروسل ─────
-        Container(
+        SizedBox(
           height: 180,
-          padding: const EdgeInsets.symmetric(vertical: 15),
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? Center(
-                  child: Text(
-                    _error!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: 'sans',
-                      fontSize: 12,
-                      color: Colors.red,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'sans',
+                        fontSize: 12,
+                        color: Colors.red,
+                      ),
                     ),
                   ),
                 )
@@ -179,7 +204,6 @@ class _MostimportantState extends State<Mostimportant> {
                     ),
                   ),
                 )
-              // 👇 ScrollConfiguration: روی وب ماوس/trackpad هم drag می‌کند
               : ScrollConfiguration(
                   behavior: const ScrollBehavior().copyWith(
                     dragDevices: {
@@ -192,7 +216,10 @@ class _MostimportantState extends State<Mostimportant> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
                     itemCount: _items.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 15),
                     itemBuilder: (context, i) => GestureDetector(
@@ -208,12 +235,11 @@ class _MostimportantState extends State<Mostimportant> {
 
   Widget _card(MountMoney item) {
     return Container(
-      margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(15),
       width: 200,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(15)),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             blurRadius: 4,
@@ -223,86 +249,90 @@ class _MostimportantState extends State<Mostimportant> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // 👈 تا ارتفاع از ۱۸۰-۳۰ عبور نکند
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.transparent,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.amber,
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      transform: const GradientRotation(10),
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft,
-                      colors: const [
-                        Color.fromRGBO(56, 0, 146, 1),
-                        Color.fromRGBO(102, 26, 224, 1),
-                        Color.fromRGBO(160, 112, 236, 1),
-                      ],
-                    ),
+              // 👈 CircleAvatar+Container redundant حذف شد؛ Container مستقیم
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    // 👈 ۱۰ رادیان → ۱۰ درجه (pi/18)
+                    transform: GradientRotation(math.pi / 18),
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      Color.fromRGBO(56, 0, 146, 1),
+                      Color.fromRGBO(102, 26, 224, 1),
+                      Color.fromRGBO(160, 112, 236, 1),
+                    ],
                   ),
-                  child: Center(
-                    child: Text(
-                      item.firstCharacter,
-                      style: const TextStyle(
-                        fontFamily: 'sans',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
+                ),
+                child: Text(
+                  item.firstCharacter,
+                  style: const TextStyle(
+                    fontFamily: 'sans',
+                    fontSize: 14,
+                    color: Colors.white,
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontFamily: 'sans',
-                      color: Colors.black,
-                      fontSize: 14,
+              Expanded(
+                // 👈 Expanded تا نام بلند overflow ندهد
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'sans',
+                        color: Colors.black,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  Text(
-                    item.title,
-                    style: const TextStyle(
-                      fontFamily: 'sans',
-                      color: Colors.grey,
-                      fontSize: 10,
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontFamily: 'sans',
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.price,
-                style: TextStyle(
-                  fontFamily: 'sans',
-                  color: item.priceTypeColor,
-                  fontSize: 14,
-                ),
-              ),
-              const Text(
-                'تومان',
-                style: TextStyle(
-                  fontFamily: 'sans',
-                  color: Colors.grey,
-                  fontSize: 10,
-                ),
-              ),
-            ],
+          const SizedBox(height: 14),
+          Text(
+            item.price,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'sans',
+              color: item.priceTypeColor,
+              fontSize: 14,
+            ),
+          ),
+          const Text(
+            'تومان',
+            style: TextStyle(
+              fontFamily: 'sans',
+              color: Colors.grey,
+              fontSize: 10,
+            ),
           ),
         ],
       ),

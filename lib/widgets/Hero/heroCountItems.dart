@@ -19,6 +19,7 @@ class Herocountitems extends StatelessWidget {
             fontSize: 16,
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            height: 1.2,
           ),
         )
       : AnimatedNumberText(
@@ -29,6 +30,7 @@ class Herocountitems extends StatelessWidget {
             fontSize: 16,
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            height: 1.2,
           ),
         );
 
@@ -36,39 +38,44 @@ class Herocountitems extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.watch<ReportBloc>().state.data?.summary;
 
-    return Container(
-      padding: const EdgeInsets.all(7),
-      child: Center(
-        child: GlassContainer(
-          containerWidth: 400,
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _cell(_val(s?.paidCount), ScreenDictionary.paidText),
-                _cell(_val(null), ScreenDictionary.paidInProgressText),
-                _cell(_val(s?.unpaidCount), ScreenDictionary.notPaidText),
-              ],
-            ),
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      child: GlassContainer(
+        // 👈 containerWidth: 400 حذف شد؛ حالا با عرض والد (Expanded) scale می‌شود
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _cell(_val(s?.paidCount), ScreenDictionary.paidText),
+            _cell(_val(null), ScreenDictionary.paidInProgressText),
+            _cell(_val(s?.unpaidCount), ScreenDictionary.notPaidText),
+          ],
         ),
       ),
     );
   }
 
-  Widget _cell(Widget value, String label) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      value,
-      const SizedBox(height: 2),
-      Text(
-        label,
-        style: TextStyle(
-          fontFamily: 'sans',
-          fontSize: 10,
-          color: Colors.grey[400],
+  Widget _cell(Widget value, String label) => Expanded(
+    // 👈 Expanded به‌جای ستون آزاد: سه خانه مساوی، هیچ‌کدام overflow نمی‌دهد
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        value,
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'sans',
+            fontSize: 10,
+            color: Colors.white70,
+            height: 1.2,
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }

@@ -8,6 +8,7 @@ import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/session/session_cleaner.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/core/storage/web_persist.dart';
+import 'package:money/widgets/global/web_frame.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/screens/home_page.dart';
@@ -62,6 +63,9 @@ class MoneyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
+      // 👈 کل Navigator را داخل WebFrame می‌گذارد؛ پس route ها + دیالوگ +
+      //    شیت + توست همه از MediaQuery محدودشده استفاده می‌کنند.
+      builder: (context, child) => WebFrame(child: child),
       locale: const Locale('fa', 'IR'),
       localizationsDelegates: const [
         PersianMaterialLocalizations.delegate,

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
@@ -17,8 +19,9 @@ Future<void> showContactFormSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
+    useSafeArea: false, // 👈 padding پایین را خودمان صریح می‌گیریم (جدا‌بخش)
     backgroundColor: Colors.transparent,
+    constraints: const BoxConstraints(maxWidth: 640),
     builder: (_) => BlocProvider.value(
       value: bloc,
       child: ContactFormSheet(contact: contact),
@@ -83,9 +86,10 @@ class _ContactFormSheetState extends State<ContactFormSheet> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    // 👈 کیبورد یا نوار ناوبری، هرکدام بزرگ‌تر — بدون double-padding
+    final bottomInset = math.max(media.viewInsets.bottom, media.padding.bottom);
 
     return BlocListener<ContactBloc, ContactState>(
-      // وقتی عملیات تمام شد: موفق → بستن شیت | خطا → نمایش داخل شیت
       listenWhen: (p, c) => p.isSubmitting && !c.isSubmitting,
       listener: (context, state) {
         final fb = state.feedback;
@@ -97,7 +101,7 @@ class _ContactFormSheetState extends State<ContactFormSheet> {
         }
       },
       child: Container(
-        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+        padding: EdgeInsets.only(bottom: bottomInset),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
@@ -353,7 +357,6 @@ class _PhoneImportViewState extends State<_PhoneImportView> {
     });
 
     try {
-      // ۱. درخواست دسترسی با متد نسخه جدید
       final status = await FlutterContacts.permissions.request(
         PermissionType.read,
       );
@@ -369,8 +372,6 @@ class _PhoneImportViewState extends State<_PhoneImportView> {
         return;
       }
 
-      // ۲. دریافت مخاطبین با متد نسخه جدید (getAll به‌جای getContacts)
-      // ۲. دریافت مخاطبین با فیلد شماره تلفن
       final contacts = await FlutterContacts.getAll(
         properties: {ContactProperty.phone},
       );
@@ -564,6 +565,7 @@ class _PhoneImportViewState extends State<_PhoneImportView> {
                       },
                     ),
             ),
+            // 👇 این بلوک در فایل تو قطع شده بود — بازسازی‌شده
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: SizedBox(

@@ -97,25 +97,25 @@ class _HeroLayerBody extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch, // 👈 تا بچه‌ها عرض کامل بگیرند
         children: [
-          /// Top row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.account_balance_wallet_outlined,
                     color: Colors.white54,
                     size: 22,
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     ScreenDictionary.myWalllet,
                     style: TextStyle(
-                      color: Colors.grey[200],
+                      color: Color(0xFFE5E7EB),
                       fontFamily: 'sans',
                     ),
                   ),
@@ -123,7 +123,6 @@ class _HeroLayerBody extends StatelessWidget {
               ),
               Row(
                 children: [
-                  // 👈 refresh آمار
                   IconButton(
                     tooltip: 'به‌روزرسانی آمار',
                     visualDensity: VisualDensity.compact,
@@ -137,7 +136,6 @@ class _HeroLayerBody extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  // 👈 دکمه‌ی تبدیل واحد
                   GestureDetector(
                     onTap: cur.toggle,
                     child: GlassContainer(
@@ -145,7 +143,6 @@ class _HeroLayerBody extends StatelessWidget {
                         horizontal: 14,
                         vertical: 8,
                       ),
-                      containerWidth: 90,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -172,16 +169,13 @@ class _HeroLayerBody extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 30),
-
+          const SizedBox(height: 26),
           const Heroinfo(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           const Herocontainergrid(),
           const SizedBox(height: 10),
           const Herocountitems(),
           const SizedBox(height: 14),
-
-          // 👈 نرخ‌ها + معوق
           const _RatesRow(),
         ],
       ),
@@ -200,6 +194,7 @@ class _RatesRow extends StatelessWidget {
     final overdue = s.overdueCount > 0;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: _rate(
@@ -220,7 +215,8 @@ class _RatesRow extends StatelessWidget {
         ),
         if (overdue) ...[
           const SizedBox(width: 10),
-          _overdueChip(s.overdueCount),
+          // 👈 Flexible(fit: loose) تا chip روی صفحه‌ی باریک overflow ندهد
+          Flexible(child: _overdueChip(s.overdueCount)),
         ],
       ],
     );
@@ -235,19 +231,26 @@ class _RatesRow extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: 'sans',
-                  fontSize: 11,
-                  color: Colors.white70,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'sans',
+                    fontSize: 11,
+                    color: Colors.white70,
+                  ),
                 ),
               ),
+              const SizedBox(width: 6),
               Text(
                 rate == null ? '—' : pct(rate),
                 style: TextStyle(
@@ -273,6 +276,7 @@ class _RatesRow extends StatelessWidget {
           Text(
             detail,
             maxLines: 1,
+            softWrap: false,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'sans',
@@ -299,6 +303,7 @@ class _RatesRow extends StatelessWidget {
           const Icon(Icons.warning_amber_rounded, size: 16, color: _orange),
           const SizedBox(width: 6),
           Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -308,6 +313,7 @@ class _RatesRow extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: _orange,
+                  height: 1.1,
                 ),
               ),
               const Text(
@@ -316,6 +322,7 @@ class _RatesRow extends StatelessWidget {
                   fontFamily: 'sans',
                   fontSize: 9,
                   color: Colors.white70,
+                  height: 1.1,
                 ),
               ),
             ],

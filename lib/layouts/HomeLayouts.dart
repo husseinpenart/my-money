@@ -15,10 +15,15 @@ class Homelayouts extends StatefulWidget {
 class _MyHomePageLayouts extends State<Homelayouts> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        padding: EdgeInsets.all(3),
-        child: Column(
+    // 👈 SafeArea(top) هدر را زیر status bar نمی‌برد؛ bottom:false چون
+    //    نوار ناوبری را خودمان با padding پایینِ اسکرول رزرو می‌کنیم.
+    return SafeArea(
+      top: true,
+      bottom: false,
+      child: SingleChildScrollView(
+        // 👈 ۹۶ ≈ ارتفاع FAB(56) + فاصله + نفس؛ تا آخرین کارت زیر FAB نرود
+        padding: const EdgeInsets.only(bottom: 96),
+        child: const Column(
           children: [
             Header(),
             Herocontainer(),
@@ -28,7 +33,6 @@ class _MyHomePageLayouts extends State<Homelayouts> {
             Mostimportant(),
             SizedBox(height: 10),
             CardItemLayout(),
-
           ],
         ),
       ),

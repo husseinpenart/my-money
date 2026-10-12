@@ -59,8 +59,6 @@ class _ContactListViewState extends State<ContactListView> {
     bloc.add(const ContactFilterChanged(ContactFilter.all));
   }
 
-  // 👈 async تا هم type-safe باشد (showContactDetails -> Future<bool?>)
-  //    هم ویرایشِ انجام‌شده داخل شیت، لیست را refresh کند.
   Future<void> _open(ContactModel c) async {
     final changed = await showContactDetails(context, c);
     if (changed == true && mounted) {
@@ -105,14 +103,11 @@ class _ContactListViewState extends State<ContactListView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ۱) شمارنده‌ها — یک‌بار
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.stats != c.stats || p.filter != c.filter,
           builder: (context, s) => _StatTiles(state: s),
         ),
         const SizedBox(height: 12),
-
-        // ۲) جستجو — یک‌بار (hint کامل + spinner هنگام refresh)
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AppSearchField(
@@ -125,8 +120,6 @@ class _ContactListViewState extends State<ContactListView> {
           ),
         ),
         const SizedBox(height: 10),
-
-        // ۳) نوار ابزار: تعداد + مرتب‌سازی + پاک‌کردن فیلتر
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) =>
               p.totalItems != c.totalItems ||
@@ -135,8 +128,6 @@ class _ContactListViewState extends State<ContactListView> {
               p.hasActiveFilter != c.hasActiveFilter,
           builder: (context, s) => _Toolbar(state: s, onClear: _clearAll),
         ),
-
-        // ۴) نوار پیشرفت هنگام refresh
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AnimatedOpacity(
@@ -146,8 +137,6 @@ class _ContactListViewState extends State<ContactListView> {
           ),
         ),
         const SizedBox(height: 6),
-
-        // ۵) نوار همگام‌سازی (آخرین بروزرسانی)
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) =>
               p.lastSyncedAt != c.lastSyncedAt ||
@@ -160,8 +149,6 @@ class _ContactListViewState extends State<ContactListView> {
           ),
         ),
         const SizedBox(height: 10),
-
-        // ۶) لیست
         Expanded(
           child: BlocBuilder<ContactBloc, ContactState>(
             buildWhen: (p, c) =>
@@ -183,7 +170,6 @@ class _ContactListViewState extends State<ContactListView> {
         (s.status == ContactsStatus.loading && s.items.isEmpty)) {
       return const _Skeleton();
     }
-
     if (s.status == ContactsStatus.failure && s.items.isEmpty) {
       return _Message(
         icon: Icons.error_outline,
@@ -193,7 +179,6 @@ class _ContactListViewState extends State<ContactListView> {
             context.read<ContactBloc>().add(const ContactsRefreshed()),
       );
     }
-
     if (s.items.isEmpty) {
       return s.hasActiveFilter
           ? _Message(
@@ -209,19 +194,13 @@ class _ContactListViewState extends State<ContactListView> {
               onAction: () => showContactFormSheet(context),
             );
     }
-
     return RefreshIndicator(
       color: kAccent,
       onRefresh: _refresh,
       child: ListView.separated(
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          2,
-          6,
-          2,
-          100,
-        ), // فضا برای دکمه‌ی شناور
+        padding: const EdgeInsets.fromLTRB(2, 6, 2, 100),
         itemCount: s.items.length + 1,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
@@ -276,7 +255,6 @@ class _ContactListViewState extends State<ContactListView> {
   }
 }
 
-// ───────────────────── شمارنده‌ها (هم‌زمان فیلتر) ─────────────────────
 class _StatTiles extends StatelessWidget {
   final ContactState state;
   const _StatTiles({required this.state});
@@ -342,7 +320,6 @@ class _StatTiles extends StatelessWidget {
   }
 }
 
-// ───────────────────── تعداد + مرتب‌سازی ─────────────────────
 class _Toolbar extends StatelessWidget {
   final ContactState state;
   final VoidCallback onClear;
@@ -427,7 +404,6 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-// ───────────────────── اسکلت بارگذاری ─────────────────────
 class _Skeleton extends StatelessWidget {
   const _Skeleton();
 

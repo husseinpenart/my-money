@@ -22,7 +22,8 @@ class AnimatedNumberText extends StatelessWidget {
       tween: Tween<num>(end: value),
       duration: duration,
       curve: Curves.easeOutCubic,
-      builder: (context, animated, _) => Text(format(animated), style: style),
+      builder: (context, animated, _) =>
+          Text(format(animated), maxLines: 1, softWrap: false, style: style),
     );
   }
 }

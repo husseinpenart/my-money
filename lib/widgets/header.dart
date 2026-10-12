@@ -4,7 +4,7 @@ import 'package:money/core/storage/token_storage.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/search/search_sheet.dart';
 import 'package:money/widgets/contact/contact_style.dart';
-import 'package:money/widgets/drawer/drawer_menu_button.dart'; // 👈 جدید
+import 'package:money/widgets/drawer/drawer_menu_button.dart';
 import 'package:money/widgets/global/notification_bell.dart';
 
 class Header extends StatefulWidget {
@@ -43,7 +43,6 @@ class _HeaderState extends State<Header> {
         children: [
           Row(
             children: [
-              // 👈 دکمه‌ی منو داخل باکس گرادیانی هم‌اندازه‌ی آواتار قبلی
               Container(
                 width: 44,
                 height: 44,
@@ -85,7 +84,6 @@ class _HeaderState extends State<Header> {
             ],
           ),
           const SizedBox(height: 14),
-
           Material(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),

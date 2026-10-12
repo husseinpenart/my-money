@@ -15,38 +15,44 @@ class Heroinfo extends StatelessWidget {
 
     return Column(
       children: [
-        Center(
-          child: Text(
-            ScreenDictionary.pureIncomeText,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontFamily: 'sans',
-              fontSize: 14,
-            ),
+        const Text(
+          ScreenDictionary.pureIncomeText,
+          maxLines: 1,
+          softWrap: false,
+          style: TextStyle(
+            color: Colors.white70,
+            fontFamily: 'sans',
+            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 12),
-        Center(
-          child: s == null
-              ? const Text(
-                  '—',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'sans',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+        const SizedBox(height: 10),
+        // 👈 SizedBox(infinity) به FittedBox constraint عرض می‌دهد تا scaleDown کار کند
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: s == null
+                ? const Text(
+                    '—',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'sans',
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : AnimatedNumberText(
+                    value: s.net,
+                    format: cur.format,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'sans',
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                )
-              : AnimatedNumberText(
-                  value: s.net,
-                  format: cur.format, // 👈 با واحد فعلی تبدیل+فرمت
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'sans',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+          ),
         ),
       ],
     );
