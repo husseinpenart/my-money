@@ -10,7 +10,7 @@ class ApiClient {
     : dio = Dio(
         BaseOptions(
           // baseUrl: 'http://192.168.1.185:8085/api',
-          baseUrl:'http://localhost:8085/api',
+          baseUrl: 'https://localhost:44389/api',
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 30),
           // Content-Type عمداً اینجا نیست؛ در _buildOptions بر اساس نوع data ست می‌شود

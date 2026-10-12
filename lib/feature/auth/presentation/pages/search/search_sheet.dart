@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/storage/app_storage.dart';
 import 'package:money/feature/auth/presentation/pages/contact/contact_details_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/bus/debt_change_bus.dart';
@@ -30,8 +31,9 @@ Future<void> showSearchSheet(BuildContext context) {
 class _RecentStore {
   static const _k = 'recent_searches';
   static const _max = 8;
+  static AppStorage get _p => GetIt.I<AppStorage>();
 
-  static SharedPreferences get _p => GetIt.I<SharedPreferences>();
+  // static SharedPreferences get _p => GetIt.I<SharedPreferences>();
 
   static List<String> load() => _p.getStringList(_k) ?? <String>[];
 

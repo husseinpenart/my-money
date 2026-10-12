@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:money/core/storage/app_storage.dart';
 import 'package:money/feature/model/contact/contact_model.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 import 'package:money/helper/utils/input_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class _Entry {
   final ContactModel c;
@@ -25,7 +25,8 @@ final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
 class ContactCache extends ChangeNotifier {
   static const _key = 'cache_contacts_v1';
 
-  final SharedPreferences _prefs;
+  final AppStorage _prefs;
+
   final Map<String, Map<String, dynamic>> _raw = {};
 
   List<_Entry>? _entries;

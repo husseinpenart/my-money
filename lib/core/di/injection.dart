@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/notification_read_store.dart';
+import 'package:money/core/storage/app_storage.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/budget/budget_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
@@ -18,7 +19,6 @@ import 'package:money/feature/data/dataResource/notification_remote_data_source.
 import 'package:money/feature/data/dataResource/report_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/sync_remote_data_source.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/feature/data/dataResource/auth_remote_data_source.dart';
@@ -28,13 +28,14 @@ final GetIt getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
   // ۱. SharedPreferences
-  final sharedPreferences = await SharedPreferences.getInstance();
-  getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+  // final sharedPreferences = await SharedPreferences.getInstance();
+  // getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+  final storage = await AppStorage.init();
+  getIt.registerSingleton<AppStorage>(storage);
+  getIt.registerSingleton<TokenStorage>(TokenStorage(storage));
 
   // ۲. TokenStorage
-  getIt.registerSingleton<TokenStorage>(
-    TokenStorage(getIt<SharedPreferences>()),
-  );
+  // getIt.registerSingleton<TokenStorage>(TokenStorage(getIt<AppStorage>()));
 
   // ۳. ApiClient
   getIt.registerLazySingleton<ApiClient>(
@@ -64,7 +65,7 @@ Future<void> configureDependencies() async {
 
   // ───────────── Cache / Sync ─────────────
   getIt.registerLazySingleton<ContactCache>(
-    () => ContactCache(getIt<SharedPreferences>()),
+    () => ContactCache(getIt<AppStorage>()),
   );
 
   getIt.registerLazySingleton<SyncRemoteDataSource>(
@@ -129,7 +130,7 @@ Future<void> configureDependencies() async {
 
   // ───────────── Notification ─────────────
   getIt.registerLazySingleton<NotificationReadStore>(
-    () => NotificationReadStore(getIt<SharedPreferences>()),
+    () => NotificationReadStore(getIt<AppStorage>()),
   );
 
   getIt.registerLazySingleton<NotificationRemoteDataSource>(
