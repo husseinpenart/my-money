@@ -10,6 +10,7 @@ import 'package:money/feature/auth/presentation/pages/drawer/about_me_page.dart'
 import 'package:money/feature/auth/presentation/pages/drawer/coffee_page.dart';
 import 'package:money/feature/auth/presentation/pages/drawer/privacy_page.dart';
 import 'package:money/feature/auth/presentation/pages/drawer/version_page.dart';
+import 'package:money/feature/auth/presentation/pages/vault/vault_page.dart';
 import 'package:money/screens/intro_page.dart';
 import 'package:money/widgets/auth/recovery_code_dialog.dart';
 import 'package:money/widgets/contact/contact_style.dart';
@@ -104,6 +105,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 padding: EdgeInsets.zero,
                 children: [
                   _label('اپلیکیشن'),
+          
                   DrawerTile(
                     icon: Icons.info_outline_rounded,
                     title: 'درباره برنامه',

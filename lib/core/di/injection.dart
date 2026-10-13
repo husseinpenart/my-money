@@ -4,6 +4,8 @@ import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/notification_read_store.dart';
 import 'package:money/core/storage/app_storage.dart';
+import 'package:money/core/vault/vault_local_store.dart';
+import 'package:money/core/vault/vault_repository.dart';
 import 'package:money/feature/auth/presentation/bloc/DebtReceviable/debt_form_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/budget/budget_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/contact/contact_bloc.dart';
@@ -11,6 +13,7 @@ import 'package:money/feature/auth/presentation/bloc/hero/hero_stats_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/notification/notification_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/report/report_bloc.dart';
 import 'package:money/feature/auth/presentation/bloc/search/search_bloc.dart';
+import 'package:money/feature/auth/presentation/bloc/vault/vault_bloc.dart';
 import 'package:money/feature/data/dataResource/budget_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
 import 'package:money/feature/data/dataResource/debt_remote_data_source.dart';
@@ -23,6 +26,7 @@ import 'package:money/core/network/api_client.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/feature/data/dataResource/auth_remote_data_source.dart';
 import 'package:money/feature/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:money/feature/data/dataResource/vault_remote_data_source.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -34,8 +38,20 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<AppStorage>(storage);
   getIt.registerSingleton<TokenStorage>(TokenStorage(storage));
 
-  // ۲. TokenStorage
-  // getIt.registerSingleton<TokenStorage>(TokenStorage(getIt<AppStorage>()));
+  final vaultStore = VaultLocalStore();
+  await vaultStore.init();
+  getIt.registerSingleton<VaultLocalStore>(vaultStore);
+  getIt.registerLazySingleton<VaultRemoteDataSource>(
+    () => VaultRemoteDataSource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<VaultRepository>(
+    () => VaultRepository(
+      getIt<VaultRemoteDataSource>(),
+      getIt<VaultLocalStore>(),
+      getIt<AppStorage>(),
+    ),
+  );
+  getIt.registerFactory<VaultBloc>(() => VaultBloc(getIt<VaultRepository>()));
 
   // ۳. ApiClient
   getIt.registerLazySingleton<ApiClient>(

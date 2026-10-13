@@ -13,23 +13,23 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/screens/home_page.dart';
 import 'package:money/screens/intro_page.dart';
+import 'package:cryptography_flutter/cryptography_flutter.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 bool _loggingOut = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  FlutterCryptography.enable();
   await configureDependencies();
   await AppInfo.init();
-  requestPersistentStorage(); // فقط در وب اثر دارد؛ منتظرش نمی‌مانیم
+  requestPersistentStorage();
 
   _installAuthGuard();
 
   runApp(MoneyApp(isLoggedIn: GetIt.I<TokenStorage>().isLoggedIn));
 }
 
-/// توکن نامعتبر یا منقضی (۴۰۱) → پاک‌سازی نشست و رفتن به صفحه‌ی ورود
 void _installAuthGuard() {
   GetIt.I<ApiClient>().dio.interceptors.add(
     InterceptorsWrapper(
@@ -63,9 +63,11 @@ class MoneyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      // 👈 کل Navigator را داخل WebFrame می‌گذارد؛ پس route ها + دیالوگ +
-      //    شیت + توست همه از MediaQuery محدودشده استفاده می‌کنند.
-      builder: (context, child) => WebFrame(child: child),
+      // ✅ اگر child نداشت، SizedBox.expand می‌دهیم تا همیشه constraint داشته باشد
+      builder: (context, child) {
+        final Widget content = child ?? const SizedBox.expand();
+        return WebFrame(child: content);
+      },
       locale: const Locale('fa', 'IR'),
       localizationsDelegates: const [
         PersianMaterialLocalizations.delegate,

@@ -54,6 +54,9 @@ dependencies:
   hive_ce: ^2.11.0
   hive_ce_flutter: ^2.3.0
   web: ^1.1.0
+  cryptography: ^2.9.0
+  cryptography_flutter: ^2.3.4
+  image: ^4.12.0
   
 flutter_launcher_icons:
   android: true

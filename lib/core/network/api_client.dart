@@ -9,12 +9,12 @@ class ApiClient {
   ApiClient(this.tokenStorage)
     : dio = Dio(
         BaseOptions(
-          baseUrl: 'http://192.168.1.185:8085/api',
-          // baseUrl: 'https://localhost:44389/api',
+          // baseUrl: 'http://192.168.1.185:8085/api',
+          baseUrl: 'http://localhost:8085/api',
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 30),
           // Content-Type عمداً اینجا نیست؛ در _buildOptions بر اساس نوع data ست می‌شود
-          headers: {'Accept': 'application/json'},
+          headers: const {'Accept': 'application/json'},
         ),
       );
 
@@ -23,12 +23,13 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     bool requiresAuth = true,
     CancelToken? cancelToken,
+    ResponseType? responseType,
   }) {
     return dio.get<T>(
       path,
       queryParameters: queryParameters,
       cancelToken: cancelToken,
-      options: _buildOptions(requiresAuth),
+      options: _buildOptions(requiresAuth, responseType: responseType),
     );
   }
 
@@ -96,7 +97,11 @@ class ApiClient {
     );
   }
 
-  Options _buildOptions(bool requiresAuth, {Object? data}) {
+  Options _buildOptions(
+    bool requiresAuth, {
+    Object? data,
+    ResponseType? responseType,
+  }) {
     final token = tokenStorage.getToken();
     final headers = <String, dynamic>{};
 
@@ -110,6 +115,10 @@ class ApiClient {
         ? null
         : (data != null ? Headers.jsonContentType : null);
 
-    return Options(headers: headers, contentType: contentType);
+    return Options(
+      headers: headers,
+      contentType: contentType,
+      responseType: responseType,
+    );
   }
 }

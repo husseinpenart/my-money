@@ -60,7 +60,7 @@ class _RecoveryCodeDialogState extends State<_RecoveryCodeDialog> {
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: 'sans',
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,

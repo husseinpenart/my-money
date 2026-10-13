@@ -54,8 +54,7 @@ class ScreenDictionary {
   static const String endPaymentDate = 'سررسید پرداخت';
   static const String saveDemmandButton = 'ذخیره طلب';
   static const String calculationItems = 'مدیریت مالی';
-
-
+  static const String valuatTitle = "گاوصندوق ";
 }
 
 class ButtonsDictionary {

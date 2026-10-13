@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/feature/auth/presentation/pages/budget/budget_page.dart';
+import 'package:money/feature/auth/presentation/pages/vault/vault_page.dart';
 import 'package:money/layouts/HomeLayouts.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
@@ -31,6 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<Widget> _pages = const [
     Homelayouts(),
     BudgetPage(),
+    VaultPage(),
     ReportPage(),
     ContactPage(),
   ];
@@ -45,6 +47,11 @@ class _MyHomePageState extends State<MyHomePage> {
       label: ScreenDictionary.calculationItems,
       active: Icons.account_balance_wallet_rounded,
       inactive: Icons.account_balance_wallet_outlined,
+    ),
+    (
+      label: ScreenDictionary.valuatTitle,
+      active: Icons.security_rounded,
+      inactive: Icons.lock,
     ),
     (
       label: ScreenDictionary.report,
