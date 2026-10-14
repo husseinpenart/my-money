@@ -4,7 +4,6 @@ import 'package:money/feature/model/report/report_models.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/report/report_format.dart';
 
-
 const _green = Color(0xFF16A34A);
 const _red = Color(0xFFEF4444);
 const _blue = Color.fromRGBO(37, 99, 235, 1);
@@ -790,6 +789,10 @@ class ReportFooter extends StatelessWidget {
           line(
             Icons.dataset_outlined,
             '${fa('${s.recordCount}')} رکورد از ${fa('${s.contactCount}')} مخاطب',
+          ),
+          line(
+            Icons.savings_outlined,
+            'حقوق و هزینه: دوره‌های مالی که شروعشان در بازه است. اگر حقوق واقعی ثبت نشده باشد، حقوق ثابت (تخمینی) حساب می‌شود.',
           ),
           line(
             Icons.rule,

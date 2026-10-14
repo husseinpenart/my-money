@@ -1,13 +1,15 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:money/core/cache/contact_cache.dart';
+import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/backend_message.dart';
-import 'package:money/feature/data/dataResource/search_remote_data_source.dart';
-import 'package:money/feature/model/search_models/search_filter.dart';
+import 'package:money/feature/data/dataResource/contact_remote_data_source.dart';
+import 'package:money/feature/model/contact/contact_model.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
+import 'package:money/helper/utils/input_utils.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/global/app_search_field.dart';
+import 'package:money/widgets/report/report_format.dart';
 
 const _border = Color.fromARGB(255, 211, 205, 205);
 
@@ -22,7 +24,7 @@ class ContactPickerField extends StatelessWidget {
     required this.value,
     required this.onSelected,
     this.errorText,
-    this.hintText = 'انتخاب از مخاطبین',
+    this.hintText = 'انتخاب یا افزودن مخاطب',
   });
 
   Future<void> _open(BuildContext context) async {
@@ -33,7 +35,7 @@ class ContactPickerField extends StatelessWidget {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       constraints: const BoxConstraints(maxWidth: 560),
-      builder: (_) => const _ContactPickerSheet(),
+      builder: (_) => const _PickerSheet(),
     );
     if (picked != null) onSelected(picked);
   }
@@ -70,26 +72,26 @@ class ContactPickerField extends StatelessWidget {
   }
 }
 
-class _ContactPickerSheet extends StatefulWidget {
-  const _ContactPickerSheet();
-
+class _PickerSheet extends StatefulWidget {
+  const _PickerSheet();
   @override
-  State<_ContactPickerSheet> createState() => _ContactPickerSheetState();
+  State<_PickerSheet> createState() => _PickerSheetState();
 }
 
-class _ContactPickerSheetState extends State<_ContactPickerSheet> {
-  final _ds = GetIt.I<SearchRemoteDataSource>();
+class _PickerSheetState extends State<_PickerSheet> {
+  static const _step = 30;
+
+  final _cache = GetIt.I<ContactCache>();
   final _scroll = ScrollController();
-  Timer? _debounce;
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
 
   String _query = '';
-  List<SearchContact> _items = [];
-  int _page = 1;
-  int _totalPages = 0;
-  bool _loading = true;
-  bool _loadingMore = false;
+  int _limit = _step;
+  bool _loading = false;
+  bool _creating = false;
+  bool _busy = false;
   String? _error;
-  int _req = 0; // برای نادیده گرفتن پاسخ‌های قدیمی
 
   @override
   void initState() {
@@ -97,59 +99,84 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
     _scroll.addListener(() {
       if (_scroll.hasClients &&
           _scroll.position.pixels >= _scroll.position.maxScrollExtent - 100) {
-        _load(reset: false);
+        setState(() => _limit += _step);
       }
     });
-    _load(reset: true);
+    // فقط اگر هنوز هیچ داده‌ای روی دستگاه نیست
+    if (!_cache.hasData) {
+      _loading = true;
+      GetIt.I<SyncRepository>().refresh().whenComplete(() {
+        if (mounted) setState(() => _loading = false);
+      }).ignore();
+    }
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _scroll.dispose();
+    _name.dispose();
+    _phone.dispose();
     super.dispose();
   }
 
-  void _onChanged(String v) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      _query = v.trim();
-      _load(reset: true);
+  SearchContact _toSearch(ContactModel c) => SearchContact(
+    contactId: c.contactId,
+    name: c.name,
+    phoneNumber: c.phoneNumber,
+    createdAt: c.createdAt,
+    debts: c.debts,
+  );
+
+  void _startCreate() {
+    final q = _query.trim();
+    final looksPhone =
+        RegExp(r'^[\d+\s\-]+$').hasMatch(normalizeDigits(q)) && q.isNotEmpty;
+    setState(() {
+      _creating = true;
+      _error = null;
+      _name.text = looksPhone ? '' : q;
+      _phone.text = looksPhone ? q : '';
     });
   }
 
-  Future<void> _load({required bool reset}) async {
-    final cache = GetIt.I<ContactCache>();
-    final all = cache.query(query: _query);
-
+  Future<void> _save() async {
+    final name = _name.text.trim();
+    final phone = normalizePhone(_phone.text);
+    if (name.isEmpty) {
+      setState(() => _error = 'نام را وارد کن');
+      return;
+    }
+    if (phone.isNotEmpty && !isValidPhone(phone)) {
+      setState(() => _error = 'شماره تماس معتبر نیست');
+      return;
+    }
     setState(() {
-      _items = all
-          .take(reset ? 20 : _items.length + 20)
-          .map(
-            (c) => SearchContact(
-              contactId: c.contactId,
-              name: c.name,
-              phoneNumber: c.phoneNumber,
-              createdAt: c.createdAt,
-              debts: c.debts,
-            ),
-          )
-          .toList();
-      _page = 1;
-      _totalPages = _items.length < all.length
-          ? 2
-          : 1; // یعنی هنوز صفحه‌ی بعد هست
-      _loading = false;
-      _loadingMore = false;
+      _busy = true;
       _error = null;
     });
+    try {
+      final c = await GetIt.I<ContactRemoteDataSource>().create(
+        name: name,
+        phoneNumber: phone,
+      );
+      if (mounted) Navigator.of(context).pop(_toSearch(c));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e is ContactApiException ? e.message : backendMessage(e);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final all = _cache.query(query: _query, sort: ContactSort.name);
+    final shown = all.take(_limit).toList();
+
     return Container(
-      height: media.size.height * 0.8,
+      height: media.size.height * 0.85,
       padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -171,84 +198,195 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             'انتخاب طرف حساب',
             style: sans(size: 16, weight: FontWeight.bold),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: AppSearchField(
+              autofocus: false,
               hintText: 'جستجوی نام یا شماره',
               isLoading: _loading,
-              onChanged: _onChanged,
+              onChanged: (v) => setState(() {
+                _query = v.trim();
+                _limit = _step;
+              }),
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(child: _body()),
+          _createTile(),
+          if (_creating) _createForm(),
+          const Divider(height: 1),
+          Expanded(child: _list(shown, all.length)),
         ],
       ),
     );
   }
 
-  Widget _body() {
-    if (_loading && _items.isEmpty) {
+  Widget _createTile() {
+    final q = _query.trim();
+    final text = q.isEmpty
+        ? 'افزودن مخاطب جدید'
+        : 'افزودن «$q» به‌عنوان مخاطب جدید';
+    return ListTile(
+      dense: true,
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: kAccent.withValues(alpha: 0.12),
+        child: const Icon(
+          Icons.person_add_alt_1_rounded,
+          size: 18,
+          color: kAccent,
+        ),
+      ),
+      title: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: sans(size: 13, weight: FontWeight.bold, color: kAccent),
+      ),
+      subtitle: Text(
+        'شماره اختیاری است',
+        style: sans(size: 11, color: Colors.grey.shade600),
+      ),
+      onTap: _creating ? null : _startCreate,
+    );
+  }
+
+  Widget _createForm() {
+    InputDecoration d(String l, IconData i) => InputDecoration(
+      labelText: l,
+      labelStyle: sans(size: 12.5),
+      prefixIcon: Icon(i, size: 19, color: kAccent),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    );
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: kAccent.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kAccent.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _name,
+            style: sans(size: 14),
+            textInputAction: TextInputAction.next,
+            decoration: d('نام مخاطب', Icons.person_outline),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _phone,
+            style: sans(size: 14),
+            keyboardType: TextInputType.phone,
+            onSubmitted: (_) => _save(),
+            decoration: d('شماره تماس (اختیاری)', Icons.phone_outlined),
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  _error!,
+                  style: sans(size: 11.5, color: Colors.red.shade400),
+                ),
+              ),
+            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              TextButton(
+                onPressed: _busy
+                    ? null
+                    : () => setState(() => _creating = false),
+                child: Text('انصراف', style: sans(size: 12)),
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _busy ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: _busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'ثبت و انتخاب',
+                        style: sans(size: 12.5, weight: FontWeight.bold),
+                      ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _list(List<ContactModel> shown, int total) {
+    if (_loading && shown.isEmpty) {
       return const Center(child: CircularProgressIndicator(color: kAccent));
     }
-    if (_error != null && _items.isEmpty) {
+    if (shown.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_error!, style: sans(size: 12, color: Colors.red.shade400)),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => _load(reset: true),
-              child: Text('تلاش دوباره', style: sans(size: 12)),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            _query.isEmpty
+                ? 'هنوز مخاطبی نداری. از بالا یکی اضافه کن.'
+                : 'مخاطبی با این جستجو پیدا نشد. از بالا «افزودن» را بزن.',
+            textAlign: TextAlign.center,
+            style: sans(size: 12, color: Colors.grey.shade600),
+          ),
         ),
       );
     }
-    if (_items.isEmpty) {
-      return Center(
-        child: Text(
-          _query.isEmpty ? 'هنوز مخاطبی ثبت نکرده‌ای' : 'مخاطبی پیدا نشد',
-          style: sans(size: 12, color: Colors.grey.shade600),
-        ),
-      );
-    }
-
     return ListView.builder(
       controller: _scroll,
-      itemCount: _items.length + (_loadingMore ? 1 : 0),
+      itemCount: shown.length + 1,
       itemBuilder: (context, i) {
-        if (i >= _items.length) {
-          return const Padding(
-            padding: EdgeInsets.all(12),
+        if (i == shown.length) {
+          return Padding(
+            padding: const EdgeInsets.all(12),
             child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: kAccent,
-                ),
+              child: Text(
+                '${fa('$total')} مخاطب',
+                style: sans(size: 11, color: Colors.grey.shade500),
               ),
             ),
           );
         }
-        final c = _items[i];
+        final c = shown[i];
         return ListTile(
-          onTap: () => Navigator.of(context).pop(c),
+          onTap: () => Navigator.of(context).pop(_toSearch(c)),
           leading: CircleAvatar(
             backgroundColor: kAccent.withValues(alpha: 0.12),
             child: Text(
-              c.name.isEmpty ? '?' : c.name.characters.first,
+              c.name.isEmpty ? '؟' : c.name.characters.first,
               style: sans(size: 14, weight: FontWeight.bold, color: kAccent),
             ),
           ),
           title: Text(c.name, style: sans(size: 13)),
-          subtitle: Text(
-            c.phoneNumber,
-            style: sans(size: 11, color: Colors.grey.shade600),
-          ),
+          subtitle: c.hasPhone
+              ? Text(
+                  fa(c.phoneNumber),
+                  style: sans(size: 11, color: Colors.grey.shade600),
+                )
+              : null,
         );
       },
     );

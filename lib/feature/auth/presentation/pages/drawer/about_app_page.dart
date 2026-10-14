@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:money/core/drawer/app_info.dart';
 import 'package:money/feature/auth/presentation/pages/drawer/privacy_page.dart';
 import 'package:money/widgets/contact/contact_style.dart';
+import 'package:money/widgets/drawer/rich_line.dart';
 import 'package:money/widgets/drawer/section_card.dart';
 
 const _brand = Color(0xFF4E81EF);
+const _purple = Color(0xFF7C3AED);
 const _sky = Color(0xFF0EA5E9);
 const _green = Color(0xFF10B981);
 const _grey700 = Color(0xFF616161);
@@ -29,7 +31,7 @@ class AboutAppPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // هدر معرفی
+          // ───── هدر ─────
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -90,19 +92,92 @@ class AboutAppPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // ───── چرا این اپ ─────
           SectionCard(
             icon: Icons.auto_awesome_rounded,
             title: 'چرا این اپ؟',
-            child: Text(
-              'مدیریت امور مالی نباید پراکنده و استرس‌آور باشد. این اپ سه نیاز '
-              'اصلی را در یک جا جمع می‌کند: پیگیری دقیق طلب و بدهی، بودجه‌بندی '
-              'واقع‌گرایانه‌ی ماهانه، و گزارش‌هایی که نشان می‌دهند پولت کجاست و '
-              'چه چیزی معوق مانده. هدف، شفافیت و تصمیم‌گیری آگاهانه است؛ بدون '
-              'شلوغی و بدون اصطلاحات پیچیده.',
-              style: sans(size: 12.5, color: _grey700).copyWith(height: 1.8),
+            child: const RichLine(
+              'مدیریت پول نباید پراکنده و استرس‌آور باشد. این اپ سه کار را '
+              'در یک جا انجام می‌دهد: **طلب و بدهی‌هایت را دقیق پیگیری می‌کند**، '
+              '**بودجه‌ی ماهانه‌ات را می‌چیند** و **گزارش می‌دهد پولت کجا رفته**. '
+              'بدون شلوغی و بدون اصطلاحات پیچیده.',
             ),
           ),
 
+          // ───── گاوصندوق (مهم‌ترین نقطه‌ی قوت) ─────
+          SectionCard(
+            icon: Icons.shield_moon_rounded,
+            title: 'گاوصندوق با رمزنگاری سمت دستگاه',
+            color: _purple,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const RichLine(
+                  'گاوصندوق جایی برای چیزهای خیلی مهم است: طلا و سکه، سند، چک، '
+                  'شماره کارت یا هر یادداشت محرمانه.',
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _purple.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const RichLine(
+                    '**مثال ساده:** گاوصندوق مثل یک جعبه‌ی قفل‌دار است که '
+                    '**فقط خودت کلیدش را داری**. ما جعبه را برایت نگه می‌داریم، '
+                    'و کلید رمزگشایی طبق طراحی گاوصندوق به سرور ارسال نمی‌شود. '
+                    'به همین دلیل محتوای رمزنگاری‌شده برای سرور قابل خواندن نیست.',
+                    height: 1.8,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const BulletRow(
+                  text:
+                      '**قفل‌گذاری روی گوشی خودت انجام می‌شود،** قبل از اینکه چیزی '
+                      'به اینترنت برود. آنچه روی سرور می‌ماند فقط حروف درهم‌ریخته‌ای '
+                      'است که بدون کلید معتبر قابل خواندن نیست.',
+                  color: _purple,
+                ),
+                const BulletRow(
+                  text:
+                      '**تصاویر و اطلاعات حساس همراه آن‌ها** نیز مطابق سازوکار '
+                      'رمزنگاری گاوصندوق، پیش از ارسال محافظت می‌شوند.',
+                  color: _purple,
+                ),
+                const BulletRow(
+                  text:
+                      '**اگر رمز را فراموش کنی،** کلید بازیابی که هنگام ساخت دریافت '
+                      'کرده‌ای، در صورت نگهداری صحیح امکان تعیین رمز تازه و '
+                      'بازیابی دسترسی را فراهم می‌کند.',
+                  color: _purple,
+                ),
+                const BulletRow(
+                  text:
+                      '**کلید بازیابی را روی کاغذ بنویس** و جای امنی نگه دار. '
+                      'اگر رمز را نیز فراموش کنی، بدون این کلید امکان بازیابی نیست.',
+                  color: _purple,
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const RichLine(
+                    '**یک نکته‌ی صادقانه:** چون ما کلید را نداریم، اگر هم رمز و هم '
+                    'کلید بازیابی را گم کنی، طبق سازوکار فعلی گاوصندوق '
+                    '**امکان بازیابی محتوای رمزنگاری‌شده وجود ندارد**؛ حتی '
+                    'از طریق پشتیبانی.',
+                    color: Color(0xFF9A3412),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ───── قابلیت‌ها ─────
           SectionCard(
             icon: Icons.bolt_rounded,
             title: 'قابلیت‌های کلیدی',
@@ -120,12 +195,11 @@ class AboutAppPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
+                          child: RichLine(
                             f.title,
-                            style: sans(
-                              size: 12.5,
-                              color: _grey700,
-                            ).copyWith(height: 1.5),
+                            size: 12.5,
+                            height: 1.6,
+                            boldColor: _brand,
                           ),
                         ),
                       ],
@@ -135,6 +209,36 @@ class AboutAppPage extends StatelessWidget {
             ),
           ),
 
+          // ───── سرعت ─────
+          SectionCard(
+            icon: Icons.speed_rounded,
+            title: 'چرا اپ سریع است؟',
+            color: _green,
+            child: Column(
+              children: const [
+                BulletRow(
+                  text:
+                      '**اطلاعاتت روی گوشی خودت ذخیره می‌شود،** پس هر بار که صفحه '
+                      'را باز می‌کنی، لازم نیست منتظر اینترنت بمانی.',
+                  color: _green,
+                ),
+                BulletRow(
+                  text:
+                      'وقتی چیزی را **اضافه یا ویرایش می‌کنی، همان لحظه** در لیست '
+                      'می‌بینی.',
+                  color: _green,
+                ),
+                BulletRow(
+                  text:
+                      'اگر از گوشی یا مرورگر دیگری تغییر دادی، با دکمه‌ی '
+                      '«بروزرسانی» اطلاعات تازه می‌رسد.',
+                  color: _green,
+                ),
+              ],
+            ),
+          ),
+
+          // ───── تعهد حریم ─────
           SectionCard(
             icon: Icons.privacy_tip_outlined,
             title: 'تعهد ما به حریم تو',
@@ -142,15 +246,12 @@ class AboutAppPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'داده‌های تو صرفاً مال خودت است. اطلاعات مخاطبین فقط با اجازه‌ی '
-                  'خودت و فقط برای راحتی انتخاب طرف حساب خوانده می‌شود؛ ذخیره‌ی '
-                  'سراسری، ارسال یا فروش آن وجود ندارد. هر رکورد و تصویر نیز تنها '
-                  'در حساب خودت قابل مشاهده است.',
-                  style: sans(
-                    size: 12.5,
-                    color: _grey700,
-                  ).copyWith(height: 1.7),
+                const RichLine(
+                  '**داده‌هایت مال خودت است.** نه می‌فروشیم، نه برای تبلیغات '
+                  'استفاده می‌کنیم. مخاطبین گوشی فقط با اجازه‌ی خودت و فقط '
+                  'برای انتخاب طرف حساب خوانده می‌شود. هر حساب از حساب‌های دیگر '
+                  'جداست.',
+                  height: 1.7,
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
@@ -171,13 +272,59 @@ class AboutAppPage extends StatelessWidget {
             ),
           ),
 
+          // ───── شفافیت در استفاده و مسئولیت ─────
+          SectionCard(
+            icon: Icons.info_outline_rounded,
+            title: 'چند نکته درباره اطلاعات مالی',
+            color: _brand,
+            child: const Column(
+              children: [
+                BulletRow(
+                  text:
+                      'ثبت طلب، بدهی یا تصویر سند در برنامه، به‌تنهایی '
+                      '**تأیید یا اثبات قطعی آن توسط سازنده** نیست. '
+                      'اعتبار هر مدرک در اختلافات به تشخیص مرجع صالح بستگی دارد.',
+                  color: _brand,
+                ),
+                BulletRow(
+                  text:
+                      'گزارش‌ها و یادآوری سررسیدها ابزار کمکی‌اند؛ '
+                      'برای تعهدات مهم، سوابق و یادآور مستقل هم نگه دار.',
+                  color: _brand,
+                ),
+                BulletRow(
+                  text:
+                      'می‌توانی اطلاعاتت را مطابق امکانات برنامه مدیریت '
+                      'یا درخواست حذف حساب بدهی. جزئیات حذف و چرخه بکاپ '
+                      'در سیاست حریم خصوصی توضیح داده شده است.',
+                  color: _brand,
+                ),
+              ],
+            ),
+          ),
+
+          // ───── اطلاعات ارائه‌دهنده ─────
+          SectionCard(
+            icon: Icons.business_outlined,
+            title: 'ارائه‌دهنده و راه ارتباط',
+            color: _sky,
+            child: RichLine(
+              'برای گزارش اشکال، درخواست مرتبط با داده‌ها یا پیگیری شکایت، '
+              'از راه ارتباط رسمی **${AppInfo.supportEmail}** استفاده کن. '
+              'اطلاعات کامل درباره پردازش داده‌ها و حقوق کاربران در صفحه '
+              'حریم خصوصی در دسترس است.',
+              color: _grey700,
+              height: 1.7,
+            ),
+          ),
+
           SectionCard(
             icon: Icons.mail_outline_rounded,
             title: 'پشتیبانی',
             color: _green,
-            child: Text(
-              'برای گزارش باگ، پیشنهاد قابلیت یا هر پرسش: ${AppInfo.supportEmail}',
-              style: sans(size: 12.5, color: _grey700).copyWith(height: 1.8),
+            child: RichLine(
+              'برای گزارش مشکل، پیشنهاد، درخواست حریم خصوصی یا شکایت: **${AppInfo.supportEmail}**',
+              color: _grey700,
             ),
           ),
 

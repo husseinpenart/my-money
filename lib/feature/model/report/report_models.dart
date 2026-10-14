@@ -57,7 +57,7 @@ extension ReportPeriodX on ReportPeriod {
   }
 }
 
-// ───────────────────── مدل‌های پاسخ ─────────────────────
+// ───────────────────── بدهی و طلب ─────────────────────
 class ReportSummary {
   final double totalDebt,
       totalReceivable,
@@ -66,7 +66,9 @@ class ReportSummary {
       unpaidDebt,
       unpaidReceivable,
       overdueDebt,
-      overdueReceivable;
+      overdueReceivable,
+      dueSoonDebt,
+      dueSoonReceivable;
   final int recordCount,
       debtCount,
       receivableCount,
@@ -75,7 +77,9 @@ class ReportSummary {
       overdueCount,
       starredCount,
       contactCount,
-      invalidAmountCount;
+      invalidAmountCount,
+      dueSoonDebtCount,
+      dueSoonReceivableCount;
 
   const ReportSummary({
     required this.totalDebt,
@@ -86,6 +90,8 @@ class ReportSummary {
     required this.unpaidReceivable,
     required this.overdueDebt,
     required this.overdueReceivable,
+    required this.dueSoonDebt,
+    required this.dueSoonReceivable,
     required this.recordCount,
     required this.debtCount,
     required this.receivableCount,
@@ -95,6 +101,8 @@ class ReportSummary {
     required this.starredCount,
     required this.contactCount,
     required this.invalidAmountCount,
+    required this.dueSoonDebtCount,
+    required this.dueSoonReceivableCount,
   });
 
   factory ReportSummary.fromJson(Map<String, dynamic> j) => ReportSummary(
@@ -106,6 +114,8 @@ class ReportSummary {
     unpaidReceivable: _d(j['unpaidReceivable']),
     overdueDebt: _d(j['overdueDebt']),
     overdueReceivable: _d(j['overdueReceivable']),
+    dueSoonDebt: _d(j['dueSoonDebt']),
+    dueSoonReceivable: _d(j['dueSoonReceivable']),
     recordCount: _i(j['recordCount']),
     debtCount: _i(j['debtCount']),
     receivableCount: _i(j['receivableCount']),
@@ -115,13 +125,15 @@ class ReportSummary {
     starredCount: _i(j['starredCount']),
     contactCount: _i(j['contactCount']),
     invalidAmountCount: _i(j['invalidAmountCount']),
+    dueSoonDebtCount: _i(j['dueSoonDebtCount']),
+    dueSoonReceivableCount: _i(j['dueSoonReceivableCount']),
   );
 
-  /// طلب باقی‌مانده منهای بدهی باقی‌مانده
   double get net => unpaidReceivable - unpaidDebt;
   double? get collectionRate =>
       totalReceivable <= 0 ? null : paidReceivable / totalReceivable;
   double? get repaymentRate => totalDebt <= 0 ? null : paidDebt / totalDebt;
+  double get dueSoonNet => dueSoonReceivable - dueSoonDebt;
 }
 
 class ReportMonth {
@@ -185,13 +197,142 @@ class ReportContact {
   double get net => unpaidReceivable - unpaidDebt;
 }
 
+// ───────────────────── حقوق و هزینه ─────────────────────
+class ReportBudgetCycle {
+  final int cycleKey, count;
+  final DateTime? start;
+  final double salary, spent;
+  final bool estimated;
+  const ReportBudgetCycle({
+    required this.cycleKey,
+    required this.count,
+    required this.start,
+    required this.salary,
+    required this.spent,
+    required this.estimated,
+  });
+  factory ReportBudgetCycle.fromJson(Map<String, dynamic> j) =>
+      ReportBudgetCycle(
+        cycleKey: _i(j['cycleKey']),
+        count: _i(j['count']),
+        start: DateTime.tryParse('${j['start']}'),
+        salary: _d(j['salary']),
+        spent: _d(j['spent']),
+        estimated: j['estimated'] == true,
+      );
+}
+
+class ReportCategoryAmount {
+  final String category;
+  final double amount, share;
+  final int count;
+  const ReportCategoryAmount({
+    required this.category,
+    required this.amount,
+    required this.share,
+    required this.count,
+  });
+  factory ReportCategoryAmount.fromJson(Map<String, dynamic> j) =>
+      ReportCategoryAmount(
+        category: (j['category'] ?? 'Other').toString(),
+        amount: _d(j['amount']),
+        share: _d(j['share']),
+        count: _i(j['count']),
+      );
+}
+
+class ReportTopExpense {
+  final String title, category;
+  final double amount;
+  final DateTime? date;
+  const ReportTopExpense({
+    required this.title,
+    required this.category,
+    required this.amount,
+    required this.date,
+  });
+  factory ReportTopExpense.fromJson(Map<String, dynamic> j) => ReportTopExpense(
+    title: (j['title'] ?? '').toString(),
+    category: (j['category'] ?? 'Other').toString(),
+    amount: _d(j['amount']),
+    date: DateTime.tryParse('${j['date']}'),
+  );
+}
+
+class ReportBudget {
+  final bool hasProfile;
+  final double income, expense, saved, avgMonthlyIncome, avgMonthlyExpense;
+  final double? savingsRate;
+  final int cycleCount, estimatedCycles, expenseCount;
+  final List<ReportBudgetCycle> cycles;
+  final List<ReportCategoryAmount> categories;
+  final List<ReportTopExpense> topExpenses;
+
+  const ReportBudget({
+    required this.hasProfile,
+    required this.income,
+    required this.expense,
+    required this.saved,
+    required this.avgMonthlyIncome,
+    required this.avgMonthlyExpense,
+    required this.savingsRate,
+    required this.cycleCount,
+    required this.estimatedCycles,
+    required this.expenseCount,
+    required this.cycles,
+    required this.categories,
+    required this.topExpenses,
+  });
+
+  factory ReportBudget.fromJson(Map<String, dynamic> j) => ReportBudget(
+    hasProfile: j['hasProfile'] == true,
+    income: _d(j['income']),
+    expense: _d(j['expense']),
+    saved: _d(j['saved']),
+    avgMonthlyIncome: _d(j['avgMonthlyIncome']),
+    avgMonthlyExpense: _d(j['avgMonthlyExpense']),
+    savingsRate: j['savingsRate'] == null ? null : _d(j['savingsRate']),
+    cycleCount: _i(j['cycleCount']),
+    estimatedCycles: _i(j['estimatedCycles']),
+    expenseCount: _i(j['expenseCount']),
+    cycles: _l(j['cycles']).map(ReportBudgetCycle.fromJson).toList(),
+    categories: _l(j['categories']).map(ReportCategoryAmount.fromJson).toList(),
+    topExpenses: _l(j['topExpenses']).map(ReportTopExpense.fromJson).toList(),
+  );
+}
+
+// ───────────────────── نکات و پیامدها ─────────────────────
+class ReportInsight {
+  final String code, severity;
+  final double? amount, percent;
+  final int? count;
+  final String? name;
+  const ReportInsight({
+    required this.code,
+    required this.severity,
+    this.amount,
+    this.percent,
+    this.count,
+    this.name,
+  });
+  factory ReportInsight.fromJson(Map<String, dynamic> j) => ReportInsight(
+    code: (j['code'] ?? '').toString(),
+    severity: (j['severity'] ?? 'info').toString(),
+    amount: j['amount'] == null ? null : _d(j['amount']),
+    percent: j['percent'] == null ? null : _d(j['percent']),
+    count: j['count'] == null ? null : _i(j['count']),
+    name: j['name']?.toString(),
+  );
+}
+
 class ReportData {
-  final DateTime? generatedAt;
-  final DateTime? from, to;
+  final DateTime? generatedAt, from, to;
   final ReportSummary summary;
   final List<ReportMonth> monthly;
   final List<ReportAging> aging;
   final List<ReportContact> topContacts;
+  final ReportBudget budget;
+  final List<ReportInsight> insights;
 
   const ReportData({
     required this.generatedAt,
@@ -201,6 +342,8 @@ class ReportData {
     required this.monthly,
     required this.aging,
     required this.topContacts,
+    required this.budget,
+    required this.insights,
   });
 
   factory ReportData.fromJson(Map<String, dynamic> j) => ReportData(
@@ -211,5 +354,7 @@ class ReportData {
     monthly: _l(j['monthly']).map(ReportMonth.fromJson).toList(),
     aging: _l(j['aging']).map(ReportAging.fromJson).toList(),
     topContacts: _l(j['topContacts']).map(ReportContact.fromJson).toList(),
+    budget: ReportBudget.fromJson(_m(j['budget'])),
+    insights: _l(j['insights']).map(ReportInsight.fromJson).toList(),
   );
 }

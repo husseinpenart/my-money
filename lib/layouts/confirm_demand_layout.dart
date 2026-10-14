@@ -253,7 +253,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
               ),
             ),
           );
-           DebtChangeBus.instance.notifyChanged();
+          DebtChangeBus.instance.notifyChanged();
           Navigator.of(context).pop(true);
         } else if (state.status == DebtFormStatus.failure) {
           setState(() => _serverError = state.message);
@@ -324,18 +324,20 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                         ),
                       ),
 
-                      _section(
-                        ScreenDictionary.labelMobile,
-                        TextFormField(
-                          controller: _phone,
-                          readOnly: true,
-                          style: sans(size: 14),
-                          decoration: _dec(
-                            hint: ScreenDictionary.placeholderMobile,
-                            icon: Icons.phone,
+                      // 👈 فقط وقتی شماره دارد
+                      if (_phone.text.isNotEmpty)
+                        _section(
+                          ScreenDictionary.labelMobile,
+                          TextFormField(
+                            controller: _phone,
+                            readOnly: true,
+                            style: sans(size: 14),
+                            decoration: _dec(
+                              hint: ScreenDictionary.placeholderMobile,
+                              icon: Icons.phone,
+                            ),
                           ),
                         ),
-                      ),
 
                       _section(
                         ScreenDictionary.labelPrice,

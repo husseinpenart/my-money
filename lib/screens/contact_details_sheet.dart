@@ -149,11 +149,14 @@ class _ContactDetailsSheetState extends State<ContactDetailsSheet> {
                         _contact.name,
                         style: sans(size: 16, weight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        NumberHelper.toPersianDigits(_contact.phoneNumber),
-                        style: sans(size: 12, color: Colors.grey.shade600),
-                      ),
+                      // 👈 فقط وقتی شماره دارد
+                      if (_contact.phoneNumber.trim().isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          NumberHelper.toPersianDigits(_contact.phoneNumber),
+                          style: sans(size: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
                     ],
                   ),
                 ),

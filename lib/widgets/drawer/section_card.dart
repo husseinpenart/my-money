@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money/widgets/contact/contact_style.dart';
+import 'package:money/widgets/drawer/rich_line.dart';
 
 // رنگ‌های ثابت (hex) تا در هر const context امن باشند
 const _grey600 = Color(0xFF757575);
@@ -81,7 +82,7 @@ class BulletRow extends StatelessWidget {
     this.icon = Icons.check_circle_outline_rounded,
     this.color = _green500,
   });
-  final String text;
+  final String text; // بخش‌های بین ** ** پررنگ می‌شوند
   final IconData icon;
   final Color color;
 
@@ -92,14 +93,13 @@ class BulletRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 17, color: color),
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Icon(icon, size: 17, color: color),
+          ),
           const SizedBox(width: 9),
-          // 👈 height با copyWith (sans آن را ندارد)
           Expanded(
-            child: Text(
-              text,
-              style: sans(size: 12.5, color: _grey700).copyWith(height: 1.7),
-            ),
+            child: RichLine(text, size: 12.5, height: 1.7, boldColor: color),
           ),
         ],
       ),

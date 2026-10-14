@@ -29,7 +29,7 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     on<ContactSortChanged>(_onSort);
     on<ContactsLoadMore>(_onLoadMore);
     on<ContactCreated>(_onCreated, transformer: sequential());
-    on<ContactsImported>(_onImported, transformer: sequential());
+    // on<ContactsImported>(_onImported, transformer: sequential());
     on<ContactUpdated>(_onUpdated, transformer: sequential());
     on<ContactDeleted>(_onDeleted, transformer: sequential());
 
@@ -171,58 +171,6 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
         ),
       );
     }
-  }
-
-  Future<void> _onImported(
-    ContactsImported e,
-    Emitter<ContactState> emit,
-  ) async {
-    final total = e.entries.length;
-    emit(state.copyWith(isSubmitting: true, importDone: 0, importTotal: total));
-
-    var ok = 0;
-    String? firstError;
-    await cache.runBatch(() async {
-      for (var i = 0; i < total; i++) {
-        try {
-          await remote.create(
-            name: e.entries[i].name,
-            phoneNumber: e.entries[i].phoneNumber,
-          );
-          ok++;
-        } catch (err) {
-          firstError ??= _msg(err); // مثلاً مخاطب تکراری
-        }
-        emit(state.copyWith(importDone: i + 1));
-      }
-    });
-
-    if (ok == 0) {
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          importDone: 0,
-          importTotal: 0,
-          feedback: ContactFeedback.error(
-            firstError ?? 'ثبت مخاطبین ناموفق بود',
-          ),
-        ),
-      );
-      return;
-    }
-    final failed = total - ok;
-    emit(
-      state.copyWith(
-        isSubmitting: false,
-        importDone: 0,
-        importTotal: 0,
-        feedback: ContactFeedback.success(
-          failed == 0
-              ? '$ok مخاطب با موفقیت اضافه شد'
-              : '$ok مخاطب اضافه شد؛ $failed مورد تکراری یا ناموفق بود',
-        ),
-      ),
-    );
   }
 
   Future<void> _onUpdated(ContactUpdated e, Emitter<ContactState> emit) async {

@@ -20,12 +20,10 @@ const List<String> kMonthNames = [
 
 String fa(String s) => NumberHelper.toPersianDigits(s);
 
-/// عدد کامل با جداکننده و ارقام فارسی (برای استناد)
 String money(num v) => '${v < 0 ? '−' : ''}${fa(formatAmount(v))}';
 
 String _trim(double x) => x.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
 
-/// خلاصه برای برچسب نمودار: ۱.۲ میلیون
 String compact(num v) {
   final a = v.abs().toDouble();
   final String s;
@@ -73,10 +71,11 @@ String agingLabel(String key) => switch (key) {
   _ => key,
 };
 
-/// متن قابل کپی/ارسال با همه‌ی مشخصات گزارش
+/// متن قابل کپی با همه‌ی مشخصات گزارش
 String buildReportText(ReportData d, ReportPeriod p) {
   final s = d.summary;
-  final b = StringBuffer()
+  final b = d.budget;
+  final w = StringBuffer()
     ..writeln('گزارش مالی')
     ..writeln('بازه: ${periodText(d, p)}')
     ..writeln(
@@ -86,6 +85,7 @@ String buildReportText(ReportData d, ReportPeriod p) {
       'تعداد رکورد: ${fa('${s.recordCount}')} | تعداد مخاطب: ${fa('${s.contactCount}')}',
     )
     ..writeln('────────────')
+    ..writeln('بدهی و طلب')
     ..writeln(
       'کل طلب: ${money(s.totalReceivable)} | وصول‌شده: ${money(s.paidReceivable)}',
     )
@@ -98,17 +98,33 @@ String buildReportText(ReportData d, ReportPeriod p) {
     ..writeln(
       'طلب معوق: ${money(s.overdueReceivable)} | بدهی معوق: ${money(s.overdueDebt)}',
     )
-    ..writeln('تعداد رکورد معوق: ${fa('${s.overdueCount}')}');
-  if (s.collectionRate != null) {
-    b.writeln('نرخ وصول طلب: ${pct(s.collectionRate!)}');
-  }
-  if (s.repaymentRate != null) {
-    b.writeln('نرخ بازپرداخت بدهی: ${pct(s.repaymentRate!)}');
-  }
+    ..writeln('تعداد رکورد معوق: ${fa('${s.overdueCount}')}')
+    ..writeln(
+      'سررسید ۳۰ روز آینده: دریافتی ${money(s.dueSoonReceivable)} | پرداختی ${money(s.dueSoonDebt)}',
+    );
+  if (s.collectionRate != null)
+    w.writeln('نرخ وصول طلب: ${pct(s.collectionRate!)}');
+  if (s.repaymentRate != null)
+    w.writeln('نرخ بازپرداخت بدهی: ${pct(s.repaymentRate!)}');
   if (s.invalidAmountCount > 0) {
-    b.writeln(
+    w.writeln(
       'توجه: ${fa('${s.invalidAmountCount}')} رکورد مبلغ نامعتبر داشت و در جمع‌ها نیامده است.',
     );
   }
-  return b.toString();
+
+  if (b.hasProfile && b.cycleCount > 0) {
+    w
+      ..writeln('────────────')
+      ..writeln('حقوق و هزینه (${fa('${b.cycleCount}')} دوره‌ی مالی)')
+      ..writeln(
+        'درآمد: ${money(b.income)}${b.estimatedCycles > 0 ? ' (شامل ${fa('${b.estimatedCycles}')} دوره‌ی تخمینی)' : ''}',
+      )
+      ..writeln('هزینه: ${money(b.expense)}')
+      ..writeln(
+        '${b.saved < 0 ? 'کسری' : 'پس‌انداز'}: ${money(b.saved.abs())}',
+      );
+    if (b.savingsRate != null)
+      w.writeln('نرخ پس‌انداز: ${pct(b.savingsRate!)}');
+  }
+  return w.toString();
 }

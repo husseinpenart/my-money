@@ -11,6 +11,7 @@ class ContactModel {
   final String phoneNumber;
   final DateTime? createdAt;
   final List<SearchDebt> debts;
+  bool get hasPhone => phoneNumber.trim().isNotEmpty;
 
   const ContactModel({
     required this.contactId,
@@ -48,11 +49,6 @@ class ContactModel {
 }
 
 /// یک ردیف از مخاطبین گوشی
-class PhoneEntry {
-  final String name;
-  final String phoneNumber; // نرمال‌شده
-  const PhoneEntry({required this.name, required this.phoneNumber});
-}
 
 class ContactApiException implements Exception {
   final String message;

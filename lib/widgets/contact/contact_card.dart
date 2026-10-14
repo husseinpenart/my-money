@@ -179,21 +179,24 @@ class _ContactCardState extends State<ContactCard> {
                 overflow: TextOverflow.ellipsis,
                 style: sans(size: 15, weight: FontWeight.bold),
               ),
-              const SizedBox(height: 3),
-              Row(
-                children: [
-                  Icon(
-                    Icons.phone_outlined,
-                    size: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    fa(c.phoneNumber),
-                    style: sans(size: 11.5, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
+              // 👈 فقط وقتی شماره دارد
+              if (c.hasPhone) ...[
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.phone_outlined,
+                      size: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      fa(c.phoneNumber),
+                      style: sans(size: 11.5, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

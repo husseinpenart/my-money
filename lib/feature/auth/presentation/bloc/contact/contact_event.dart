@@ -42,13 +42,8 @@ class ContactSortChanged extends ContactEvent {
 
 class ContactCreated extends ContactEvent {
   final String name;
-  final String phoneNumber;
-  const ContactCreated({required this.name, required this.phoneNumber});
-}
-
-class ContactsImported extends ContactEvent {
-  final List<PhoneEntry> entries;
-  const ContactsImported(this.entries);
+  final String phoneNumber; // اختیاری؛ خالی یعنی بدون شماره
+  const ContactCreated({required this.name, this.phoneNumber = ''});
 }
 
 class ContactUpdated extends ContactEvent {
