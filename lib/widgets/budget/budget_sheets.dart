@@ -135,7 +135,7 @@ class _FrameState extends State<_Frame> {
         }
       },
       child: Container(
-        constraints: BoxConstraints(maxHeight: media.size.height * 0.92),
+        constraints: BoxConstraints(maxHeight: media.size.height * 0.90),
         padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -175,6 +175,7 @@ class _FrameState extends State<_Frame> {
             const Divider(height: 1),
             Flexible(
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 child: Form(key: widget.formKey, child: widget.child),
               ),
@@ -193,35 +194,45 @@ class _FrameState extends State<_Frame> {
                   style: sans(size: 12, color: Colors.red.shade400),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              child: BlocBuilder<BudgetBloc, BudgetState>(
-                buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
-                builder: (context, s) => SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: s.isSubmitting ? null : _go,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+            // ✅ رفع قطعی گیر کردن دکمه زیر کلیدهای سیستم عامل اندروید
+            SafeArea(
+              top: false,
+              maintainBottomViewPadding: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                child: BlocBuilder<BudgetBloc, BudgetState>(
+                  buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
+                  builder: (context, s) => SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: s.isSubmitting ? null : _go,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kAccent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                    ),
-                    child: s.isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                      child: s.isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              widget.submitLabel,
+                              style: sans(
+                                size: 15,
+                                weight: FontWeight.bold,
+                                color: Colors.white, // رنگ سفید و واضح
+                              ),
                             ),
-                          )
-                        : Text(
-                            widget.submitLabel,
-                            style: sans(size: 14, weight: FontWeight.bold),
-                          ),
+                    ),
                   ),
                 ),
               ),
@@ -369,7 +380,7 @@ class _SalaryConfirmSheetState extends State<_SalaryConfirmSheet> {
       context: context,
       initialDate: _date,
       firstDate: now.addDays(-40),
-      lastDate: now, // تاریخ آینده مجاز نیست
+      lastDate: now,
       initialEntryMode: PersianDatePickerEntryMode.calendar,
       initialDatePickerMode: PersianDatePickerMode.day,
       locale: const Locale('fa', 'IR'),
@@ -667,7 +678,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       context: context,
       initialDate: _date,
       firstDate: Jalali(now.year - 2, 1, 1),
-      lastDate: now, // هزینه‌ی آینده مجاز نیست
+      lastDate: now,
       initialEntryMode: PersianDatePickerEntryMode.calendar,
       initialDatePickerMode: PersianDatePickerMode.day,
       locale: const Locale('fa', 'IR'),
@@ -684,7 +695,6 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
     final bloc = context.read<BudgetBloc>();
     final plan = bloc.state.plan;
 
-    // مبلغ بسیار بزرگ نسبت به حقوق: قبل از ثبت تأیید گرفته می‌شود
     if (plan != null && plan.salary > 0 && amt > plan.salary * 0.5) {
       final ok = await showDialog<bool>(
         context: context,

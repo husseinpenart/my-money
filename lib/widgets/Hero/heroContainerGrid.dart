@@ -20,8 +20,7 @@ class Herocontainergrid extends StatelessWidget {
         children: [
           Expanded(
             child: _tile(
-              icon: Icons
-                  .south_west_rounded, // طلب = ورودی (بدون Transform.rotate)
+              icon: Icons.south_west_rounded,
               iconBg: Colors.lightGreen,
               iconFg: const Color(0xFF15803D),
               label: ScreenDictionary.demandText,
@@ -33,7 +32,7 @@ class Herocontainergrid extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _tile(
-              icon: Icons.north_east_rounded, // بدهی = خروجی
+              icon: Icons.north_east_rounded,
               iconBg: const Color(0xFFFF7B71),
               iconFg: const Color(0xFF9E2118),
               label: ScreenDictionary.debtsText,
@@ -57,13 +56,12 @@ class Herocontainergrid extends StatelessWidget {
     required CurrencyScope cur,
   }) {
     return GlassContainer(
-      // 👈 FittedBox دور کل محتوا: اگر ۰.۷۶px (یا بیشتر) اضافه آمد، scale می‌کند
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: Alignment.centerLeft,
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center, // 👈 به‌جای start
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(6),
@@ -75,7 +73,7 @@ class Herocontainergrid extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Column(
-              mainAxisSize: MainAxisSize.min, // 👈 فقط به اندازه‌ی محتوا
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -87,10 +85,10 @@ class Herocontainergrid extends StatelessWidget {
                     fontFamily: 'sans',
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
-                    height: 1.2, // 👈 line-height کنترل‌شده تا overflow ندهد
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 3), // 👈 width:8 غلط → height:3
+                const SizedBox(height: 3),
                 AnimatedNumberText(
                   value: value ?? 0,
                   format: cur.format,

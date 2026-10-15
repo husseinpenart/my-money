@@ -13,6 +13,9 @@ class GlassContainer extends StatelessWidget {
     this.borderOpacity = 0.25,
     this.shadowOpacity = 0.1,
     this.containerWidth,
+    // 👈 کلید فرار: اگر artifact سفید دیدی، این را false کن
+    // (بدون BackdropFilter = بدون saveLayer = قطعی بدون fog)
+    this.enableBlur = true,
   });
 
   final Widget child;
@@ -23,33 +26,54 @@ class GlassContainer extends StatelessWidget {
   final double borderOpacity;
   final double shadowOpacity;
   final double? containerWidth;
+  final bool enableBlur;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          width: containerWidth,
-          padding: padding,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: borderOpacity),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: shadowOpacity),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: child,
+    final radius = BorderRadius.circular(borderRadius);
+
+    // لایه‌ی tint + border (همان container اصلی، با همان width)
+    final glass = Container(
+      width: containerWidth,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: opacity),
+        borderRadius: radius,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: borderOpacity),
         ),
       ),
+      child: child,
     );
+
+    // blur فقط وقتی enableBlur=true؛ و همیشه داخل ClipRRect با clip صریح
+    final blurred = enableBlur
+        ? ClipRRect(
+            borderRadius: radius,
+            clipBehavior: Clip.antiAlias, // 👈 صریح، نه پیش‌فرض مبهم
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: glass,
+            ),
+          )
+        : glass;
+
+    // 👈 سایه بیرون از لایه‌ی blur → دیگر halo سفید داخل saveLayer نمی‌سازد
+    final shadowed = Container(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: shadowOpacity),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: blurred,
+    );
+
+    // 👈 ایزوله‌سازی saveLayer: نشت fog به کل صفحه بسته می‌شود
+    return RepaintBoundary(child: shadowed);
   }
 }

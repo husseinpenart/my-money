@@ -17,13 +17,12 @@ import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/forms/top_button_filter.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
-/// خروجی: true یعنی با موفقیت ثبت/ویرایش شد (لیست را رفرش کن)
 Future<bool?> showDebtFormSheet(
   BuildContext context, {
   bool hasDebt = false,
-  SearchDebt? initial, // برای ویرایش
-  SearchContact? initialContact, // انتخاب از قبل طرف حساب
-  bool editTitle = false, // 👈 جدید: عنوان ویرایش بدون initial
+  SearchDebt? initial,
+  SearchContact? initialContact,
+  bool editTitle = false,
 }) {
   return showModalBottomSheet<bool>(
     context: context,
@@ -197,7 +196,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
   }
 
   Widget _label(String t) =>
-      Text(t, style: sans(size: 12, color: Colors.grey[500]));
+      Text(t, style: sans(size: 12, color: Colors.grey[600]));
 
   InputDecoration _dec({required String hint, required IconData icon}) =>
       InputDecoration(
@@ -260,6 +259,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
         }
       },
       child: Container(
+        // وقتی کیبورد باز میشه فرم متناسب بالا میاد
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -288,7 +288,11 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                         ? ScreenDictionary.informTitle
                         : ScreenDictionary.informNewDebt,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontFamily: 'sans', fontSize: 17),
+                    style: const TextStyle(
+                      fontFamily: 'sans',
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 48),
@@ -298,8 +302,10 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
             const Divider(thickness: 0.5, height: 1),
             const SizedBox(height: 12),
 
+            // بخش اسکرول‌خور فرم
             Flexible(
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -324,7 +330,6 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                         ),
                       ),
 
-                      // 👈 فقط وقتی شماره دارد
                       if (_phone.text.isNotEmpty)
                         _section(
                           ScreenDictionary.labelMobile,
@@ -461,7 +466,7 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
                               child: SwitchListTile(
                                 dense: true,
                                 contentPadding: EdgeInsets.zero,
-                                activeThumbColor: accent,
+                                activeColor: accent,
                                 value: _paid,
                                 onChanged: (v) => setState(() => _paid = v),
                                 title: Text(
@@ -504,40 +509,50 @@ class _ConfirmDemandLayoutState extends State<ConfirmDemandLayout> {
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              child: BlocBuilder<DebtFormBloc, DebtFormState>(
-                buildWhen: (p, c) => p.status != c.status,
-                builder: (context, state) {
-                  final busy = state.status == DebtFormStatus.submitting;
-                  return SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: busy ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(13),
+            // ✅ دکمه با SafeArea پایین تا هرگز زیر دکمه‌های ۳تایی یا خط هوم اندروید گم نشه!
+            SafeArea(
+              top: false,
+              maintainBottomViewPadding: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: BlocBuilder<DebtFormBloc, DebtFormState>(
+                  buildWhen: (p, c) => p.status != c.status,
+                  builder: (context, state) {
+                    final busy = state.status == DebtFormStatus.submitting;
+                    return SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: busy ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: accent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                      ),
-                      child: busy
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                        child: busy
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                ScreenDictionary.saveDemmandButton,
+                                style: sans(
+                                  size: 14,
+                                  color: Colors.white,
+                                  weight: FontWeight.bold,
+                                ),
                               ),
-                            )
-                          : Text(
-                              ScreenDictionary.saveDemmandButton,
-                              style: sans(size: 13, color: Colors.white),
-                            ),
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],

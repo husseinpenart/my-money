@@ -97,8 +97,7 @@ class _HeroLayerBody extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.stretch, // 👈 تا بچه‌ها عرض کامل بگیرند
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,7 +167,6 @@ class _HeroLayerBody extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 26),
           const Heroinfo(),
           const SizedBox(height: 18),
@@ -194,7 +192,8 @@ class _RatesRow extends StatelessWidget {
     final overdue = s.overdueCount > 0;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      // ✅ اصلاح شد: start به جای stretch تا باگی ایجاد نکند
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _rate(
@@ -215,7 +214,6 @@ class _RatesRow extends StatelessWidget {
         ),
         if (overdue) ...[
           const SizedBox(width: 10),
-          // 👈 Flexible(fit: loose) تا chip روی صفحه‌ی باریک overflow ندهد
           Flexible(child: _overdueChip(s.overdueCount)),
         ],
       ],

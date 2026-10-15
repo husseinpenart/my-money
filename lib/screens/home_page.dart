@@ -7,8 +7,8 @@ import 'package:money/layouts/HomeLayouts.dart';
 import 'package:money/screens/contact_page.dart';
 import 'package:money/screens/report_page.dart';
 import 'package:money/widgets/custom_expandable_fab.dart';
-import 'package:money/widgets/drawer/app_drawer.dart'; // 👈 از widgets/drawer
-import 'package:money/widgets/drawer/drawer_scope.dart'; // 👈 از widgets/drawer
+import 'package:money/widgets/drawer/app_drawer.dart';
+import 'package:money/widgets/drawer/drawer_scope.dart';
 
 const _navActive = Color.fromRGBO(78, 129, 239, 1);
 const _navInactive = Color.fromRGBO(163, 168, 176, 1);
@@ -76,9 +76,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: const AppDrawer(),
+      // ✅ با SafeArea هم استاتوس بار ساعت و باتری رعایت میشه هم پس‌زمینه یکپارچه می‌مونه
       body: DrawerScope(
         scaffoldKey: _scaffoldKey,
-        child: _pages[_selectedIndex],
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: _pages[_selectedIndex],
+        ),
       ),
       bottomNavigationBar: _BottomBar(
         index: _selectedIndex,

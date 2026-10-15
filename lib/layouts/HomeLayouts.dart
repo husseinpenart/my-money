@@ -15,28 +15,24 @@ class Homelayouts extends StatefulWidget {
 class _MyHomePageLayouts extends State<Homelayouts> {
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: true,
-      bottom: false,
-      child: SingleChildScrollView(
-        // عرض کامل تا فرزندان در Hit Test بدون سایز نمانند
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 96),
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: const [
-              Header(),
-              Herocontainer(),
-              SizedBox(height: 10),
-              Quickaccess(),
-              SizedBox(height: 10),
-              Mostimportant(),
-              SizedBox(height: 10),
-              CardItemLayout(),
-            ],
-          ),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 96, top: 8),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: const [
+            Header(),
+            SizedBox(height: 12),
+            Herocontainer(),
+            SizedBox(height: 14),
+            Quickaccess(),
+            SizedBox(height: 14),
+            Mostimportant(),
+            SizedBox(height: 14),
+            CardItemLayout(),
+          ],
         ),
       ),
     );

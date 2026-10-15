@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart'; // 👈 اضافه شد برای تشخیص وب
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
@@ -63,10 +64,10 @@ class MoneyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      // ✅ اگر child نداشت، SizedBox.expand می‌دهیم تا همیشه constraint داشته باشد
+      // ✅ این خط کپسول مزاحم رو روی گوشی کلاً خاموش میکنه:
       builder: (context, child) {
         final Widget content = child ?? const SizedBox.expand();
-        return WebFrame(child: content);
+        return kIsWeb ? WebFrame(child: content) : content;
       },
       locale: const Locale('fa', 'IR'),
       localizationsDelegates: const [
@@ -80,9 +81,15 @@ class MoneyApp extends StatelessWidget {
       title: Titles.topTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(
+          0xFFF3F4F6,
+        ), // رنگ خاکستری ملایم پس‌زمینه
         fontFamily: 'sans',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color.fromARGB(255, 93, 0, 255),
+          brightness: Brightness.light,
         ),
         bottomSheetTheme: const BottomSheetThemeData(
           showDragHandle: true,
@@ -92,7 +99,6 @@ class MoneyApp extends StatelessWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
           ),
           backgroundColor: Colors.white,
-          modalBackgroundColor: Colors.amberAccent,
         ),
       ),
       home: isLoggedIn

@@ -152,20 +152,6 @@ class _MostimportantState extends State<Mostimportant> {
                       color: Colors.amber,
                       size: 22,
                     ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        ScreenDictionary.importantOnes,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'sans',
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),

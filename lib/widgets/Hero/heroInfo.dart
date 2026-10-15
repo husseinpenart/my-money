@@ -26,7 +26,6 @@ class Heroinfo extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        // 👈 SizedBox(infinity) به FittedBox constraint عرض می‌دهد تا scaleDown کار کند
         SizedBox(
           width: double.infinity,
           child: FittedBox(
