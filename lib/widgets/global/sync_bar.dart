@@ -7,15 +7,24 @@ class SyncBar extends StatelessWidget {
   final DateTime? syncedAt;
   final bool busy;
   final VoidCallback onRefresh;
+
+  /// اگر false باشد، کل نوار بروزرسانی نمایش داده نمی‌شود.
+  /// این پارامتر اختیاری است و پیش‌فرض true است تا جاهای دیگر خراب نشوند.
+  final bool hasData;
+
   const SyncBar({
     super.key,
     required this.syncedAt,
     required this.busy,
     required this.onRefresh,
+    this.hasData = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    // 👈 اگر داده‌ای وجود نداشت، اصلاً نوار را نشان نده
+    if (!hasData) return const SizedBox.shrink();
+
     return Row(
       children: [
         Icon(Icons.cloud_done_outlined, size: 15, color: Colors.grey.shade500),

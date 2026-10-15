@@ -107,7 +107,9 @@ class _ContactListViewState extends State<ContactListView> {
           buildWhen: (p, c) => p.stats != c.stats || p.filter != c.filter,
           builder: (context, s) => _StatTiles(state: s),
         ),
+
         const SizedBox(height: 12),
+
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AppSearchField(
@@ -119,7 +121,9 @@ class _ContactListViewState extends State<ContactListView> {
                 context.read<ContactBloc>().add(ContactQueryChanged(v)),
           ),
         ),
+
         const SizedBox(height: 10),
+
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) =>
               p.totalItems != c.totalItems ||
@@ -128,6 +132,7 @@ class _ContactListViewState extends State<ContactListView> {
               p.hasActiveFilter != c.hasActiveFilter,
           builder: (context, s) => _Toolbar(state: s, onClear: _clearAll),
         ),
+
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) => p.isRefreshing != c.isRefreshing,
           builder: (context, s) => AnimatedOpacity(
@@ -136,19 +141,37 @@ class _ContactListViewState extends State<ContactListView> {
             child: const LinearProgressIndicator(minHeight: 2, color: kAccent),
           ),
         ),
+
         const SizedBox(height: 6),
+
+        // 👈 فقط وقتی لیست خالی نباشد، SyncBar نمایش داده شود
         BlocBuilder<ContactBloc, ContactState>(
           buildWhen: (p, c) =>
+              p.items != c.items ||
+              p.status != c.status ||
               p.lastSyncedAt != c.lastSyncedAt ||
               p.isRefreshing != c.isRefreshing,
-          builder: (context, s) => SyncBar(
-            syncedAt: s.lastSyncedAt,
-            busy: s.isRefreshing,
-            onRefresh: () =>
-                context.read<ContactBloc>().add(const ContactsRefreshed()),
-          ),
+          builder: (context, s) {
+            if (s.items.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SyncBar(
+                  syncedAt: s.lastSyncedAt,
+                  busy: s.isRefreshing,
+                  onRefresh: () => context.read<ContactBloc>().add(
+                    const ContactsRefreshed(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            );
+          },
         ),
-        const SizedBox(height: 10),
+
         Expanded(
           child: BlocBuilder<ContactBloc, ContactState>(
             buildWhen: (p, c) =>
@@ -170,6 +193,7 @@ class _ContactListViewState extends State<ContactListView> {
         (s.status == ContactsStatus.loading && s.items.isEmpty)) {
       return const _Skeleton();
     }
+
     if (s.status == ContactsStatus.failure && s.items.isEmpty) {
       return _Message(
         icon: Icons.error_outline,
@@ -179,6 +203,7 @@ class _ContactListViewState extends State<ContactListView> {
             context.read<ContactBloc>().add(const ContactsRefreshed()),
       );
     }
+
     if (s.items.isEmpty) {
       return s.hasActiveFilter
           ? _Message(
@@ -194,6 +219,7 @@ class _ContactListViewState extends State<ContactListView> {
               onAction: () => showContactFormSheet(context),
             );
     }
+
     return RefreshIndicator(
       color: kAccent,
       onRefresh: _refresh,
@@ -205,6 +231,7 @@ class _ContactListViewState extends State<ContactListView> {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
           if (i >= s.items.length) return _footer(s);
+
           final c = s.items[i];
           return ContactCard(
             key: ValueKey(c.contactId),
@@ -231,6 +258,7 @@ class _ContactListViewState extends State<ContactListView> {
         ),
       );
     }
+
     if (s.hasMore) {
       return Center(
         child: TextButton(
@@ -240,6 +268,7 @@ class _ContactListViewState extends State<ContactListView> {
         ),
       );
     }
+
     if (s.items.length > 5) {
       return Padding(
         padding: const EdgeInsets.all(12),
@@ -251,6 +280,7 @@ class _ContactListViewState extends State<ContactListView> {
         ),
       );
     }
+
     return const SizedBox.shrink();
   }
 }
@@ -328,6 +358,7 @@ class _Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loaded = state.status == ContactsStatus.success;
+
     return Row(
       children: [
         Text(
@@ -477,6 +508,7 @@ class _Message extends StatelessWidget {
     this.actionLabel,
     this.onAction,
   });
+
   final IconData icon;
   final String text;
   final String? actionLabel;
