@@ -20,11 +20,13 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // TODO: Specify your own unique Application ID
+        // https://developer.android.com/studio/build/application-id.html
         applicationId = "com.example.money"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+
+        // 👇 security-crypto معمولاً حداقل API 23 می‌خواهد
+        minSdk = maxOf(flutter.minSdkVersion, 23)
+
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -33,9 +35,17 @@ android {
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // فعلاً با debug sign می‌شود تا flutter run --release کار کند.
+            // برای انتشار واقعی حتماً keystore/release sign را جایگزین کن.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+// 👇 این بخش مشکل Could not find androidx.security:security-crypto:1.1.0 را حل می‌کند
+configurations.all {
+    resolutionStrategy {
+        force("androidx.security:security-crypto:1.1.0-alpha06")
     }
 }
 
