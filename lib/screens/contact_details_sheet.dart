@@ -12,7 +12,7 @@ import 'package:money/widgets/DebtReceviable/cover_viewer.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
-/// خروجی: true یعنی حداقل یک تراکنش این مخاطب ویرایش/حذف شده
+/// خروجی: true یعنی حداقل یک تراکنش این طرف حساب ویرایش/حذف شده
 Future<bool?> showContactDetails(BuildContext context, ContactModel contact) {
   return showModalBottomSheet<bool?>(
     context: context,

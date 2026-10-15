@@ -240,7 +240,7 @@ class _SearchSheetState extends State<SearchSheet> {
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
             children: [
               if (showContacts && s.contacts.items.isNotEmpty) ...[
-                _SectionTitle('مخاطبین', s.contacts.totalItems),
+                _SectionTitle('طرف حساب', s.contacts.totalItems),
                 for (final c in s.contacts.items)
                   _ContactTile(
                     contact: c,
@@ -345,7 +345,7 @@ class _SearchSheetState extends State<SearchSheet> {
                 ],
               ),
               const SizedBox(height: 8),
-              _tip('نام یا شماره‌ی مخاطب را بنویس'),
+              _tip('نام یا شماره‌ی طرف حساب را بنویس'),
               _tip('چند کلمه را با فاصله بنویس؛ همه‌ی کلمه‌ها باید پیدا شوند'),
               _tip('کلمه‌ی «بدهی» یا «طلب» فقط همان نوع را نشان می‌دهد'),
               _tip(
@@ -384,7 +384,7 @@ class _TypeTabs extends StatelessWidget {
 
     final items = <(SearchType, String)>[
       (SearchType.all, 'همه'),
-      (SearchType.contacts, label('مخاطبین', state.contacts.totalItems)),
+      (SearchType.contacts, label('طرف حساب', state.contacts.totalItems)),
       (SearchType.debts, label('بدهی و طلب', state.debts.totalItems)),
     ];
 

@@ -21,7 +21,9 @@ class _HeaderState extends State<Header> {
   void initState() {
     super.initState();
     final stored = GetIt.I<TokenStorage>().getName();
-    if (stored != null && stored.isNotEmpty) _userName = stored;
+    if (stored != null && stored.isNotEmpty) {
+      _userName = stored;
+    }
   }
 
   String get _greeting {
@@ -36,9 +38,10 @@ class _HeaderState extends State<Header> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.maxFinite,
+      width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
@@ -61,6 +64,7 @@ class _HeaderState extends State<Header> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       '${Titles.hello} · $_greeting',
@@ -84,51 +88,56 @@ class _HeaderState extends State<Header> {
             ],
           ),
           const SizedBox(height: 14),
-          Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: () => showSearchSheet(context),
+          // بخش سرچ‌بار استاندارد شده بدون تداخل سایز و هیت‌تست
+          // به جای Material روی InkWell، سایز رو به InkWell تحمیل کن و از Ink استفاده کن:
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, color: kAccent),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        Titles.searchText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: sans(size: 13, color: Colors.grey.shade500),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                mouseCursor: SystemMouseCursors.click,
+                onTap: () => showSearchSheet(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search, color: kAccent),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          Titles.searchText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: sans(size: 13, color: Colors.grey.shade500),
+                        ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: kAccent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: kAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.tune_rounded,
+                          size: 16,
+                          color: kAccent,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        size: 16,
-                        color: kAccent,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

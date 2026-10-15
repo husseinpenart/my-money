@@ -15,25 +15,28 @@ class Homelayouts extends StatefulWidget {
 class _MyHomePageLayouts extends State<Homelayouts> {
   @override
   Widget build(BuildContext context) {
-    // 👈 SafeArea(top) هدر را زیر status bar نمی‌برد؛ bottom:false چون
-    //    نوار ناوبری را خودمان با padding پایینِ اسکرول رزرو می‌کنیم.
     return SafeArea(
       top: true,
       bottom: false,
       child: SingleChildScrollView(
-        // 👈 ۹۶ ≈ ارتفاع FAB(56) + فاصله + نفس؛ تا آخرین کارت زیر FAB نرود
+        // عرض کامل تا فرزندان در Hit Test بدون سایز نمانند
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 96),
-        child: const Column(
-          children: [
-            Header(),
-            Herocontainer(),
-            SizedBox(height: 10),
-            Quickaccess(),
-            SizedBox(height: 10),
-            Mostimportant(),
-            SizedBox(height: 10),
-            CardItemLayout(),
-          ],
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: const [
+              Header(),
+              Herocontainer(),
+              SizedBox(height: 10),
+              Quickaccess(),
+              SizedBox(height: 10),
+              Mostimportant(),
+              SizedBox(height: 10),
+              CardItemLayout(),
+            ],
+          ),
         ),
       ),
     );

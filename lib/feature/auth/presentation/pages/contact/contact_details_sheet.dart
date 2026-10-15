@@ -111,7 +111,7 @@ class _ContactDetailsSheet extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    'جزئیات مخاطب',
+                    'جزئیات طرف حساب',
                     textAlign: TextAlign.center,
                     style: sans(size: 16, weight: FontWeight.bold),
                   ),
@@ -264,7 +264,7 @@ class _ContactDetailsSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
                         child: Text(
-                          'هنوز بدهی یا طلبی برای این مخاطب ثبت نشده',
+                          'هنوز بدهی یا طلبی برای این طرف حساب ثبت نشده',
                           style: sans(size: 12, color: Colors.grey.shade600),
                         ),
                       ),

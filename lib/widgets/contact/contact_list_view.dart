@@ -72,11 +72,11 @@ class _ContactListViewState extends State<ContactListView> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'حذف مخاطب',
+          'حذف طرف حساب',
           style: sans(size: 15, weight: FontWeight.bold),
         ),
         content: Text(
-          'آیا از حذف «${c.name}» مطمئن هستی؟\nمخاطبی که طلب یا بدهی ثبت‌شده دارد حذف نمی‌شود.',
+          'آیا از حذف «${c.name}» مطمئن هستی؟\nطرف حسابی که طلب یا بدهی ثبت‌شده دارد حذف نمی‌شود.',
           style: sans(size: 13),
         ),
         actions: [
@@ -173,7 +173,7 @@ class _ContactListViewState extends State<ContactListView> {
     if (s.status == ContactsStatus.failure && s.items.isEmpty) {
       return _Message(
         icon: Icons.error_outline,
-        text: s.error ?? 'خطا در دریافت مخاطبین',
+        text: s.error ?? 'خطا در دریافت طرف حساب',
         actionLabel: 'تلاش دوباره',
         onAction: () =>
             context.read<ContactBloc>().add(const ContactsRefreshed()),
@@ -183,14 +183,14 @@ class _ContactListViewState extends State<ContactListView> {
       return s.hasActiveFilter
           ? _Message(
               icon: Icons.search_off_rounded,
-              text: 'مخاطبی با این جستجو یا فیلتر پیدا نشد',
+              text: 'طرف حسابی با این جستجو یا فیلتر پیدا نشد',
               actionLabel: 'پاک کردن جستجو و فیلتر',
               onAction: _clearAll,
             )
           : _Message(
               icon: Icons.contacts_outlined,
-              text: 'هنوز مخاطبی ثبت نکرده‌ای',
-              actionLabel: 'افزودن مخاطب',
+              text: 'هنوز طرف حسابی ثبت نکرده‌ای',
+              actionLabel: 'افزودن طرف حساب',
               onAction: () => showContactFormSheet(context),
             );
     }
@@ -245,7 +245,7 @@ class _ContactListViewState extends State<ContactListView> {
         padding: const EdgeInsets.all(12),
         child: Center(
           child: Text(
-            'همه‌ی مخاطبین نمایش داده شد',
+            'همه‌ی طرف حساب نمایش داده شد',
             style: sans(size: 11, color: Colors.grey.shade500),
           ),
         ),
@@ -331,7 +331,7 @@ class _Toolbar extends StatelessWidget {
     return Row(
       children: [
         Text(
-          loaded ? '${fa('${state.totalItems}')} مخاطب' : '',
+          loaded ? '${fa('${state.totalItems}')} طرف حساب' : '',
           style: sans(
             size: 12,
             weight: FontWeight.w600,

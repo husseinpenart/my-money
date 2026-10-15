@@ -663,7 +663,7 @@ class AgingCard extends StatelessWidget {
   }
 }
 
-// ───────────────────── مهم‌ترین مخاطبین ─────────────────────
+// ───────────────────── مهم‌ترین طرف حساب ─────────────────────
 class TopContactsCard extends StatelessWidget {
   final List<ReportContact> contacts;
   const TopContactsCard({super.key, required this.contacts});
@@ -671,7 +671,7 @@ class TopContactsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ReportCard(
-      title: 'بیشترین مانده‌ها به تفکیک مخاطب',
+      title: 'بیشترین مانده‌ها به تفکیک طرف حساب',
       subtitle: 'مرتب‌شده بر اساس قدر مطلق تراز پرداخت‌نشده',
       child: contacts.isEmpty
           ? Padding(
@@ -788,7 +788,7 @@ class ReportFooter extends StatelessWidget {
           ),
           line(
             Icons.dataset_outlined,
-            '${fa('${s.recordCount}')} رکورد از ${fa('${s.contactCount}')} مخاطب',
+            '${fa('${s.recordCount}')} رکورد از ${fa('${s.contactCount}')} طرف حساب',
           ),
           line(
             Icons.savings_outlined,

@@ -6,11 +6,10 @@ import 'package:money/feature/auth/presentation/bloc/search/search_state.dart';
 import 'package:money/feature/model/search_models/search_filter.dart';
 import 'package:money/feature/model/search_models/search_models.dart';
 
-
 const _accent = Color.fromARGB(255, 83, 109, 255);
 
 class SearchResultsPanel extends StatelessWidget {
-  /// وقتی روی مخاطب یا بدهی/طلب زده شد (برای ناوبری)
+  /// وقتی روی طرف حساب یا بدهی/طلب زده شد (برای ناوبری)
   final void Function(SearchContact contact)? onContactTap;
   final void Function(SearchDebt debt)? onDebtTap;
 
@@ -67,7 +66,7 @@ class _TypeTabs extends StatelessWidget {
 
     final items = <(SearchType, String)>[
       (SearchType.all, 'همه'),
-      (SearchType.contacts, label('مخاطبین', state.contacts.totalItems)),
+      (SearchType.contacts, label('طرف حساب', state.contacts.totalItems)),
       (SearchType.debts, label('بدهی و طلب', state.debts.totalItems)),
     ];
 
@@ -263,7 +262,7 @@ class _ResultsListState extends State<_ResultsList> {
 
     final children = <Widget>[
       if (showContacts && s.contacts.items.isNotEmpty) ...[
-        _SectionTitle('مخاطبین', s.contacts.totalItems),
+        _SectionTitle('طرف حساب', s.contacts.totalItems),
         for (final c in s.contacts.items)
           _ContactTile(contact: c, onTap: widget.onContactTap),
       ],

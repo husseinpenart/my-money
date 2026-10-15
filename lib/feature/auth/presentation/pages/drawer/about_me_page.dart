@@ -28,7 +28,7 @@ const List<({IconData icon, Color color, String title, String body})> _trust = [
     title: 'داده‌ات فقط مال خودت',
     body:
         'هر حساب کاملاً جداست. اطلاعاتت نه فروخته می‌شود نه با کسی به‌اشتراک '
-        'گذاشته می‌شود؛ دسترسی مخاطبین هم فقط با اجازه‌ی خودت.',
+        'گذاشته می‌شود؛ دسترسی طرف حساب هم فقط با اجازه‌ی خودت.',
   ),
   (
     icon: Icons.workspace_premium_rounded,

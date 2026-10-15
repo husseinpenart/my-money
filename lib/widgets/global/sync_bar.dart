@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:money/widgets/contact/contact_style.dart';
 import 'package:money/widgets/report/report_format.dart';
 
-/// زمان آخرین بروزرسانی + دکمه‌ی رفرش (برای مخاطبین و بدهی/طلب)
+/// زمان آخرین بروزرسانی + دکمه‌ی رفرش (برای طرف حساب و بدهی/طلب)
 class SyncBar extends StatelessWidget {
   final DateTime? syncedAt;
   final bool busy;

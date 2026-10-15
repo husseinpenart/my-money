@@ -115,7 +115,7 @@ class _ContactFormSheetState extends State<ContactFormSheet> {
               ),
               const SizedBox(height: 14),
               Text(
-                _isEdit ? 'ویرایش مخاطب' : 'مخاطب جدید',
+                _isEdit ? 'ویرایش طرف حساب' : 'طرف حساب جدید',
                 style: sans(size: 16, weight: FontWeight.bold),
               ),
               const SizedBox(height: 14),
@@ -131,7 +131,7 @@ class _ContactFormSheetState extends State<ContactFormSheet> {
                         textInputAction: TextInputAction.next,
                         style: sans(size: 14),
                         decoration: _decoration(
-                          'نام مخاطب',
+                          'نام طرف حساب',
                           Icons.person_outline,
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
@@ -197,7 +197,7 @@ class _ContactFormSheetState extends State<ContactFormSheet> {
                                     ),
                                   )
                                 : Text(
-                                    _isEdit ? 'ذخیره تغییرات' : 'ثبت مخاطب',
+                                    _isEdit ? 'ذخیره تغییرات' : 'ثبت طرف حساب',
                                     style: sans(
                                       size: 14,
                                       weight: FontWeight.bold,

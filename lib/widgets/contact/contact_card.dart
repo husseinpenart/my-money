@@ -10,7 +10,7 @@ const _red = Color(0xFFEF4444);
 const _amber = Color(0xFFF59E0B);
 const _grey = Color(0xFF64748B);
 
-/// خلاصه‌ی مالی یک مخاطب (فقط موارد پرداخت‌نشده)
+/// خلاصه‌ی مالی یک طرف حساب (فقط موارد پرداخت‌نشده)
 class _Metrics {
   final double receivable, debt;
   final int open, overdue;

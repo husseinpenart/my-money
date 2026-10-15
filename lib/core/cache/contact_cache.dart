@@ -20,7 +20,7 @@ String _norm(String s) => normalizeDigits(s)
 
 final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
 
-/// منبع واحد داده‌ی مخاطبین و بدهی/طلب روی دستگاه.
+/// منبع واحد داده‌ی طرف حساب و بدهی/طلب روی دستگاه.
 /// از سرور فقط با دکمه‌ی رفرش پر می‌شود؛ Commandها نتیجه‌شان را مستقیم اینجا اعمال می‌کنند.
 class ContactCache extends ChangeNotifier {
   static const _key = 'cache_contacts_v1';

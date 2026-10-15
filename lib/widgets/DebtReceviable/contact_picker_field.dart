@@ -24,7 +24,7 @@ class ContactPickerField extends StatelessWidget {
     required this.value,
     required this.onSelected,
     this.errorText,
-    this.hintText = 'انتخاب یا افزودن مخاطب',
+    this.hintText = 'انتخاب یا افزودن طرف حساب',
   });
 
   Future<void> _open(BuildContext context) async {
@@ -224,8 +224,8 @@ class _PickerSheetState extends State<_PickerSheet> {
   Widget _createTile() {
     final q = _query.trim();
     final text = q.isEmpty
-        ? 'افزودن مخاطب جدید'
-        : 'افزودن «$q» به‌عنوان مخاطب جدید';
+        ? 'افزودن طرف حساب جدید'
+        : 'افزودن «$q» به‌عنوان طرف حساب جدید';
     return ListTile(
       dense: true,
       leading: CircleAvatar(
@@ -276,7 +276,7 @@ class _PickerSheetState extends State<_PickerSheet> {
             controller: _name,
             style: sans(size: 14),
             textInputAction: TextInputAction.next,
-            decoration: d('نام مخاطب', Icons.person_outline),
+            decoration: d('نام طرف حساب', Icons.person_outline),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -347,8 +347,8 @@ class _PickerSheetState extends State<_PickerSheet> {
           padding: const EdgeInsets.all(24),
           child: Text(
             _query.isEmpty
-                ? 'هنوز مخاطبی نداری. از بالا یکی اضافه کن.'
-                : 'مخاطبی با این جستجو پیدا نشد. از بالا «افزودن» را بزن.',
+                ? 'هنوز طرف حسابی نداری. از بالا یکی اضافه کن.'
+                : 'طرف حسابی با این جستجو پیدا نشد. از بالا «افزودن» را بزن.',
             textAlign: TextAlign.center,
             style: sans(size: 12, color: Colors.grey.shade600),
           ),
@@ -364,7 +364,7 @@ class _PickerSheetState extends State<_PickerSheet> {
             padding: const EdgeInsets.all(12),
             child: Center(
               child: Text(
-                '${fa('$total')} مخاطب',
+                '${fa('$total')} طرف حساب',
                 style: sans(size: 11, color: Colors.grey.shade500),
               ),
             ),

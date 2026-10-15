@@ -1,4 +1,3 @@
-// lib/feature/auth/presentation/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +46,10 @@ class _LoginViewState extends State<_LoginView> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  /// خطاهای محلی فرم، مثلاً «فیلدها خالی هستند»
+  List<String> _localErrors = [];
+
+  /// خطاهای دریافتی از بک‌اند
   List<String> _serverErrors = [];
 
   @override
@@ -56,52 +59,46 @@ class _LoginViewState extends State<_LoginView> {
     super.dispose();
   }
 
-  // بررسی لحظه‌ای خطاها برای حذف موارد برطرف‌شده
-  List<String> get _activeErrors {
-    final phone = _phoneController.text.trim();
-    final pass = _passwordController.text;
+  /// همه‌ی خطاهایی که باید نمایش داده شوند
+  List<String> get _visibleErrors => [..._localErrors, ..._serverErrors];
 
-    return _serverErrors.where((err) {
-      if (err.contains('الزامی') && phone.isNotEmpty && pass.isNotEmpty) {
-        return false;
-      }
-      if (err.contains('تماس') && phone.isNotEmpty) return false;
-      if (err.contains('11 رقم') && phone.length == 11) return false;
-      if (err.contains('09') && phone.startsWith('09')) return false;
-      if (err.contains('عبور') && pass.isNotEmpty) return false;
-      if (err.contains('8 کاراکتر') && pass.length >= 8) return false;
-      return true;
-    }).toList();
+  /// با تغییر فیلدها، خطاهای قبلی پاک شوند
+  void _clearErrors() {
+    if (_localErrors.isEmpty && _serverErrors.isEmpty) return;
+
+    setState(() {
+      _localErrors = [];
+      _serverErrors = [];
+    });
   }
 
   void _goToRegister() {
     if (context.read<AuthBloc>().state is AuthLoading) return;
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );
   }
 
   void _submit() {
-    final phone = _phoneController.text.trim();
+    final phone = NumberHelper.toEnglishDigits(_phoneController.text.trim());
     final password = _passwordController.text;
 
-    // تبدیل شماره به ارقام انگلیسی استاندارد برای ارسال به سرور ASP.NET
-    final normalizedPhone = NumberHelper.toEnglishDigits(phone);
-
-    if (normalizedPhone.isEmpty || password.isEmpty) {
+    if (phone.isEmpty || password.isEmpty) {
       setState(() {
-        _serverErrors = ['پر کردن تمامی فیلد ها الزامی است'];
+        _localErrors = ['پر کردن تمامی فیلد ها الزامی است'];
+        _serverErrors = [];
       });
       return;
     }
 
     setState(() {
+      _localErrors = [];
       _serverErrors = [];
     });
 
-    // ارسال ایونت ورود
     context.read<AuthBloc>().add(
-      LoginSubmitted(phoneNumber: normalizedPhone, password: password),
+      LoginSubmitted(phoneNumber: phone, password: password),
     );
   }
 
@@ -109,25 +106,38 @@ class _LoginViewState extends State<_LoginView> {
     if (!mounted) return;
 
     if (state is AuthFailure) {
+      final raw = state.message.trim();
+
+      final lines = raw.isEmpty
+          ? <String>[]
+          : raw
+                .split('\n')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+
       setState(() {
-        _serverErrors = state.message
-            .split('\n')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+        _localErrors = [];
+        _serverErrors = lines.isEmpty
+            ? ['ورود ناموفق بود. دوباره تلاش کنید.']
+            : lines;
       });
+
       return;
     }
 
     if (state is AuthSuccess) {
-      setState(() => _serverErrors = []);
+      setState(() {
+        _localErrors = [];
+        _serverErrors = [];
+      });
 
-      // ۱. متن پیام برگشتی از سمت سرور
-      final successMsg = state.message.isNotEmpty
-          ? state.message
-          : 'ورود با موفقیت انجام شد';
+      final successMsg = state.message.trim().isEmpty
+          ? 'ورود با موفقیت انجام شد'
+          : state.message.trim();
 
-      // ۲. انتقال به صفحه اصلی و پاک کردن تمام صفحات قبلی از پشته (Stack)
+      final messenger = ScaffoldMessenger.of(context);
+
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (_) => const MyHomePage(title: Titles.mainTitle),
@@ -135,8 +145,7 @@ class _LoginViewState extends State<_LoginView> {
         (route) => false,
       );
 
-      // ۳. نمایش پیام سرور روی صفحه اصلی
-      ScaffoldMessenger.of(context)
+      messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
@@ -144,11 +153,7 @@ class _LoginViewState extends State<_LoginView> {
               textDirection: TextDirection.rtl,
               child: Text(
                 successMsg,
-                style: const TextStyle(
-                  fontFamily: 'Vazir',
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.white),
               ),
             ),
             backgroundColor: Colors.green.shade700,
@@ -168,7 +173,7 @@ class _LoginViewState extends State<_LoginView> {
       listener: _onAuthStateChanged,
       builder: (context, state) {
         final bool isLoading = state is AuthLoading;
-        final activeErrors = _activeErrors;
+        final activeErrors = _visibleErrors;
 
         return Scaffold(
           body: SafeArea(
@@ -207,7 +212,6 @@ class _LoginViewState extends State<_LoginView> {
                               AppTextField(
                                 controller: _phoneController,
                                 label: 'شماره موبایل',
-                                // hint: '0912 000 0000',
                                 icon: Icons.phone_outlined,
                                 keyboardType: TextInputType.phone,
                                 maxLength: 11,
@@ -216,7 +220,7 @@ class _LoginViewState extends State<_LoginView> {
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: null,
-                                onChanged: (_) => setState(() {}),
+                                onChanged: (_) => _clearErrors(),
                               ),
 
                               const SizedBox(height: 16),
@@ -226,7 +230,7 @@ class _LoginViewState extends State<_LoginView> {
                                 label: 'رمز عبور',
                                 hint: 'رمز عبور خود را وارد کنید',
                                 validator: null,
-                                onChanged: (_) => setState(() {}),
+                                onChanged: (_) => _clearErrors(),
                               ),
 
                               const SizedBox(height: 30),
@@ -239,7 +243,9 @@ class _LoginViewState extends State<_LoginView> {
                                 loading: isLoading,
                                 onPressed: _submit,
                               ),
+
                               const SizedBox(height: 20),
+
                               TextButton(
                                 onPressed: isLoading
                                     ? null
@@ -254,6 +260,7 @@ class _LoginViewState extends State<_LoginView> {
                                   style: TextStyle(fontSize: 12.5),
                                 ),
                               ),
+
                               if (activeErrors.isNotEmpty) ...[
                                 const SizedBox(height: 16),
                                 Container(

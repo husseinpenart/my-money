@@ -82,7 +82,7 @@ String buildReportText(ReportData d, ReportPeriod p) {
       'زمان تولید: ${d.generatedAt != null ? jalaliDateTime(d.generatedAt!) : '—'}',
     )
     ..writeln(
-      'تعداد رکورد: ${fa('${s.recordCount}')} | تعداد مخاطب: ${fa('${s.contactCount}')}',
+      'تعداد رکورد: ${fa('${s.recordCount}')} | تعداد طرف حساب: ${fa('${s.contactCount}')}',
     )
     ..writeln('────────────')
     ..writeln('بدهی و طلب')

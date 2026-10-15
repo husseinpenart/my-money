@@ -96,7 +96,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                 ),
                 const SizedBox(height: 8),
                 for (final t in const [
-                  'مخاطبین، طلب‌ها و بدهی‌ها',
+                  'طرف حساب، طلب‌ها و بدهی‌ها',
                   'تصاویر پیوست‌شده',
                   'حقوق، بودجه، هزینه‌ها و تاریخچه',
                   'اطلاعات ورود شما',

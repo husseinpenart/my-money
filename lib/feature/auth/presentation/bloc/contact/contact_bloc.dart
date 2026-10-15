@@ -160,7 +160,7 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
       emit(
         state.copyWith(
           isSubmitting: false,
-          feedback: ContactFeedback.success('مخاطب با موفقیت ثبت شد'),
+          feedback: ContactFeedback.success('طرف حساب با موفقیت ثبت شد'),
         ),
       );
     } catch (err) {
@@ -204,7 +204,7 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
         state.copyWith(feedback: ContactFeedback.success('با موفقیت حذف شد')),
       );
     } catch (err) {
-      // مثلاً: «این مخاطب بدهی یا طلب ثبت‌شده دارد و قابل حذف نیست»
+      // مثلاً: «این طرف حساب بدهی یا طلب ثبت‌شده دارد و قابل حذف نیست»
       emit(state.copyWith(feedback: ContactFeedback.error(_msg(err))));
     }
   }

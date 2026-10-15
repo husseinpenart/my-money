@@ -48,7 +48,7 @@ class ContactModel {
   }
 }
 
-/// یک ردیف از مخاطبین گوشی
+/// یک ردیف از طرف حساب گوشی
 
 class ContactApiException implements Exception {
   final String message;

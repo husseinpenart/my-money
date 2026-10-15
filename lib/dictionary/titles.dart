@@ -72,6 +72,6 @@ class ButtonsDictionary {
 
 class BottomNavigations {
   static const String home = 'خانه';
-  static const String contacts = 'مخاطبین';
+  static const String contacts = 'طرف حساب';
   static const String setting = 'تنظیمات';
 }
