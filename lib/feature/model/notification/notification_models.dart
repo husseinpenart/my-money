@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:money/helper/utils/input_utils.dart';
 import 'package:money/widgets/report/report_format.dart';
 
@@ -96,15 +97,104 @@ class AppNotification {
   }
 }
 
+// ───────────────────── هشدارهای حقوق و بودجه ─────────────────────
+class BudgetAlert {
+  final String key, code, severity;
+  final double? amount, percent;
+  final int? days;
+  final String? name;
+  final DateTime? date;
+
+  const BudgetAlert({
+    required this.key,
+    required this.code,
+    required this.severity,
+    this.amount,
+    this.percent,
+    this.days,
+    this.name,
+    this.date,
+  });
+
+  factory BudgetAlert.fromJson(Map<String, dynamic> j) => BudgetAlert(
+    key: (j['key'] ?? '').toString(),
+    code: (j['code'] ?? '').toString(),
+    severity: (j['severity'] ?? 'info').toString(),
+    amount: (j['amount'] as num?)?.toDouble(),
+    percent: (j['percent'] as num?)?.toDouble(),
+    days: (j['days'] as num?)?.toInt(),
+    name: j['name']?.toString(),
+    date: DateTime.tryParse('${j['date']}'),
+  );
+
+  Color get color => switch (severity) {
+    'danger' => const Color(0xFFEF4444),
+    'warn' => const Color(0xFFF59E0B),
+    _ => const Color(0xFF3B82F6),
+  };
+
+  IconData get icon => switch (code) {
+    'salary_today' || 'salary_soon' => Icons.payments_outlined,
+    'salary_late' => Icons.hourglass_bottom_rounded,
+    'cycle_ending' => Icons.event_repeat_rounded,
+    'budget_over' => Icons.error_outline,
+    'budget_high' => Icons.speed_rounded,
+    'item_due' => Icons.receipt_long_outlined,
+    'item_overdue' => Icons.report_gmailerrorred_outlined,
+    _ => Icons.notifications_none,
+  };
+
+  String get _n => fa('${days ?? 0}');
+  String get _a => money(amount ?? 0);
+  String get _name => name ?? '';
+
+  String get title => switch (code) {
+    'salary_today' => 'امروز روز دریافت حقوق است',
+    'salary_soon' => '$_n روز تا دریافت حقوق',
+    'salary_late' => 'حقوق $_n روز دیرکرد دارد',
+    'cycle_ending' => 'دوره‌ی مالی رو به پایان است',
+    'budget_over' => 'بیش‌خرجی در این دوره',
+    'budget_high' => 'نزدیک سقف بودجه‌ای',
+    'item_due' =>
+      days == 0
+          ? '«$_name» امروز سررسید است'
+          : '«$_name» $_n روز دیگر سررسید است',
+    'item_overdue' => '«$_name» پرداخت نشده',
+    _ => code,
+  };
+
+  String get message => switch (code) {
+    'salary_today' =>
+      'اگر حقوق واریز شد، مبلغ واقعی را ثبت کن تا بودجه‌ی دوره‌ی جدید دقیق چیده شود.',
+    'salary_soon' =>
+      'حقوق حدود ${date != null ? jalaliDate(date!) : ''} واریز می‌شود. تا آن موقع مراقب مانده‌ی بودجه باش.',
+    'salary_late' =>
+      'حقوق هنوز ثبت نشده. اگر دریافت کرده‌ای ثبتش کن؛ وگرنه بودجه با مبلغ تخمینی شروع می‌شود.',
+    'cycle_ending' =>
+      (amount ?? 0) >= 0
+          ? 'تا حقوق بعدی $_n روز مانده و $_a از بودجه‌ات باقی است.'
+          : 'تا حقوق بعدی $_n روز مانده، ولی ${money((amount ?? 0).abs())} بیشتر از حقوقت خرج کرده‌ای.',
+    'budget_over' => 'از حقوق این دوره $_a بیشتر خرج کرده‌ای.',
+    'budget_high' =>
+      '${pct(percent ?? 0)} از حقوق این دوره خرج شده و $_a باقی مانده.',
+    'item_due' => 'مبلغ برنامه‌ریزی‌شده: $_a',
+    'item_overdue' =>
+      '$_n روز از سررسیدش گذشته و هزینه‌ای برایش ثبت نشده ($_a).',
+    _ => '',
+  };
+}
+
 class NotificationSummary {
   final int overdue, today, soon, total;
   final List<String> keys;
+  final List<BudgetAlert> alerts;
   const NotificationSummary({
     this.overdue = 0,
     this.today = 0,
     this.soon = 0,
     this.total = 0,
     this.keys = const [],
+    this.alerts = const [],
   });
 
   factory NotificationSummary.fromJson(Map<String, dynamic> j) =>
@@ -114,9 +204,14 @@ class NotificationSummary {
         soon: (j['soon'] as num?)?.toInt() ?? 0,
         total: (j['total'] as num?)?.toInt() ?? 0,
         keys: ((j['keys'] as List?) ?? []).map((e) => e.toString()).toList(),
+        alerts: ((j['alerts'] as List?) ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(BudgetAlert.fromJson)
+            .toList(),
       );
 }
 
+// ───────────────────── فیلتر ─────────────────────
 enum NotificationKindFilter { all, overdue, today, soon }
 
 class NotificationFilter {

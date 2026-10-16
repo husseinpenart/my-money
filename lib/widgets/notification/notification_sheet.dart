@@ -8,6 +8,7 @@ import 'package:money/widgets/contact/contact_style.dart';
 
 import 'package:money/widgets/global/app_search_field.dart';
 import 'package:money/widgets/notification/debt_detail_sheet.dart';
+import 'package:money/widgets/notification/notification_widgets.dart';
 import 'package:money/widgets/report/report_format.dart';
 
 class NotificationSheet extends StatefulWidget {
@@ -73,14 +74,16 @@ class _NotificationSheetState extends State<NotificationSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Text('پیام‌ها و اعلان‌ها',
-                        style: sans(size: 16, weight: FontWeight.bold)),
+                    Text(
+                      'پیام‌ها و اعلان‌ها',
+                      style: sans(size: 16, weight: FontWeight.bold),
+                    ),
                     const Spacer(),
                     if (s.unreadCount > 0)
                       TextButton(
-                        onPressed: () => context
-                            .read<NotificationBloc>()
-                            .add(const NotificationAllRead()),
+                        onPressed: () => context.read<NotificationBloc>().add(
+                          const NotificationAllRead(),
+                        ),
                         child: Text('خواندن همه', style: sans(size: 12)),
                       ),
                   ],
@@ -92,9 +95,9 @@ class _NotificationSheetState extends State<NotificationSheet> {
                   hintText: 'جستجوی نام، شماره، مبلغ یا توضیحات',
                   autofocus: false,
                   isLoading: s.status == NotificationStatus.loading,
-                  onChanged: (v) => context
-                      .read<NotificationBloc>()
-                      .add(NotificationQueryChanged(v)),
+                  onChanged: (v) => context.read<NotificationBloc>().add(
+                    NotificationQueryChanged(v),
+                  ),
                 ),
               ),
               _Filters(state: s),
@@ -131,38 +134,54 @@ class _NotificationSheetState extends State<NotificationSheet> {
             : 'اعلانی وجود ندارد. سررسیدهای نزدیک اینجا نمایش داده می‌شوند.',
       );
     }
-
     return RefreshIndicator(
       color: kAccent,
       onRefresh: () async {
         context.read<NotificationBloc>().add(const NotificationRefreshed());
         await Future<void>.delayed(const Duration(milliseconds: 600));
       },
-      child: ListView.separated(
+      child: ListView(
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: s.items.length + (s.isLoadingMore ? 1 : 0),
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, i) {
-          if (i >= s.items.length) {
-            return const Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: DeviceAlertsTile(),
+          ),
+          if (!s.hasActiveFilter)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: BudgetAlertsSection(
+                alerts: s.summary.alerts,
+                readKeys: s.readKeys,
+                onRead: (k) =>
+                    context.read<NotificationBloc>().add(NotificationRead(k)),
+              ),
+            ),
+          for (var i = 0; i < s.items.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            _Tile(
+              n: s.items[i],
+              unread: !s.readKeys.contains(s.items[i].key),
+              onTap: () => _open(s.items[i]),
+            ),
+          ],
+          if (s.isLoadingMore)
+            const Padding(
               padding: EdgeInsets.all(14),
               child: Center(
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: kAccent),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: kAccent,
+                  ),
                 ),
               ),
-            );
-          }
-          final n = s.items[i];
-          return _Tile(
-            n: n,
-            unread: !s.readKeys.contains(n.key),
-            onTap: () => _open(n),
-          );
-        },
+            ),
+        ],
       ),
     );
   }
@@ -182,31 +201,34 @@ class _Filters extends StatelessWidget {
     String c(String t, int n) => '$t (${fa('$n')})';
 
     Widget kind(String text, NotificationKindFilter k) => Padding(
-          padding: const EdgeInsetsDirectional.only(end: 8),
-          child: ChoiceChip(
-            label: Text(text, style: sans(size: 12)),
-            selected: f.kind == k,
-            showCheckmark: false,
-            selectedColor: kAccent.withValues(alpha: 0.15),
-            onSelected: (_) => bloc.add(NotificationFilterChanged(f.copyWith(kind: k))),
-          ),
-        );
+      padding: const EdgeInsetsDirectional.only(end: 8),
+      child: ChoiceChip(
+        label: Text(text, style: sans(size: 12)),
+        selected: f.kind == k,
+        showCheckmark: false,
+        selectedColor: kAccent.withValues(alpha: 0.15),
+        onSelected: (_) =>
+            bloc.add(NotificationFilterChanged(f.copyWith(kind: k))),
+      ),
+    );
 
     Widget type(String text, String value) => Padding(
-          padding: const EdgeInsetsDirectional.only(end: 8),
-          child: FilterChip(
-            label: Text(text, style: sans(size: 11)),
-            selected: f.recordType == value,
-            selectedColor: kAccent.withValues(alpha: 0.15),
-            checkmarkColor: kAccent,
-            visualDensity: VisualDensity.compact,
-            onSelected: (_) => bloc.add(NotificationFilterChanged(
-              f.recordType == value
-                  ? f.copyWith(clearRecordType: true)
-                  : f.copyWith(recordType: value),
-            )),
+      padding: const EdgeInsetsDirectional.only(end: 8),
+      child: FilterChip(
+        label: Text(text, style: sans(size: 11)),
+        selected: f.recordType == value,
+        selectedColor: kAccent.withValues(alpha: 0.15),
+        checkmarkColor: kAccent,
+        visualDensity: VisualDensity.compact,
+        onSelected: (_) => bloc.add(
+          NotificationFilterChanged(
+            f.recordType == value
+                ? f.copyWith(clearRecordType: true)
+                : f.copyWith(recordType: value),
           ),
-        );
+        ),
+      ),
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -235,25 +257,25 @@ class _Tile extends StatelessWidget {
   const _Tile({required this.n, required this.unread, required this.onTap});
 
   Color get _color => switch (n.kind) {
-        NotificationKind.overdue => const Color(0xFFDC2626),
-        NotificationKind.today => const Color(0xFFF97316),
-        NotificationKind.soon => const Color(0xFFF59E0B),
-      };
+    NotificationKind.overdue => const Color(0xFFDC2626),
+    NotificationKind.today => const Color(0xFFF97316),
+    NotificationKind.soon => const Color(0xFFF59E0B),
+  };
 
   IconData get _icon => switch (n.kind) {
-        NotificationKind.overdue => Icons.warning_amber_rounded,
-        NotificationKind.today => Icons.alarm,
-        NotificationKind.soon => Icons.schedule,
-      };
+    NotificationKind.overdue => Icons.warning_amber_rounded,
+    NotificationKind.today => Icons.alarm,
+    NotificationKind.soon => Icons.schedule,
+  };
 
   String get _time {
     final d = n.endedDate;
     final date = d == null ? '' : jalaliDate(d);
     return switch (n.kind) {
-      NotificationKind.overdue => '${fa('${n.daysLeft.abs()}')} روز معوق',
-      NotificationKind.today => 'امروز',
-      NotificationKind.soon => '${fa('${n.daysLeft}')} روز دیگر',
-    } +
+          NotificationKind.overdue => '${fa('${n.daysLeft.abs()}')} روز معوق',
+          NotificationKind.today => 'امروز',
+          NotificationKind.soon => '${fa('${n.daysLeft}')} روز دیگر',
+        } +
         (date.isEmpty ? '' : '  ·  $date');
   }
 
@@ -306,8 +328,10 @@ class _Tile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(n.message,
-                      style: sans(size: 12, color: Colors.grey.shade700)),
+                  Text(
+                    n.message,
+                    style: sans(size: 12, color: Colors.grey.shade700),
+                  ),
                   const SizedBox(height: 6),
                   Text(_time, style: sans(size: 11, color: _color)),
                 ],
@@ -327,29 +351,36 @@ class _Empty extends StatelessWidget {
   final String text;
   final String? action;
   final VoidCallback? onAction;
-  const _Empty({required this.icon, required this.text, this.action, this.onAction});
+  const _Empty({
+    required this.icon,
+    required this.text,
+    this.action,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 44, color: Colors.grey.shade400),
-              const SizedBox(height: 10),
-              Text(text,
-                  textAlign: TextAlign.center,
-                  style: sans(size: 12, color: Colors.grey.shade600)),
-              if (action != null) ...[
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: onAction,
-                  child: Text(action!, style: sans(size: 12)),
-                ),
-              ],
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 44, color: Colors.grey.shade400),
+          const SizedBox(height: 10),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: sans(size: 12, color: Colors.grey.shade600),
           ),
-        ),
-      );
+          if (action != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onAction,
+              child: Text(action!, style: sans(size: 12)),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
 }

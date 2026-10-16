@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart'; // 👈 اضافه شد برای تش�
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/alerts/alert_coordinator.dart';
+import 'package:money/core/alerts/device_alerts.dart';
 import 'package:money/core/di/injection.dart';
 import 'package:money/core/drawer/app_info.dart';
 import 'package:money/core/network/api_client.dart';
@@ -10,6 +12,7 @@ import 'package:money/core/storage/session/session_cleaner.dart';
 import 'package:money/core/storage/token_storage.dart';
 import 'package:money/core/storage/web_persist.dart';
 import 'package:money/widgets/global/web_frame.dart';
+import 'package:money/widgets/notification/debt_detail_sheet.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:money/dictionary/titles.dart';
 import 'package:money/screens/home_page.dart';
@@ -18,11 +21,21 @@ import 'package:cryptography_flutter/cryptography_flutter.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 bool _loggingOut = false;
+void _onAlertTap(String payload) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  if (payload.startsWith('debt:')) {
+    showDebtDetailSheet(ctx, payload.substring(5));
+  }
+  // 'open': فقط اپ باز می‌شود
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterCryptography.enable();
   await configureDependencies();
+  await DeviceAlerts.init(_onAlertTap);
+  GetIt.I<AlertCoordinator>().attach();
   await AppInfo.init();
   requestPersistentStorage();
 

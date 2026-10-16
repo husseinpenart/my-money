@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:money/core/alerts/alert_coordinator.dart';
 import 'package:money/core/cache/contact_cache.dart';
 import 'package:money/core/cache/sync_repository.dart';
 import 'package:money/core/network/notification_read_store.dart';
@@ -50,6 +51,9 @@ Future<void> configureDependencies() async {
       getIt<VaultLocalStore>(),
       getIt<AppStorage>(),
     ),
+  );
+  getIt.registerLazySingleton<AlertCoordinator>(
+    () => AlertCoordinator(getIt<ContactCache>(), getIt<AppStorage>()),
   );
   getIt.registerFactory<VaultBloc>(() => VaultBloc(getIt<VaultRepository>()));
 
@@ -157,6 +161,7 @@ Future<void> configureDependencies() async {
     () => NotificationBloc(
       remote: getIt<NotificationRemoteDataSource>(),
       store: getIt<NotificationReadStore>(),
+      alerts: getIt<AlertCoordinator>(),
     ),
   );
 
